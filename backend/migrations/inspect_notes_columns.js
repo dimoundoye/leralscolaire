@@ -1,0 +1,18 @@
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+const db = require('../src/config/db');
+
+async function check() {
+  try {
+    const { rows } = await db.query(`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'notes'
+    `);
+    console.log('Notes table columns:', rows);
+  } catch (err) {
+    console.error(err);
+  }
+  process.exit();
+}
+check();

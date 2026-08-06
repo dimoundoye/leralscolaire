@@ -1,20 +1,34 @@
-const db = require('./db');
-async function checkSchema() {
+const { Pool } = require('pg');
+require('dotenv').config();
+
+const pool = new Pool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT
+});
+
+async function main() {
   try {
-    const tables = ['users', 'etablissements', 'eleves', 'classes', 'notes', 'matieres', 'inscription_classes'];
-    for (const table of tables) {
-      const res = await db.query(`
-        SELECT column_name, data_type, is_nullable 
-        FROM information_schema.columns 
-        WHERE table_name = $1
-      `, [table]);
-      console.log(`--- Table: ${table} ---`);
-      console.table(res.rows);
-    }
-  } catch (err) {
-    console.error(err);
+    const r = await pool.query(
+      `SELECT column_name, data_type FROM information_schema.columns 
+       WHERE table_name = 'professeurs_etablissements' ORDER BY ordinal_position`
+    );
+    console.log('Columns in professeurs_etablissements:');
+    console.log(JSON.stringify(r.rows, null, 2));
+
+    // Also check messages table
+    const r2 = await pool.query(
+      `SELECT column_name, data_type FROM information_schema.columns 
+       WHERE table_name = 'messages' ORDER BY ordinal_position`
+    );
+    console.log('\nColumns in messages:');
+    console.log(JSON.stringify(r2.rows, null, 2));
+  } catch (e) {
+    console.error('Error:', e.message);
   } finally {
-    process.exit();
+    await pool.end();
   }
 }
-checkSchema();
+main();

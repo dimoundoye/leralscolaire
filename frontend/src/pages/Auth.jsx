@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LogIn, UserPlus, Mail, Lock, Building, ArrowRight, Shield, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import './Auth.css';
 
 const Auth = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -36,10 +38,19 @@ const Auth = () => {
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        login(data.token, data.user);
         setMessage({ type: 'success', text: 'Connexion réussie ! Redirection...' });
-        setTimeout(() => navigate('/dashboard'), 1500);
+
+        const redirectPath = data.user.role === 'PRESIDENT_JURY'
+          ? '/jury/dashboard'
+          : data.user.role === 'ELEVE' 
+            ? '/student/dashboard' 
+            : data.user.role === 'PROFESSEUR' 
+              ? '/professeur/dashboard' 
+              : data.user.role === 'OFFICE_BAC'
+                ? '/office/dashboard'
+                : '/dashboard';
+        setTimeout(() => navigate(redirectPath), 1500);
       } else {
         setMessage({ type: 'error', text: data.message || 'Identifiants incorrects' });
       }
