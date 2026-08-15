@@ -53,6 +53,29 @@ const TeacherTopbar = ({
               <option value="2026-2027">2026-2027</option>
             </select>
           </div>
+          {/* Bouton Émerger mon Cours */}
+          <button
+            onClick={() => navigate('/professeur/emargement')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 14px',
+              background: 'linear-gradient(135deg, #16a34a 0%, #059669 100%)',
+              color: '#ffffff',
+              fontSize: '12px',
+              fontWeight: '800',
+              borderRadius: '8px',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(5, 150, 105, 0.3)',
+              marginRight: '8px'
+            }}
+            title="Accéder au scanner QR Code 20s et au Mode Terrain EPS"
+          >
+            <span>Émerger mon Cours</span>
+          </button>
+
           <button className="icon-action-btn relative" onClick={() => { setShowNotificationsDrawer(true); fetchNotifications(); }} title="Notifications">
             <Bell size={20} />
             {(unreadNotificationsCount > 0 || invitations?.length > 0) && <span className="badge-dot" style={{ background: 'var(--accent-red)' }}></span>}

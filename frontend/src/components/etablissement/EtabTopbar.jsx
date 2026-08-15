@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, Bell, Shield, Calendar } from 'lucide-react';
+import { LogOut, Bell, Shield, Calendar, Monitor } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 const EtabTopbar = ({ profile, notificationsCount, onShowMessages, selectedYear, onYearChange, availableYears }) => {
@@ -53,6 +53,39 @@ const EtabTopbar = ({ profile, notificationsCount, onShowMessages, selectedYear,
         <span className="school-badge">
           {profile?.nom || 'LeralScolaire'}
         </span>
+
+        {/* Bouton Borne Émargement QR Code Externe */}
+        <button
+          onClick={() => {
+            const popWindow = window.open(
+              '/emargement/live-qr/default',
+              'QREmargementLiveKiosque',
+              'width=1024,height=768,menubar=no,toolbar=no,location=no,status=no,resizable=yes'
+            );
+            window.addEventListener('beforeunload', () => {
+              if (popWindow && !popWindow.closed) popWindow.close();
+            });
+          }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '6px 14px',
+            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+            color: '#ffffff',
+            fontSize: '12px',
+            fontWeight: '700',
+            borderRadius: '8px',
+            border: 'none',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(79, 70, 229, 0.3)',
+            marginRight: '8px'
+          }}
+          title="Ouvrir la borne d'émargement QR Code dynamique 20s en plein écran pour le second écran / vidéo-projecteur"
+        >
+          <Monitor size={15} />
+          <span>Afficher le QR Code en Externe</span>
+        </button>
 
         {/* Notifications Icon */}
         <button 

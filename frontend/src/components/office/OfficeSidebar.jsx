@@ -22,6 +22,7 @@ export const OfficeSidebar = ({
     { id: 'demandes', label: 'Agrégations & Licences', icon: <Inbox size={18} /> },
     { id: 'etablissements', label: 'Établissements Sénégal', icon: <School size={18} /> },
     { id: 'professeurs', label: 'Professeurs & Correcteurs', icon: <Users size={18} /> },
+    { id: 'carte-prof', label: 'Fiches & Score Profs (1000 Pts)', icon: <Award size={18} />, route: '/office/professeurs/carte-identite' },
     { id: 'centres', label: 'Centres d’Examen', icon: <School size={18} /> },
     { id: 'jurys', label: 'Jurys d’Examen', icon: <Users size={18} /> },
     { id: 'livrets', label: 'Livrets Scolaires Numériques', icon: <FileText size={18} /> },

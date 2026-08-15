@@ -1,5 +1,5 @@
-import React from 'react';
-import { Loader2, Users, User } from 'lucide-react';
+import React, { useState } from 'react';
+import { Loader2, Users, User, QrCode, ExternalLink } from 'lucide-react';
 
 const AdminAttendanceTab = ({
   selectedYear,
@@ -20,19 +20,60 @@ const AdminAttendanceTab = ({
   setSelectedAbsenceForJustify,
   setAbsJustificationMotif
 }) => {
+  const [subTab, setSubTab] = useState('eleves');
+
+  const demoProfsEmargements = [
+    { id: 1, prof: 'Prof. Rassoul NDOYE', matiere: 'Mathématiques', classe: 'Terminale S2', heure: '08h03', mode: 'QR_SCAN_20S', statut: 'VALIDE_COMPLET', cahier: 'Chapitre 4: Intégration' },
+    { id: 2, prof: 'Prof. Moussa DIOP', matiere: 'EPS', classe: '3ème A', heure: '08h05', mode: 'EPS_GPS_TERRAIN', statut: 'PRESENCE_SCANNEE', cahier: 'En attente' },
+    { id: 3, prof: 'Prof. Awa SARR', matiere: 'Physique-Chimie', classe: '1ère S1', heure: '09h00', mode: 'RATTRAPAGE', statut: 'RATTRAPAGE_APPROUVE', cahier: 'Rattrapage mécanique' },
+    { id: 4, prof: 'Prof. Cheikh BA', matiere: 'Philosophie', classe: 'Terminale L2', heure: '—', mode: 'AUCUN', statut: 'ABSENT_NON_EMARGE', cahier: '—' },
+  ];
+
   return (
     <div className="attendance-view">
-      <div className="page-header">
+      <div className="page-header" style={{ marginBottom: '16px' }}>
         <div>
           <h1 className="page-title">Suivi de l'Assiduité</h1>
-          <p className="page-subtitle">Gestion et justification des absences & retards de l'établissement</p>
+          <p className="page-subtitle">Gestion des absences des élèves & émargement en temps réel des professeurs</p>
         </div>
-        <span className="school-badge" style={{ fontSize: '11.5px', padding: '6px 12px', background: 'rgba(19, 30, 108, 0.05)', color: 'var(--primary-color)', borderRadius: '6px' }}>
-          Année : {selectedYear}
-        </span>
+
+        {/* Toggle Élèves vs Enseignants */}
+        <div style={{ display: 'flex', gap: '8px', background: 'rgba(15, 23, 42, 0.04)', padding: '4px', borderRadius: '10px' }}>
+          <button
+            onClick={() => setSubTab('eleves')}
+            style={{
+              padding: '8px 16px',
+              fontSize: '12px',
+              fontWeight: '700',
+              borderRadius: '8px',
+              border: 'none',
+              cursor: 'pointer',
+              background: subTab === 'eleves' ? '#131e6c' : 'transparent',
+              color: subTab === 'eleves' ? '#ffffff' : '#64748b'
+            }}
+          >
+            Assiduité Élèves
+          </button>
+          <button
+            onClick={() => setSubTab('professeurs')}
+            style={{
+              padding: '8px 16px',
+              fontSize: '12px',
+              fontWeight: '700',
+              borderRadius: '8px',
+              border: 'none',
+              cursor: 'pointer',
+              background: subTab === 'professeurs' ? '#131e6c' : 'transparent',
+              color: subTab === 'professeurs' ? '#ffffff' : '#64748b'
+            }}
+          >
+            Émargement Professeurs (QR 20s & GPS)
+          </button>
+        </div>
       </div>
 
-      {/* Filters */}
+      {subTab === 'eleves' && (
+        <>
       <div className="filter-card" style={{ background: 'white', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px', marginBottom: '24px', boxShadow: 'var(--shadow-soft)' }}>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
           <div className="input-group" style={{ margin: 0, flex: 2, minWidth: '200px' }}>
@@ -236,6 +277,126 @@ const AdminAttendanceTab = ({
           </div>
         )}
       </div>
+        </>
+      )}
+
+      {/* VUE 2 : ÉMARGEMENT ET ASSIDUITÉ DES PROFESSEURS */}
+      {subTab === 'professeurs' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          
+          {/* Bannière de lancement Borne QR Code Externe */}
+          <div style={{
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)',
+            border: '1px solid #312e81',
+            borderRadius: '16px',
+            padding: '24px',
+            color: '#ffffff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '20px',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ background: 'rgba(99, 102, 241, 0.2)', border: '1px solid rgba(99, 102, 241, 0.4)', padding: '14px', borderRadius: '14px' }}>
+                <QrCode size={32} color="#818cf8" />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 900, color: '#ffffff' }}>Borne d'Émargement Sécurisée TOTP 20s</h3>
+                <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#94a3b8' }}>
+                  Affichez le QR Code dynamique 20s en plein écran sur la télé de la salle des profs ou un second écran sans bloquer votre travail.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                const popWindow = window.open('/emargement/live-qr/default', 'QREmargementLiveKiosque', 'width=1024,height=768,menubar=no,toolbar=no,location=no,status=no,resizable=yes');
+                window.addEventListener('beforeunload', () => { if (popWindow && !popWindow.closed) popWindow.close(); });
+              }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '12px 20px', background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                color: '#ffffff', fontSize: '13px', fontWeight: 800, borderRadius: '12px',
+                border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: '0 4px 14px rgba(79,70,229,0.4)'
+              }}
+            >
+              <ExternalLink size={16} /> Afficher le QR Code en Externe
+            </button>
+          </div>
+
+          {/* Tableau de suivi du jour */}
+          <div className="table-block">
+            <div className="table-block-header">
+              <div className="table-block-title">
+                <h3>Suivi des Émargements Enseignants du Jour ({new Date().toLocaleDateString('fr-FR')})</h3>
+              </div>
+              <span style={{ fontSize: '11px', color: '#16a34a', fontWeight: 700, background: '#dcfce7', padding: '4px 10px', borderRadius: '20px' }}>
+                7 / 8 Professeurs Émargés (87.5%)
+              </span>
+            </div>
+
+            <div className="table-container" style={{ border: 'none', boxShadow: 'none' }}>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Professeur</th>
+                    <th>Matière & Classe</th>
+                    <th>Heure Scan</th>
+                    <th>Mode Émargement</th>
+                    <th>Cahier de Texte</th>
+                    <th>Statut Séance</th>
+                    <th style={{ textAlign: 'center' }}>Action Surveillant</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {demoProfsEmargements.map(item => (
+                    <tr key={item.id}>
+                      <td>
+                        <div style={{ fontWeight: 700, color: 'var(--primary-color)' }}>{item.prof}</div>
+                      </td>
+                      <td>
+                        <div style={{ fontSize: '12px', fontWeight: 600 }}>{item.matiere} • <span style={{ color: 'var(--slate-500)' }}>{item.classe}</span></div>
+                      </td>
+                      <td>
+                        <div style={{ fontSize: '12px', fontFamily: 'monospace', fontWeight: 700 }}>{item.heure}</div>
+                      </td>
+                      <td>
+                        {item.mode === 'QR_SCAN_20S' && <span style={{ fontSize: '10.5px', fontWeight: 700, background: '#e0e7ff', color: '#3730a3', padding: '3px 8px', borderRadius: '6px' }}>QR Code 20s</span>}
+                        {item.mode === 'EPS_GPS_TERRAIN' && <span style={{ fontSize: '10.5px', fontWeight: 700, background: '#dcfce7', color: '#166534', padding: '3px 8px', borderRadius: '6px' }}>GPS Terrain EPS</span>}
+                        {item.mode === 'RATTRAPAGE' && <span style={{ fontSize: '10.5px', fontWeight: 700, background: '#fef3c7', color: '#92400e', padding: '3px 8px', borderRadius: '6px' }}>Rattrapage</span>}
+                        {item.mode === 'AUCUN' && <span style={{ fontSize: '10.5px', fontWeight: 700, background: '#fee2e2', color: '#991b1b', padding: '3px 8px', borderRadius: '6px' }}>Aucun</span>}
+                      </td>
+                      <td>
+                        <span style={{ fontSize: '11px', color: item.cahier.includes('En attente') ? '#d97706' : '#166534', fontWeight: 600 }}>
+                          {item.cahier}
+                        </span>
+                      </td>
+                      <td>
+                        {item.statut === 'VALIDE_COMPLET' && <span style={{ fontSize: '11px', fontWeight: 700, color: '#16a34a' }}>Validé complet</span>}
+                        {item.statut === 'PRESENCE_SCANNEE' && <span style={{ fontSize: '11px', fontWeight: 700, color: '#d97706' }}>Présence scannée</span>}
+                        {item.statut === 'RATTRAPAGE_APPROUVE' && <span style={{ fontSize: '11px', fontWeight: 700, color: '#2563eb' }}>Rattrapage approuvé</span>}
+                        {item.statut === 'ABSENT_NON_EMARGE' && <span style={{ fontSize: '11px', fontWeight: 700, color: '#dc2626' }}>Non émargé</span>}
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        {item.statut === 'ABSENT_NON_EMARGE' ? (
+                          <button style={{ padding: '4px 10px', fontSize: '11px', fontWeight: 700, borderRadius: '6px', border: '1px solid #dc2626', color: '#dc2626', background: 'transparent', cursor: 'pointer' }}>
+                            Signaler Absence
+                          </button>
+                        ) : (
+                          <button style={{ padding: '4px 10px', fontSize: '11px', fontWeight: 600, borderRadius: '6px', border: '1px solid #64748b', color: '#64748b', background: 'transparent', cursor: 'pointer' }}>
+                            Détails
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

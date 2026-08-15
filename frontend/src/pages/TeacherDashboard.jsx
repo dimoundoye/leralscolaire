@@ -21,6 +21,7 @@ import TeacherPlanningTab from '../components/professeur/TeacherPlanningTab';
 import TeacherProfileTab from '../components/professeur/TeacherProfileTab';
 import TeacherMessagesTab from '../components/professeur/TeacherMessagesTab';
 import TeacherCahierTexteTab from '../components/professeur/TeacherCahierTexteTab';
+import ProfDashboardEmargement from './ProfDashboardEmargement';
 import TeacherSidebar from '../components/professeur/TeacherSidebar';
 import TeacherTopbar from '../components/professeur/TeacherTopbar';
 import './TeacherDashboard.css';
@@ -1178,6 +1179,7 @@ const TeacherDashboard = () => {
           )}
 
           {!loading && activeTab === 'discipline' && <TeacherDisciplineView />}
+          {!loading && activeTab === 'emargement' && <ProfDashboardEmargement />}
         </main>
       </div>
 

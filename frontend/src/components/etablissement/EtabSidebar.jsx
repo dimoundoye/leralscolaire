@@ -40,6 +40,7 @@ const EtabSidebar = ({ activeTab, profile, elevesCount, preInscriptionsCount, un
     { id: 'profs', label: 'Corps Enseignant', icon: User, path: '/dashboard/profs' },
     
     { section: 'Pédagogie' },
+    { id: 'emargement-live', label: 'Borne QR Code Live 20s', icon: ShieldCheck, path: '/emargement/live-qr/default' },
     { id: 'notes', label: 'Notes & Bulletins', icon: BookOpenCheck, path: '/dashboard/notes' },
     { id: 'baremes', label: "Barèmes d'appréciation", icon: Sliders, path: '/dashboard/baremes' },
     { id: 'discipline', label: 'Vie Scolaire & Discipline', icon: Scale, path: '/dashboard/discipline' },

@@ -58,6 +58,8 @@ app.use('/api/pre-inscriptions', preInscriptionsRoutes);
 app.use('/api/professeurs-portal', professeursPortalRoutes);
 app.use('/api/cahier-texte', cahierTexteRoutes);
 app.use('/api/office-bac', officeBacRoutes);
+const emargementRoutes = require('./routes/emargement');
+app.use('/api/emargement', emargementRoutes);
 app.use('/api/jury', juryBacRoutes);
 app.use('/api/discipline', disciplineRoutes);
 

@@ -160,6 +160,9 @@ const TeacherSidebar = ({
           <button className={`nav-item ${activeTab === 'schedule' ? 'active' : ''}`} onClick={() => navigate('/professeur/dashboard/schedule')}>
             <Calendar size={18} /> <span>Emploi du Temps</span>
           </button>
+          <button className="nav-item" onClick={() => navigate('/professeur/emargement')} style={{ background: 'rgba(5, 150, 105, 0.1)', color: '#059669', fontWeight: 800 }}>
+            <Clock size={18} /> <span>Émerger mon Cours (QR/GPS)</span>
+          </button>
           <button className={`nav-item ${activeTab === 'grades' ? 'active' : ''}`} onClick={() => navigate('/professeur/dashboard/grades')}>
             <BookOpen size={18} /> <span>Saisie des Notes</span>
           </button>
