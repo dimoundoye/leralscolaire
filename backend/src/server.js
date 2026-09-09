@@ -72,13 +72,25 @@ app.get('/', (req, res) => {
 });
 
 // Test database connection before starting express server
-db.pool.connect((err, client, release) => {
+db.pool.connect(async (err, client, release) => {
   if (err) {
     return console.error('❌ ERREUR DE CONNEXION POSTGRESQL :', err.stack);
   }
   console.log('✅ Base de données connectée avec succès (MVC)');
   release();
   
+  // Auto-vérification et ajout immédiat des colonnes critiques
+  try {
+    await db.query(`
+      ALTER TABLE users 
+      ADD COLUMN IF NOT EXISTS identifiant_national VARCHAR(100),
+      ADD COLUMN IF NOT EXISTS password_provisoire VARCHAR(100);
+      CREATE INDEX IF NOT EXISTS idx_users_identifiant_national ON users(identifiant_national);
+    `);
+  } catch (schemaErr) {
+    console.warn('⚠️ Auto-vérification schéma users :', schemaErr.message);
+  }
+
   // Start server
   app.listen(PORT, () => {
     console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
