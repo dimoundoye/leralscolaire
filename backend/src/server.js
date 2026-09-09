@@ -79,16 +79,76 @@ db.pool.connect(async (err, client, release) => {
   console.log('✅ Base de données connectée avec succès (MVC)');
   release();
   
-  // Auto-vérification et ajout immédiat des colonnes critiques
+  // Auto-vérification et ajout immédiat des colonnes critiques et tables
   try {
     await db.query(`
       ALTER TABLE users 
       ADD COLUMN IF NOT EXISTS identifiant_national VARCHAR(100),
       ADD COLUMN IF NOT EXISTS password_provisoire VARCHAR(100);
       CREATE INDEX IF NOT EXISTS idx_users_identifiant_national ON users(identifiant_national);
+
+      CREATE TABLE IF NOT EXISTS centres_examen_bac (
+        id SERIAL PRIMARY KEY,
+        nom_centre VARCHAR(255) NOT NULL,
+        type_centre VARCHAR(50) DEFAULT 'PRINCIPAL',
+        centre_principal_id INT REFERENCES centres_examen_bac(id) ON DELETE SET NULL,
+        region VARCHAR(100) NOT NULL,
+        zone_commune VARCHAR(100) NOT NULL,
+        effectif_previsionnel INT DEFAULT 0,
+        series_disponibles TEXT[] DEFAULT '{"S1", "S2", "L1", "L2"}',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS office_bac_settings (
+        id SERIAL PRIMARY KEY,
+        setting_key VARCHAR(100) UNIQUE NOT NULL,
+        setting_value TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
+      ALTER TABLE etablissements
+      ADD COLUMN IF NOT EXISTS admin_id UUID REFERENCES users(id) ON DELETE SET NULL,
+      ADD COLUMN IF NOT EXISTS telephone VARCHAR(50),
+      ADD COLUMN IF NOT EXISTS autorisation_numero VARCHAR(100),
+      ADD COLUMN IF NOT EXISTS ia_nom VARCHAR(100),
+      ADD COLUMN IF NOT EXISTS ief_nom VARCHAR(100),
+      ADD COLUMN IF NOT EXISTS email_professionnel VARCHAR(255);
+
+      ALTER TABLE professeurs
+      ADD COLUMN IF NOT EXISTS sexe VARCHAR(10) DEFAULT 'M',
+      ADD COLUMN IF NOT EXISTS cni_numero VARCHAR(50),
+      ADD COLUMN IF NOT EXISTS matricule_solde VARCHAR(50),
+      ADD COLUMN IF NOT EXISTS region VARCHAR(100),
+      ADD COLUMN IF NOT EXISTS ville VARCHAR(100),
+      ADD COLUMN IF NOT EXISTS etablissement_nom VARCHAR(255);
+
+      ALTER TABLE demandes_inscription_office
+      ADD COLUMN IF NOT EXISTS sexe VARCHAR(10) DEFAULT 'M',
+      ADD COLUMN IF NOT EXISTS cni_numero VARCHAR(50),
+      ADD COLUMN IF NOT EXISTS matricule_solde VARCHAR(50),
+      ADD COLUMN IF NOT EXISTS documents_fournis TEXT,
+      ADD COLUMN IF NOT EXISTS autorisation_numero VARCHAR(100),
+      ADD COLUMN IF NOT EXISTS ia_nom VARCHAR(100),
+      ADD COLUMN IF NOT EXISTS ief_nom VARCHAR(100);
+
+      ALTER TABLE jurys_bac
+      ADD COLUMN IF NOT EXISTS type_examen VARCHAR(50) DEFAULT 'BAC',
+      ADD COLUMN IF NOT EXISTS centre_examen_id INT,
+      ADD COLUMN IF NOT EXISTS centre_secondaire VARCHAR(150),
+      ADD COLUMN IF NOT EXISTS identifiant_temporaire VARCHAR(150),
+      ADD COLUMN IF NOT EXISTS mot_de_passe_temporaire VARCHAR(150),
+      ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS date_expiration_acces TIMESTAMP WITH TIME ZONE,
+      ADD COLUMN IF NOT EXISTS statut_acces VARCHAR(50) DEFAULT 'ACTIF';
+
+      ALTER TABLE livrets_scolaires_bac
+      ADD COLUMN IF NOT EXISTS statut_transmission VARCHAR(50) DEFAULT 'EN_ATTENTE',
+      ADD COLUMN IF NOT EXISTS restitue_at TIMESTAMP WITH TIME ZONE;
     `);
   } catch (schemaErr) {
-    console.warn('⚠️ Auto-vérification schéma users :', schemaErr.message);
+    console.warn('⚠️ Auto-vérification schéma :', schemaErr.message);
   }
 
   // Start server
