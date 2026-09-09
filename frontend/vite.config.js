@@ -15,6 +15,8 @@ export default defineConfig({
         'apple-touch-icon.png',
         'android-chrome-192x192.png',
         'android-chrome-512x512.png',
+        'maskable-icon-192x192.png',
+        'maskable-icon-512x512.png',
         'logo_leralscolaire.png'
       ],
       manifest: {
@@ -44,7 +46,13 @@ export default defineConfig({
             purpose: 'any'
           },
           {
-            src: '/android-chrome-512x512.png',
+            src: '/maskable-icon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
+            src: '/maskable-icon-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
