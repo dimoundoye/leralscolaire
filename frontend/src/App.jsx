@@ -16,6 +16,7 @@ import ProfCarteIdentiteOfficeBac from './pages/ProfCarteIdentiteOfficeBac'
 import { AuthProvider } from './contexts/AuthContext'
 import { OfflineProvider } from './contexts/OfflineContext'
 import OfflineBanner from './components/common/OfflineBanner'
+import InstallPwaBanner from './components/common/InstallPwaBanner'
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <AuthProvider>
           <div className="min-h-screen bg-gray-50">
             <OfflineBanner />
+            <InstallPwaBanner />
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/a-propos" element={<AboutPage />} />

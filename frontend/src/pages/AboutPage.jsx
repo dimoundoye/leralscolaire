@@ -233,16 +233,12 @@ export const AboutPage = () => {
 
           <div className="author-presentation-card">
             <div className="author-info-content">
-              <div className="author-badge-role">
-                <Compass size={16} />
-                <span>Porteur du Projet & Concepteur</span>
-              </div>
               <h3 className="author-name">Khadim Ndoye</h3>
               <p className="author-title-sub">Développeur Fullstack & DevOps • Étudiant-Ingénieur à l'ESMT Dakar</p>
 
               <div className="author-text-paragraphs">
                 <p>
-                  <strong>LéralScolaire</strong> est le fruit de mon travail de mémoire de fin d'études en <strong>Licence de Développement d'Applications Réparties (DAR)</strong> à l'<strong>ESMT Dakar (École Supérieure Multinationale des Télécommunications)</strong>.
+                  <strong>LéralScolaire</strong> est le fruit d'un travail de mémoire de fin d'études en <strong>Licence de Développement d'Applications Réparties (DAR)</strong> à l'<strong>ESMT Dakar (École Supérieure Multinationale des Télécommunications)</strong> sous la direction de Dr Moustapha Der enseignant chercheur à l'ESMT.
                 </p>
                 <p>
                   Ce projet s'inscrit dans une vision claire : mettre l'ingénierie logicielle avancée et les pratiques modernes du DevOps au service direct de la modernisation de nos secteurs stratégiques, en particulier l'<strong>Éducation Nationale</strong>. En tant que jeune développeur sénégalais, j'ai la conviction profonde que notre génération a un rôle déterminant à jouer et une contribution majeure à apporter pour accompagner le développement socio-économique de notre pays.

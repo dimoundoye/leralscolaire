@@ -156,7 +156,7 @@ export const LandingPage = () => {
             </p>
             <div className="hero-btn-wrap-left">
               <button onClick={handleAuthAction} className="btn-hero-secondary">
-                <span>Accéder à mon tableau de bord</span>
+                <span>Tableau de bord</span>
                 <ChevronRight size={16} />
               </button>
             </div>
@@ -191,10 +191,6 @@ export const LandingPage = () => {
               />
             </div>
             <div className="logo-hero-content">
-              <div className="stitch-chip-primary">
-                <Sparkles size={14} />
-                <span>Cadre Référentiel du Ministère de l'Éducation</span>
-              </div>
               <h3 className="logo-hero-heading">
                 Une architecture modulaire alignée sur les filières générales, techniques et professionnelles
               </h3>
@@ -302,10 +298,8 @@ export const LandingPage = () => {
                   </div>
                   <div>
                     <h3 className="compare-title">L'Ancien Modèle Papier</h3>
-                    <p className="compare-sub text-red-600">Vulnérable, coûteux et non traçable</p>
                   </div>
                 </div>
-                <span className="compare-badge-pill bg-red-100 text-red-700">OBSOLÈTE</span>
               </div>
 
               <div className="compare-points-list">
@@ -333,11 +327,6 @@ export const LandingPage = () => {
                   </div>
                 </div>
               </div>
-
-              <div className="compare-footer-alert bg-red-50 text-red-800">
-                <AlertTriangle size={16} />
-                <span>Risque élevé d'invalidation du dossier d'examen officiel</span>
-              </div>
             </div>
 
             {/* Standard LéralScolaire */}
@@ -350,10 +339,8 @@ export const LandingPage = () => {
                   </div>
                   <div>
                     <h3 className="compare-title">Le Standard LéralScolaire</h3>
-                    <p className="compare-sub text-teal-700">Scellement numérique d'État certifié</p>
                   </div>
                 </div>
-                <span className="compare-badge-pill bg-teal-100 text-teal-800">HOMOLOGUÉ</span>
               </div>
 
               <div className="compare-points-list">
@@ -380,11 +367,6 @@ export const LandingPage = () => {
                     <p className="point-desc">Les enseignants saisissent les notes sans connexion internet dans les zones isolées ; la synchronisation s'opère automatiquement dès le retour du réseau.</p>
                   </div>
                 </div>
-              </div>
-
-              <div className="compare-footer-alert bg-teal-50 text-teal-900">
-                <ShieldCheck size={16} />
-                <span>Reconnu par l'Office du Bac, Campusen et les universités partenaires</span>
               </div>
             </div>
           </div>
@@ -606,10 +588,6 @@ export const LandingPage = () => {
                 Une suite d'outils pensée pour l'exactitude pédagogique, la simplicité administrative et la robustesse en conditions réelles.
               </p>
             </div>
-            <div className="stitch-standard-box">
-              <span className="text-xs uppercase text-slate-500 font-semibold">Standard MEN :</span>
-              <code className="text-xs bg-slate-200 text-slate-900 px-2 py-1 rounded font-mono font-bold">Conforme Référentiel MEN</code>
-            </div>
           </div>
 
           <div className="stitch-features-grid">
@@ -677,28 +655,7 @@ export const LandingPage = () => {
               <p className="feature-desc">
                 Un simple appareil photo de smartphone suffit à vérifier la validité sur le portail public sécurisé du ministère, garantissant l'accès universel aux familles.
               </p>
-            </div>
-
-            {/* 7. Signature & Scellement Numérique Officiel */}
-            <div className="feature-card feature-card-wide">
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-teal-800 text-white flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[24px]">vpn_key</span>
-                  </div>
-                  <div>
-                    <h3 className="feature-title mb-1">Signature & Scellement Numérique Officiel</h3>
-                    <p className="feature-desc mb-0">
-                      Chaque chef d'établissement dispose d'une signature officielle et d'une habilitation d'État délivrée par le Ministère de l'Éducation Nationale.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <span className="px-3 py-1 rounded bg-slate-200 text-xs font-semibold text-slate-800">Homologation d'État</span>
-                  <span className="px-3 py-1 rounded bg-green-100 text-green-800 text-xs font-bold">100% Inaltérable</span>
-                </div>
-              </div>
-            </div>
+            </div> 
           </div>
         </div>
       </section>
@@ -1003,13 +960,6 @@ export const LandingPage = () => {
                   <span>Accéder à l'espace de gestion</span>
                   <ArrowRight size={16} />
                 </button>
-                <a 
-                  href="#poles" 
-                  className="btn-banner-secondary"
-                >
-                  <span>Consulter le référentiel officiel</span>
-                  <span className="material-symbols-outlined text-[18px]">menu_book</span>
-                </a>
               </div>
             </div>
 
