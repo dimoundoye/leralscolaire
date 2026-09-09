@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const EmargementController = require('../controllers/emargementController');
-const { authenticateToken } = require('../middlewares/auth');
+const authenticateToken = require('../middleware/authMiddleware');
 
 // 1. Borne QR Code Live 20s (Accès public ou surveillant)
 router.get('/live-qr/:etablissementId', EmargementController.getLiveQrToken);

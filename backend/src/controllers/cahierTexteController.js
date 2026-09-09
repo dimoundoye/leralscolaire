@@ -2,6 +2,23 @@ const db = require('../config/db');
 const response = require('../utils/response');
 
 const cahierTexteController = {
+  async uploadFile(req, res, next) {
+    try {
+      if (!req.file) {
+        return response.error(res, 'Aucun fichier fourni.', 400);
+      }
+      const { getUploadedFileUrl } = require('../config/cloudinary');
+      const fichier_url = getUploadedFileUrl(req.file, 'cahier_texte');
+      return res.json({
+        fichier_url,
+        fichier_nom: req.file.originalname
+      });
+    } catch (err) {
+      console.error(err);
+      return response.error(res, "Erreur lors de l'envoi du support de cours.", 500);
+    }
+  },
+
   // 1. Saisie d'une fiche de cours / séance par le professeur
   async createEntry(req, res) {
     const {

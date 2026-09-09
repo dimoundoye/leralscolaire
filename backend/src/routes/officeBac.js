@@ -7,6 +7,8 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { generateConvocationPDF } = require('../utils/convocationPdfService');
+const { generateIUP } = require('../utils/iupGenerator');
+const emailService = require('../services/emailService');
 
 // Middleware : réservé au rôle OFFICE_BAC
 const checkOfficeBac = (req, res, next) => {
@@ -733,8 +735,7 @@ router.post('/etablissements', auth, checkOfficeBac, async (req, res) => {
       return res.status(400).json({ message: 'Cet email d\'administrateur est déjà utilisé.' });
     }
 
-    const regCode = (region || 'DKR').substring(0, 3).toUpperCase();
-    const generatedCode = code_etablissement || `ETAB-${regCode}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const generatedCode = code_etablissement || await generateIUP('ETAB', region || 'Dakar');
 
     const tempPassword = `Etab@${Math.floor(100000 + Math.random() * 900000)}`;
     const salt = await bcrypt.genSalt(10);
@@ -811,7 +812,7 @@ router.post('/professeurs', auth, checkOfficeBac, async (req, res) => {
       return res.status(400).json({ message: 'Cet email de professeur est déjà utilisé.' });
     }
 
-    const generatedIne = identifiant_national || `PROF-SN-${Math.floor(100000 + Math.random() * 900000)}`;
+    const generatedIne = identifiant_national || await generateIUP('ENS', region || 'Dakar');
     const tempPassword = `Prof@${Math.floor(100000 + Math.random() * 900000)}`;
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(tempPassword, salt);
@@ -912,9 +913,19 @@ router.post('/demande-public', async (req, res) => {
       sexe || 'M', ia_nom || null, ief_nom || null
     ]);
 
+    const createdDemande = result.rows[0];
+
+    // Envoi automatique de l'accusé de réception par email (non-bloquant)
+    emailService.sendDemandeReception({
+      to: email,
+      nom: prenom ? `${prenom} ${nom}` : nom,
+      typeDemande: type_demande,
+      referenceId: createdDemande.id
+    }).catch(e => console.error('Erreur email accusé réception:', e.message));
+
     res.status(201).json({
-      message: 'Votre demande d\'inscription avec pièces justificatives a été transmise ! Un agent de l\'Office du BAC validera vos pièces et vous expédiera vos identifiants par email.',
-      demande: result.rows[0]
+      message: 'Votre demande de pré-inscription a été transmise avec succès ! Un accusé de réception vous a été envoyé par email. Nos équipes instruiront votre dossier dans les plus brefs délais.',
+      demande: createdDemande
     });
   } catch (err) {
     console.error(err);
@@ -952,35 +963,44 @@ router.put('/demandes/:id/valider', auth, checkOfficeBac, async (req, res) => {
     let credentials = {};
 
     if (d.type_demande === 'ETABLISSEMENT') {
-      const regCode = (d.region || 'DKR').substring(0, 3).toUpperCase();
-      const generatedCode = d.specialite_ou_code || `ETAB-${regCode}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const generatedCode = d.specialite_ou_code || await generateIUP('ETAB', d.region || 'Dakar');
       const tempPassword = `Etab@${Math.floor(100000 + Math.random() * 900000)}`;
 
       const salt = await bcrypt.genSalt(10);
       const passwordHash = await bcrypt.hash(tempPassword, salt);
 
       const userRes = await db.query(`
-        INSERT INTO users (email, password_hash, role)
-        VALUES ($1, $2, 'ADMIN_ETABLISSEMENT') RETURNING id
-      `, [d.email, passwordHash]);
+        INSERT INTO users (email, password_hash, role, identifiant_national, password_provisoire)
+        VALUES ($1, $2, 'ADMIN_ETABLISSEMENT', $3, $4) RETURNING id
+      `, [d.email, passwordHash, generatedCode, tempPassword]);
 
       await db.query(`
-        INSERT INTO etablissements (code_etablissement, nom, region, ville, admin_id, telephone, autorisation_numero)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-      `, [generatedCode, d.nom, d.region, d.ville, userRes.rows[0].id, d.telephone || '', d.autorisation_numero || '']);
+        INSERT INTO etablissements (code_etablissement, nom, region, ville, admin_id, telephone, autorisation_numero, email_professionnel)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `, [generatedCode, d.nom, d.region, d.ville, userRes.rows[0].id, d.telephone || '', d.autorisation_numero || '', d.email]);
 
-      credentials = { login: d.email, code_etablissement: generatedCode, temp_password: tempPassword };
+      credentials = { login: generatedCode, code_etablissement: generatedCode, temp_password: tempPassword };
+
+      // Envoi de l'email officiel d'approbation
+      emailService.sendDemandeValidee({
+        to: d.email,
+        nom: d.nom,
+        typeDemande: 'ETABLISSEMENT',
+        iup: generatedCode,
+        tempPassword: tempPassword
+      }).catch(e => console.error('Erreur email validation établissement:', e.message));
+
     } else {
-      const generatedIne = d.specialite_ou_code || `PROF-SN-${Math.floor(100000 + Math.random() * 900000)}`;
+      const generatedIne = d.specialite_ou_code || await generateIUP('ENS', d.region || 'Dakar');
       const tempPassword = `Prof@${Math.floor(100000 + Math.random() * 900000)}`;
 
       const salt = await bcrypt.genSalt(10);
       const passwordHash = await bcrypt.hash(tempPassword, salt);
 
       const userRes = await db.query(`
-        INSERT INTO users (email, password_hash, role, identifiant_national)
-        VALUES ($1, $2, 'PROFESSEUR', $3) RETURNING id
-      `, [d.email, passwordHash, generatedIne]);
+        INSERT INTO users (email, password_hash, role, identifiant_national, password_provisoire)
+        VALUES ($1, $2, 'PROFESSEUR', $3, $4) RETURNING id
+      `, [d.email, passwordHash, generatedIne, tempPassword]);
 
       await db.query(`
         INSERT INTO professeurs (id, nom, prenom, telephone, matiere_principale, sexe)
@@ -988,7 +1008,16 @@ router.put('/demandes/:id/valider', auth, checkOfficeBac, async (req, res) => {
         ON CONFLICT (id) DO UPDATE SET nom = $2, prenom = $3, telephone = $4, matiere_principale = $5, sexe = $6
       `, [userRes.rows[0].id, d.nom, d.prenom || '', d.telephone || '', d.specialite_ou_code || 'Général', d.sexe || 'M']);
 
-      credentials = { login: d.email, identifiant_national: generatedIne, temp_password: tempPassword };
+      credentials = { login: generatedIne, identifiant_national: generatedIne, temp_password: tempPassword };
+
+      // Envoi de l'email officiel d'approbation
+      emailService.sendDemandeValidee({
+        to: d.email,
+        nom: [d.prenom, d.nom].filter(Boolean).join(' '),
+        typeDemande: 'PROFESSEUR',
+        iup: generatedIne,
+        tempPassword: tempPassword
+      }).catch(e => console.error('Erreur email validation professeur:', e.message));
     }
 
     await db.query(`
@@ -997,15 +1026,45 @@ router.put('/demandes/:id/valider', auth, checkOfficeBac, async (req, res) => {
       WHERE id = $1
     `, [req.params.id]);
 
-    console.log(`✉️ [EMAIL SIMULÉ ENVOYÉ] Expédié à ${d.email} : Vos accès LeralScolaire Office BAC - Login: ${credentials.login}, Pass: ${credentials.temp_password}`);
-
     res.json({
-      message: `Demande de ${d.nom} validée avec succès ! Les identifiants sécurisés ont été transmis à ${d.email}.`,
-      credentials
+      message: `Demande de ${d.nom} validée avec succès ! Les identifiants et le mot de passe ont été transmis de manière confidentielle à ${d.email}.`
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Erreur validation demande.' });
+  }
+});
+
+// Rejeter une demande publique et envoyer l'email de notification avec motif
+router.put('/demandes/:id/rejeter', auth, checkOfficeBac, async (req, res) => {
+  const { motif_rejet } = req.body;
+  try {
+    const demRes = await db.query('SELECT * FROM demandes_inscription_office WHERE id = $1', [req.params.id]);
+    if (demRes.rows.length === 0) return res.status(404).json({ message: 'Demande non trouvée.' });
+
+    const d = demRes.rows[0];
+    if (d.statut === 'VALIDÉ') return res.status(400).json({ message: 'Impossible de rejeter une demande déjà validée.' });
+
+    const cleanMotif = (motif_rejet || '').trim() || 'Pièces justificatives incomplètes ou non conformes aux critères ministériels.';
+
+    await db.query(`
+      UPDATE demandes_inscription_office
+      SET statut = 'REJETÉ', motif_rejet = $1, updated_at = NOW()
+      WHERE id = $2
+    `, [cleanMotif, req.params.id]);
+
+    // Envoi de l'email officiel de rejet / correction
+    emailService.sendDemandeRejetee({
+      to: d.email,
+      nom: [d.prenom, d.nom].filter(Boolean).join(' '),
+      typeDemande: d.type_demande,
+      motifRejet: cleanMotif
+    }).catch(e => console.error('Erreur email rejet:', e.message));
+
+    res.json({ message: `Demande rejetée avec succès. L'email explicatif a été expédié à ${d.email}.` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Erreur lors du rejet de la demande.' });
   }
 });
 

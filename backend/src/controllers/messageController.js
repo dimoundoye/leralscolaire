@@ -3,6 +3,23 @@ const db = require('../config/db');
 const response = require('../utils/response');
 
 const messageController = {
+  async uploadFile(req, res, next) {
+    try {
+      if (!req.file) {
+        return response.error(res, 'Aucun fichier fourni.', 400);
+      }
+      const { getUploadedFileUrl } = require('../config/cloudinary');
+      const fichier_url = getUploadedFileUrl(req.file, 'messages');
+      return res.json({
+        fichier_url,
+        fichier_nom: req.file.originalname
+      });
+    } catch (err) {
+      console.error(err);
+      return response.error(res, "Erreur lors de l'envoi du fichier.", 500);
+    }
+  },
+
   async sendMessage(req, res, next) {
     const { destinataire_type, destinataire_id, sujet, contenu, etablissement_id, fichier_url, fichier_nom } = req.body;
     try {

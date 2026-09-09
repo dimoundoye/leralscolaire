@@ -1,76 +1,327 @@
 /* CSS for Teacher Portal - LeralScolaire */
+/* Design System inspiré de samalocation — charte harmonisée */
 
 :root {
-  --primary-blue: #131e6c;       /* LeralScolaire Navy Blue */
-  --primary-hover: #1d2c94;
-  --accent-red: #f93f2d;         /* LeralScolaire Coral Red */
-  --accent-hover: #e03323;
-  
-  --bg-slate-50: #f8fafc;
-  --bg-slate-100: #f1f5f9;
-  --text-slate-900: #0f172a;
-  --text-slate-700: #334155;
-  --text-slate-500: #64748b;
-  --border-slate-200: #e2e8f0;
-  
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 20px -2px rgba(19, 30, 108, 0.04), 0 2px 6px -1px rgba(19, 30, 108, 0.02);
-  --shadow-lg: 0 10px 15px -3px rgba(19, 30, 108, 0.05), 0 4px 6px -2px rgba(19, 30, 108, 0.02);
-  --radius-lg: 14px;
+  /* ── Couleurs identitaires LeralScolaire ── */
+  --primary-blue: #1c2680;        /* Indigo Profond (inspiré samalocation hsl 240 68% 25%) */
+  --primary-hover: #2536b0;       /* Indigo hover légèrement plus clair */
+  --accent-red: #f43f2e;          /* Corail énergique (inspiré samalocation hsl 4 90% 58%) */
+  --accent-hover: #d93520;        /* Corail foncé au hover */
+
+  /* ── Palette de fonds ── */
+  --bg-page: #eef2f9;             /* Fond page doux slate-bleuté (vs blanc froid précédent) */
+  --bg-slate-50: #f1f5fb;         /* Surface cards principale */
+  --bg-slate-100: #e8edf7;        /* Surface secondaire, hover */
+  --bg-white: #ffffff;
+
+  /* ── Textes ── */
+  --text-slate-900: #0d1533;      /* Bleu nuit très foncé pour le corps */
+  --text-slate-700: #2d3b6b;      /* Textes secondaires indigo */
+  --text-slate-500: #6270a0;      /* Textes muets teintés */
+
+  /* ── Bordures ── */
+  --border-slate-200: #dde3f4;    /* Bordures légèrement bleutées */
+  --border-focus: #1c2680;
+
+  /* ── Ombres teintées (signature samalocation) ── */
+  --shadow-sm:     0 2px 8px -2px rgba(28, 38, 128, 0.07);
+  --shadow-md:     0 8px 24px -4px rgba(28, 38, 128, 0.11);
+  --shadow-lg:     0 16px 40px -8px rgba(28, 38, 128, 0.15);
+  --shadow-strong: 0 20px 48px -10px rgba(28, 38, 128, 0.22);
+
+  /* ── Dégradés signature ── */
+  --gradient-primary: linear-gradient(135deg, #1c2680 0%, #2d40c0 100%);
+  --gradient-accent:  linear-gradient(135deg, #f43f2e 0%, #f97850 100%);
+  --gradient-card:    linear-gradient(145deg, #ffffff 0%, #f4f7ff 100%);
+
+  /* ── Arrondis ── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
   --radius-xl: 20px;
+  --radius-2xl: 24px;
+
+  /* ── Transitions ── */
   --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* ─── Layout global (style samalocation : h-screen flex overflow-hidden) ─── */
 .teacher-dashboard {
-  background-color: var(--bg-slate-50);
-  min-height: 100vh;
+  background-color: var(--bg-page);
+  height: 100vh;
   color: var(--text-slate-900);
   font-family: 'Poppins', 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   display: flex;
-  flex-direction: column;
+  overflow: hidden;
 }
 
-/* Header */
+/* ─── Sidebar (style samalocation : sticky h-screen bg-card border-r) ─── */
+.td-sidebar {
+  width: 256px;
+  flex-shrink: 0;
+  background: var(--bg-white);
+  border-right: 1px solid var(--border-slate-200);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  scrollbar-width: none;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+  position: relative;
+  z-index: 30;
+}
+
+.td-sidebar::-webkit-scrollbar {
+  display: none;
+}
+
+.td-sidebar.collapsed {
+  width: 72px;
+  padding: 0;
+}
+
+/* Bouton toggle flottant — style samalocation : absolute rounded-full sur le bord droit */
+.tb-toggle-btn {
+  position: absolute;
+  right: -18px;
+  top: 28px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-white);
+  border: 2px solid var(--border-slate-200);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--primary-blue);
+  transition: var(--transition);
+  z-index: 50;
+  flex-shrink: 0;
+}
+
+.tb-toggle-btn:hover {
+  border-color: var(--primary-blue);
+  background: rgba(28, 38, 128, 0.05);
+  transform: scale(1.08);
+  box-shadow: var(--shadow-md);
+}
+
+.sidebar-toggle-row {
+  display: none;
+}
+
+/* ─── Logo dans la sidebar ─── */
+.td-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 32px;
+}
+
+.td-brand h1 {
+  font-size: 17px;
+  font-weight: 800;
+  margin: 0;
+  line-height: 1.2;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.td-sub {
+  font-size: 9.5px;
+  color: var(--text-slate-500);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  margin-top: -2px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.td-sidebar.collapsed .td-brand h1,
+.td-sidebar.collapsed .td-sub {
+  display: none;
+}
+
+/* ─── Bouton collapse sidebar dans la topbar (desktop > 992px uniquement) ─── */
+.sidebar-collapse-btn {
+  display: none !important;
+}
+
+@media (min-width: 993px) {
+  .sidebar-collapse-btn {
+    display: flex !important;
+  }
+  .mobile-burger-btn {
+    display: none !important;
+  }
+}
+
+/* ─── Teacher Card (sidebar profile) ─── */
+.teacher-card {
+  background: rgba(28, 38, 128, 0.04);
+  border: 1px solid var(--border-slate-200);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.td-sidebar.collapsed .teacher-card {
+  justify-content: center;
+  padding: 10px 0;
+  background: transparent;
+  border: none;
+}
+
+.td-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(28, 38, 128, 0.09);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--primary-blue);
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 2px solid rgba(28, 38, 128, 0.15);
+}
+
+.td-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.teacher-info h3 {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-slate-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.teacher-id {
+  font-size: 10px;
+  color: var(--text-slate-500);
+  font-family: monospace;
+  display: block;
+}
+
+.teacher-subj {
+  font-size: 11px;
+  color: var(--primary-blue);
+  font-weight: 700;
+}
+
+.td-sidebar.collapsed .teacher-info {
+  display: none;
+}
+
+/* ─── Sidebar Navigation (style samalocation : items actifs bg-primary text-white pill) ─── */
+.td-nav {
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: none;
+  flex: 1;
+}
+
+.nav-item {
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 11px 12px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-slate-500);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s ease;
+  width: 100%;
+  position: relative;
+}
+
+.nav-item:hover {
+  background: rgba(28, 38, 128, 0.06);
+  color: var(--text-slate-900);
+}
+
+/* Style exact samalocation : item actif = bg-primary text-white, pill complet */
+.nav-item.active {
+  background: var(--primary-blue);
+  color: white;
+  font-weight: 600;
+  border-left: none;
+  border-radius: var(--radius-md);
+  padding-left: 12px;
+}
+
+.nav-item.active:hover {
+  background: var(--primary-hover);
+  color: white;
+  transform: none;
+}
+
+.td-sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 10px 0;
+}
+
+/* ─── Zone principale (flex-1 flex-col overflow) ─── */
+.td-main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ─── Header / Topbar (style samalocation : bg/80 backdrop-blur border-b sticky) ─── */
 .td-header,
 .td-topbar {
-  background: white;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-slate-200);
-  padding: 12px 24px;
+  padding: 12px 24px 12px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   position: sticky;
   top: 0;
-  z-index: 50;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-}
-
-.td-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.td-brand h1 {
-  font-size: 18px;
-  font-weight: 800;
-  margin: 0;
-  line-height: 1.2;
-}
-
-.td-sub {
-  font-size: 10px;
-  color: var(--text-slate-500);
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: .05em;
-  margin-top: -2px;
+  z-index: 40;
+  flex-shrink: 0;
 }
 
 .td-header-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
 }
 
 .icon-action-btn {
@@ -83,7 +334,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--text-slate-700);
+  color: var(--text-slate-500);
   transition: var(--transition);
 }
 
@@ -98,12 +349,12 @@
 
 .badge-dot {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 8px;
-  height: 8px;
+  top: 6px;
+  right: 6px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background-color: var(--accent-red);
+  background: var(--accent-red);
   border: 2px solid white;
 }
 
@@ -120,7 +371,7 @@
 }
 
 .logout-btn {
-  background: rgba(239, 68, 68, 0.08);
+  background: none;
   border: none;
   width: 38px;
   height: 38px;
@@ -129,180 +380,28 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #dc2626;
+  color: var(--text-slate-500);
   transition: var(--transition);
 }
 
 .logout-btn:hover {
-  background: #dc2626;
-  color: white;
+  background: rgba(244, 63, 46, 0.08);
+  color: var(--accent-red);
 }
 
-/* Layout container */
+/* ─── Layout container (zone de scroll) ─── */
 .td-container {
-  display: flex;
   flex: 1;
-  max-width: 1400px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 24px;
-  gap: 24px;
+  overflow-y: auto;
+  padding: 32px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-slate-200) transparent;
 }
 
-/* Sidebar */
-.td-sidebar {
-  width: 280px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.td-sidebar.collapsed {
-  width: 78px;
-}
-
-.sidebar-toggle-row {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.td-sidebar.collapsed .sidebar-toggle-row {
-  justify-content: center;
-}
-
-.tb-toggle-btn {
-  background: var(--bg-slate-100);
-  border: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: var(--text-slate-700);
-  transition: var(--transition);
-}
-
-.tb-toggle-btn:hover {
-  background: var(--border-slate-200);
-}
-
-.teacher-card {
-  background: white;
-  border: 1px solid var(--border-slate-200);
-  border-radius: var(--radius-xl);
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  box-shadow: var(--shadow-sm);
-}
-
-.td-sidebar.collapsed .teacher-card {
-  justify-content: center;
-  padding: 10px 0;
-}
-
-.td-avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: rgba(19, 30, 108, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  color: var(--primary-blue);
-  flex-shrink: 0;
-  overflow: hidden;
-}
-
-.td-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.teacher-info h3 {
-  font-size: 13.5px;
-  font-weight: 700;
-  margin: 0;
-  color: var(--text-slate-900);
-}
-
-.teacher-id {
-  font-size: 10.5px;
-  color: var(--text-slate-500);
-  font-family: monospace;
-  display: block;
-}
-
-.teacher-subj {
-  font-size: 11px;
-  color: var(--primary-blue);
-  font-weight: 600;
-}
-
-.td-sidebar.collapsed .teacher-info {
-  display: none;
-}
-
-.td-nav {
-  background: white;
-  border: 1px solid var(--border-slate-200);
-  border-radius: var(--radius-xl);
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  box-shadow: var(--shadow-sm);
-}
-
-.nav-item {
-  background: none;
-  border: none;
-  text-align: left;
-  padding: 10px 16px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-slate-700);
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  transition: var(--transition);
-}
-
-.nav-item:hover {
-  background: var(--bg-slate-50);
-  color: var(--text-slate-900);
-}
-
-.nav-item.active {
-  background: rgba(19, 30, 108, 0.06);
-  color: var(--primary-blue);
-  font-weight: 700;
-  border-left: 4px solid var(--accent-red);
-  border-radius: 0 8px 8px 0;
-}
-
-.td-sidebar.collapsed .nav-item {
-  justify-content: center;
-  padding: 10px 0;
-}
-
-.td-sidebar.collapsed .nav-item span {
-  display: none;
-}
-
-/* Main Content Area */
 .td-main-content {
-  flex: 1;
-  min-width: 0;
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .tab-pane {
@@ -311,24 +410,30 @@
   gap: 24px;
 }
 
-/* Cards & Layouts */
+/* ─── Cards & Layouts ─── */
 .card-box {
-  background: white;
+  background: var(--bg-white);
   border: 1px solid var(--border-slate-200);
   border-radius: var(--radius-xl);
   padding: 24px;
   box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.card-box:hover {
+  box-shadow: var(--shadow-md);
 }
 
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
+  gap: 20px;
 }
 
+/* ─── Welcome Card ─── */
 .welcome-card {
   grid-column: 1 / -1;
-  background: linear-gradient(135deg, var(--primary-blue), #1d2c94);
+  background: var(--gradient-primary);
   color: white;
   display: flex;
   justify-content: space-between;
@@ -336,6 +441,20 @@
   position: relative;
   overflow: hidden;
   border: none;
+  border-radius: 20px !important;
+  box-shadow: var(--shadow-md);
+}
+
+.welcome-card::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  pointer-events: none;
 }
 
 .welcome-card h2 {
@@ -346,7 +465,7 @@
 }
 
 .welcome-card p {
-  color: rgba(255, 255, 255, 0.9) !important;
+  color: rgba(255, 255, 255, 0.88) !important;
   font-size: 14px;
   margin-bottom: 16px;
   max-width: 80%;
@@ -355,13 +474,15 @@
 .welcome-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
 }
 
 .meta-tag {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.13);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   padding: 6px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 12px;
   display: flex;
   align-items: center;
@@ -371,7 +492,7 @@
 
 .welcome-decor {
   font-size: 130px;
-  opacity: 0.12;
+  opacity: 0.09;
   position: absolute;
   right: 30px;
   bottom: -30px;
@@ -379,70 +500,76 @@
   user-select: none;
 }
 
-/* Stats cards */
-.stat-card {
-  background: white;
-  border: 1px solid var(--border-slate-200);
-  border-radius: var(--radius-xl);
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  box-shadow: var(--shadow-sm);
-  transition: var(--transition);
+/* ─── Stats cards (style samalocation : CardHeader title uppercase + icône à droite, valeur dessous) ─── */
+.teacher-dashboard .stat-card {
+  background: var(--bg-white) !important;
+  border: 1px solid var(--border-slate-200) !important;
+  border-radius: var(--radius-xl) !important;
+  padding: 18px 20px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  align-items: stretch !important;
+  box-shadow: 0 1px 3px rgba(28, 38, 128, 0.05) !important;
+  transition: all 0.2s ease-in-out !important;
+  cursor: pointer !important;
+  position: relative !important;
+  min-height: 110px !important;
 }
 
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+.teacher-dashboard .stat-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 20px -4px rgba(28, 38, 128, 0.12) !important;
+  border-color: rgba(28, 38, 128, 0.2) !important;
 }
 
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.teacher-dashboard .stat-card-header {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 12px !important;
+  width: 100% !important;
 }
 
-.stat-icon.blue {
-  background: rgba(19, 30, 108, 0.08);
-  color: var(--primary-blue);
+.teacher-dashboard .stat-card-title {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: var(--text-slate-500) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  margin: 0 !important;
 }
 
-.stat-icon.red {
-  background: rgba(249, 63, 45, 0.08);
-  color: var(--accent-red);
+.teacher-dashboard .stat-card-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
-.stat-icon.green {
-  background: rgba(34, 197, 94, 0.1);
-  color: #16a34a;
+.teacher-dashboard .stat-card-body {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  width: 100% !important;
 }
 
-.stat-icon.amber {
-  background: rgba(245, 158, 11, 0.08);
-  color: #d97706;
+.teacher-dashboard .stat-card-value {
+  font-size: 26px !important;
+  font-weight: 800 !important;
+  color: var(--text-slate-900) !important;
+  line-height: 1.1 !important;
+  letter-spacing: -0.02em !important;
 }
 
-.stat-info h3 {
-  font-size: 10.5px;
-  color: var(--text-slate-500);
-  margin-bottom: 2px;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  font-weight: 700;
+.teacher-dashboard .stat-card-sub {
+  font-size: 11px !important;
+  color: var(--text-slate-500) !important;
+  margin-top: 4px !important;
+  font-weight: 500 !important;
 }
 
-.stat-value {
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--text-slate-900);
-  line-height: 1;
-}
-
-/* Timetable Consolidated slots */
+/* ─── Timetable Consolidated slots ─── */
 .schedule-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -455,9 +582,10 @@
   font-weight: 700;
   font-size: 12px;
   color: var(--primary-blue);
-  background: var(--bg-slate-100);
+  background: rgba(28, 38, 128, 0.06);
   padding: 8px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-slate-200);
 }
 
 .day-slots-container {
@@ -468,12 +596,12 @@
 }
 
 .schedule-slot-card {
-  background: white;
-  border-left: 4px solid var(--primary-blue);
+  background: var(--bg-white);
+  border-left: 3px solid var(--primary-blue);
   border-right: 1px solid var(--border-slate-200);
   border-top: 1px solid var(--border-slate-200);
   border-bottom: 1px solid var(--border-slate-200);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 10px;
   font-size: 11px;
   box-shadow: var(--shadow-sm);
@@ -481,11 +609,17 @@
   flex-direction: column;
   gap: 4px;
   position: relative;
+  transition: var(--transition);
+}
+
+.schedule-slot-card:hover {
+  box-shadow: var(--shadow-md);
+  border-left-color: var(--accent-red);
 }
 
 .schedule-slot-card.conflict {
   border-left-color: var(--accent-red);
-  background: #fef2f2;
+  background: rgba(244, 63, 46, 0.04);
 }
 
 .slot-time {
@@ -512,15 +646,15 @@
   text-overflow: ellipsis;
 }
 
-/* Modals */
+/* ─── Modals ─── */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(15, 20, 60, 0.4);
-  backdrop-filter: blur(4px);
+  background: rgba(13, 21, 51, 0.45);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -529,25 +663,32 @@
 }
 
 .modal-card {
-  background: white;
-  border-radius: var(--radius-xl);
+  background: var(--bg-white);
+  border-radius: var(--radius-2xl);
   padding: 28px;
   width: 90%;
   max-width: 500px;
   box-shadow: var(--shadow-strong);
   animation: popIn .2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  border: 1px solid var(--border-slate-200);
 }
 
-/* Lists and Lists editing */
+/* ─── Lists and invitations ─── */
 .list-item-invite {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #f8fafc;
+  background: var(--bg-slate-50);
   border: 1px solid var(--border-slate-200);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 16px;
   margin-bottom: 12px;
+  transition: var(--transition);
+}
+
+.list-item-invite:hover {
+  border-color: rgba(28, 38, 128, 0.15);
+  box-shadow: var(--shadow-sm);
 }
 
 .invite-details h4 {
@@ -569,15 +710,16 @@
 }
 
 .btn-sm {
-  padding: 6px 12px;
+  padding: 6px 14px;
   font-size: 11px;
   font-weight: 700;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 4px;
   border: none;
+  transition: var(--transition);
 }
 
 .btn-sm.accept {
@@ -585,20 +727,31 @@
   color: white;
 }
 
+.btn-sm.accept:hover {
+  background: #059669;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+}
+
 .btn-sm.refuse {
-  background: #ef4444;
+  background: var(--accent-red);
   color: white;
 }
 
-/* Selection filter boxes */
+.btn-sm.refuse:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 4px 10px rgba(244, 63, 46, 0.3);
+}
+
+/* ─── Selection filter boxes ─── */
 .filter-bar {
   display: flex;
   gap: 16px;
-  background: white;
+  background: var(--bg-white);
   border: 1px solid var(--border-slate-200);
   border-radius: var(--radius-lg);
   padding: 16px;
   align-items: center;
+  box-shadow: var(--shadow-sm);
 }
 
 .filter-bar label {
@@ -610,14 +763,22 @@
 
 .filter-bar select {
   padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border-slate-200);
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-slate-200);
   font-size: 13px;
   outline: none;
   min-width: 150px;
+  color: var(--text-slate-900);
+  background: var(--bg-slate-50);
+  transition: var(--transition);
 }
 
-/* Attendance Roster */
+.filter-bar select:focus {
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(28, 38, 128, 0.08);
+}
+
+/* ─── Attendance Roster ─── */
 .roster-table {
   width: 100%;
   border-collapse: collapse;
@@ -672,7 +833,7 @@
   color: #b45309;
 }
 
-/* Notifications toasts & popups */
+/* ─── Notifications toasts & popups ─── */
 .toast-container {
   position: fixed;
   bottom: 24px;
@@ -681,17 +842,18 @@
 }
 
 .toast {
-  background: #1e293b;
+  background: var(--gradient-primary);
   color: white;
-  border-radius: 10px;
-  padding: 12px 18px;
-  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+  border-radius: var(--radius-lg);
+  padding: 13px 20px;
+  box-shadow: var(--shadow-strong);
   display: flex;
   align-items: center;
   gap: 10px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   animation: slideInRight .3s ease-out forwards;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Animations */
@@ -825,26 +987,19 @@
   .welcome-decor {
     display: none !important;
   }
-  .stat-card {
+  .teacher-dashboard .stat-card {
     grid-column: span 1 !important;
     width: 100% !important;
     box-sizing: border-box !important;
-    padding: 12px 10px !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 6px !important;
+    padding: 12px 14px !important;
+    min-height: 96px !important;
   }
-  .stat-card:last-child { grid-column: span 1 !important; }
-  .stat-card .stat-icon {
-    width: 36px !important;
-    height: 36px !important;
+  .teacher-dashboard .stat-card:last-child { grid-column: span 1 !important; }
+  .teacher-dashboard .stat-card-value {
+    font-size: 20px !important;
   }
-  .stat-card h3 {
-    font-size: 11px !important;
-    line-height: 1.2 !important;
-  }
-  .stat-card .stat-value {
-    font-size: 18px !important;
+  .teacher-dashboard .stat-card-sub {
+    font-size: 10px !important;
   }
   .card-box, .tab-pane {
     padding: 14px 10px !important;
@@ -870,13 +1025,39 @@
   .presence-toggle {
     max-width: 100%;
   }
-  .presence-btn {
-    padding: 5px 10px;
-    font-size: 11px;
+  .charts-grid {
+    grid-template-columns: 1fr !important;
   }
+
+  .schedule-grid {
+    display: flex !important;
+    overflow-x: auto !important;
+    gap: 10px !important;
+    padding-bottom: 12px !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .schedule-grid > div {
+    min-width: 140px !important;
+    flex-shrink: 0 !important;
+  }
+
   .tab-pane[style*="gridTemplateColumns"] {
     grid-template-columns: 1fr !important;
     height: auto !important;
+  }
+}
+
+/* ─── Grille des 2 graphiques (Desktop 2 cols, Tablette/Mobile 1 col) ─── */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 992px) {
+  .charts-grid {
+    grid-template-columns: 1fr !important;
   }
 }
 

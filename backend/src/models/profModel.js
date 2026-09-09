@@ -9,6 +9,14 @@ const ProfModel = {
     return rows[0]?.id;
   },
 
+  async getEtablissementByAdminId(adminId) {
+    const { rows } = await db.query(
+      'SELECT id, nom, region, ville, code_etablissement FROM etablissements WHERE admin_id = $1',
+      [adminId]
+    );
+    return rows[0];
+  },
+
   async listProfesseurs(etablissementId) {
     const { rows } = await db.query(`
       SELECT u.id, u.email, u.identifiant_national, p.nom, p.prenom, p.telephone, p.matiere_principale, pe.statut, pe.date_invitation, pe.droit_envoi_message
@@ -27,10 +35,10 @@ const ProfModel = {
     return rows.length > 0;
   },
 
-  async createProfUser(email, passwordHash, client = db) {
+  async createProfUser(email, passwordHash, identifiantNational = null, tempPassword = null, client = db) {
     const { rows } = await client.query(
-      "INSERT INTO users (email, password_hash, role) VALUES ($1, $2, 'PROFESSEUR') RETURNING id",
-      [email, passwordHash]
+      "INSERT INTO users (email, password_hash, role, identifiant_national, password_provisoire) VALUES ($1, $2, 'PROFESSEUR', $3, $4) RETURNING id",
+      [email, passwordHash, identifiantNational, tempPassword]
     );
     return rows[0]?.id;
   },
@@ -317,7 +325,7 @@ const ProfModel = {
 
     // Get note entries per class, subject, period
     const { rows: noteCounts } = await db.query(
-      `SELECT ic.classe_id, n.matiere_id, n.trimestre, n.semestre, n.eleve_id
+      `SELECT ic.classe_id, n.matiere_id, n.trimestre, n.semestre, n.eleve_id, n.valeur
        FROM notes n
        JOIN inscription_classes ic ON n.eleve_id = ic.eleve_id
        WHERE n.matiere_id IN (
@@ -328,17 +336,26 @@ const ProfModel = {
       [profId]
     );
 
-    // Map counts back to classes
+    // Map counts and compute averages back to classes
     const classesWithStats = classes.map(c => {
       const totalStudents = studentCountsMap[c.classe_id] || 0;
       
       // Filter note entries for this class and subject
       const entries = noteCounts.filter(n => n.classe_id === c.classe_id && n.matiere_id === c.matiere_id);
       
+      const validNotes = entries.filter(n => n.valeur !== null && n.valeur !== undefined);
+      const avgGrade = validNotes.length > 0 
+        ? Math.round((validNotes.reduce((acc, curr) => acc + parseFloat(curr.valeur), 0) / validNotes.length) * 100) / 100 
+        : null;
+
       // Let's compute rates per period (S1, S2)
       const periodStats = {};
       [1, 2].forEach(pNum => {
         const pEntries = entries.filter(n => n.trimestre === pNum || n.semestre === pNum);
+        const validPeriodNotes = pEntries.filter(n => n.valeur !== null && n.valeur !== undefined);
+        const periodAvg = validPeriodNotes.length > 0 
+          ? Math.round((validPeriodNotes.reduce((acc, curr) => acc + parseFloat(curr.valeur), 0) / validPeriodNotes.length) * 100) / 100 
+          : null;
         
         const totalEntered = pEntries.length;
         const expected = totalStudents * 2;
@@ -347,14 +364,17 @@ const ProfModel = {
         periodStats[`S${pNum}`] = {
           entered: totalEntered,
           expected: expected,
-          rate: rate
+          rate: rate,
+          average: periodAvg
         };
       });
 
       return {
         ...c,
         total_students: totalStudents,
-        period_stats: periodStats
+        period_stats: periodStats,
+        moyenne_matiere: avgGrade,
+        total_notes: validNotes.length
       };
     });
 

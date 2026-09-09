@@ -253,7 +253,7 @@ const TeacherCahierTexteTab = ({
                       onClick={async () => {
                         if (window.confirm('Supprimer cette séance du cahier de texte ?')) {
                           const token = localStorage.getItem('token');
-                          await fetch(`http://localhost:5002/api/cahier-texte/${entry.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+                          await fetch(`/api/cahier-texte/${entry.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
                           fetchCahierEntries();
                         }
                       }}
@@ -293,7 +293,7 @@ const TeacherCahierTexteTab = ({
 
                 {entry.fichier_url && (
                   <a 
-                    href={`http://localhost:5002${entry.fichier_url}`} 
+                    href={`${entry.fichier_url}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="msg-file-attachment file-other"

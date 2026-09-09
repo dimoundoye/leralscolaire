@@ -160,7 +160,7 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
               <option value="">-- Choisir un élève --</option>
               {elevesList.map((e) => (
                 <option key={e.id} value={e.id}>
-                  {e.prenom} {e.nom} {e.classe_nom ? `(${e.classe_nom})` : ''} - INE: {e.identifiant_national || e.ine || 'N/A'}
+                  {e.prenom} {e.nom} {e.classe_nom ? `(${e.classe_nom})` : ''} - IUP: {e.identifiant_national || e.ine || 'N/A'}
                 </option>
               ))}
             </select>

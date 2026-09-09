@@ -70,8 +70,8 @@ const StudentDisciplineView = () => {
           <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#131e6c' }}>{eleve.prenom} {eleve.nom}</div>
         </div>
         <div>
-          <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>INE</span>
-          <div style={{ fontWeight: 700, color: '#f93f2d' }}>{eleve.identifiant_national || 'N/A'}</div>
+          <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>IUP</span>
+          <div style={{ fontWeight: 700, color: '#131e6c' }}>{eleve.identifiant_national || 'N/A'}</div>
         </div>
         <div>
           <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Classe</span>

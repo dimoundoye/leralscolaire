@@ -68,7 +68,7 @@ const AdminSettingsTab = ({
               <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--slate-500)', textTransform: 'uppercase', marginBottom: '6px', display: 'block' }}>Signature du Directeur</label>
               <div className="photo-upload-container" style={{ minHeight: '120px', position: 'relative', cursor: 'pointer', border: '1.5px dashed var(--slate-300)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }} onClick={() => signatureInputRef.current.click()}>
                 {signaturePreview || profile.signature_url ? (
-                  <img src={signaturePreview || `http://localhost:5002${profile.signature_url}`} alt="Signature" style={{ maxWidth: '100%', maxHeight: '100px', objectFit: 'contain' }} />
+                  <img src={signaturePreview || `${profile.signature_url}`} alt="Signature" style={{ maxWidth: '100%', maxHeight: '100px', objectFit: 'contain' }} />
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: 'var(--slate-400)', fontSize: '11px' }}>
                     <Edit size={24} />
@@ -99,7 +99,7 @@ const AdminSettingsTab = ({
               <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--slate-500)', textTransform: 'uppercase', marginBottom: '6px', display: 'block' }}>Cachet Numérique de l'Établissement</label>
               <div className="photo-upload-container" style={{ minHeight: '120px', position: 'relative', cursor: 'pointer', border: '1.5px dashed var(--slate-300)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }} onClick={() => cachetInputRef.current.click()}>
                 {cachetPreview || profile.cachet_url ? (
-                  <img src={cachetPreview || `http://localhost:5002${profile.cachet_url}`} alt="Cachet" style={{ maxWidth: '100%', maxHeight: '100px', objectFit: 'contain' }} />
+                  <img src={cachetPreview || `${profile.cachet_url}`} alt="Cachet" style={{ maxWidth: '100%', maxHeight: '100px', objectFit: 'contain' }} />
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: 'var(--slate-400)', fontSize: '11px' }}>
                     <Edit size={24} />

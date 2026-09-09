@@ -132,7 +132,7 @@ const AdminCahierTexteTab = ({
 
                   {entry.fichier_url && (
                     <a 
-                      href={`http://localhost:5002${entry.fichier_url}`} 
+                      href={`${entry.fichier_url}`} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       style={{ marginTop: '10px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--primary-color)', background: '#eff6ff', padding: '6px 12px', borderRadius: '8px', border: '1px solid #bfdbfe', fontWeight: 600 }}

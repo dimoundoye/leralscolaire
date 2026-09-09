@@ -187,7 +187,7 @@ const StudentGradesTab = ({
                       </span>
                     ) : (
                       <a 
-                        href={`http://localhost:5002/api/documents/bulletin/${bull.eleve_id}?semestre=${bull.semestre}&token=${token}`}
+                        href={`/api/documents/bulletin/${bull.eleve_id}?semestre=${bull.semestre}&token=${token}`}
                         target="_blank" 
                         rel="noopener noreferrer" 
                         className="download-action-btn"

@@ -5,10 +5,27 @@ const fs = require('fs');
 const studentController = require('../controllers/studentController');
 const auth = require('../middleware/authMiddleware');
 
+const { isCloudinaryConfigured, cloudinary } = require('../config/cloudinary');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
 const upload = multer({ dest: 'uploads/' });
 
-const photoAndJustifUpload = multer({
-  storage: multer.diskStorage({
+let photoAndJustifStorage;
+if (isCloudinaryConfigured) {
+  photoAndJustifStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: async (req, file) => {
+      const isPdf = file.mimetype === 'application/pdf' || file.originalname.toLowerCase().endsWith('.pdf');
+      const subFolder = file.fieldname === 'photo' ? 'photos' : 'justificatifs_inapte';
+      return {
+        folder: `leralscolaire/${subFolder}`,
+        resource_type: isPdf ? 'raw' : 'auto',
+        public_id: `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9_-]/g, '_')}`
+      };
+    }
+  });
+} else {
+  photoAndJustifStorage = multer.diskStorage({
     destination: (req, file, cb) => {
       let dir;
       if (file.fieldname === 'photo') {
@@ -22,9 +39,13 @@ const photoAndJustifUpload = multer({
       cb(null, dir);
     },
     filename: (req, file, cb) => {
-      cb(null, Date.now() + '-' + file.originalname);
+      cb(null, Date.now() + '-' + file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_'));
     }
-  }),
+  });
+}
+
+const photoAndJustifUpload = multer({
+  storage: photoAndJustifStorage,
   fileFilter: (req, file, cb) => {
     if (file.fieldname === 'justificatif_inapte') {
       const allowed = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
@@ -34,7 +55,7 @@ const photoAndJustifUpload = multer({
     }
     cb(null, true);
   },
-  limits: { fileSize: 5 * 1024 * 1024 } // 5 MB max
+  limits: { fileSize: 10 * 1024 * 1024 } // 10 MB max
 });
 
 const fileFields = photoAndJustifUpload.fields([

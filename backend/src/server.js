@@ -20,7 +20,7 @@ const professeursPortalRoutes = require('./routes/professeursPortal');
 const officeBacRoutes = require('./routes/officeBac');
 
 const app = express();
-const PORT = 5002; // Force port 5002
+const PORT = process.env.PORT || 5002;
 
 const path = require('path');
 
@@ -62,6 +62,10 @@ const emargementRoutes = require('./routes/emargement');
 app.use('/api/emargement', emargementRoutes);
 app.use('/api/jury', juryBacRoutes);
 app.use('/api/discipline', disciplineRoutes);
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', time: new Date().toISOString() });
+});
 
 app.get('/', (req, res) => {
   res.send('Serveur LeralScolaire opérationnel (MVC) 🚀');

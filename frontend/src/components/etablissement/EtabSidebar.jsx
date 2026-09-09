@@ -60,9 +60,13 @@ const EtabSidebar = ({ activeTab, profile, elevesCount, preInscriptionsCount, un
   return (
     <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       {/* Brand logo space at the top */}
-      <div className="sidebar-brand">
-        <ShieldCheck size={20} className="text-accent" />
-        {!isCollapsed && <span className="brand-name">Leral<span>Scolaire</span></span>}
+      <div className="sidebar-brand" style={{ cursor: 'pointer' }} onClick={() => navigate('/')} title="Retour à l'accueil">
+        <img 
+          src="/logo_leralscolaire.png" 
+          alt="LeralScolaire" 
+          className="sidebar-brand-logo" 
+        />
+        {!isCollapsed && <span className="brand-name">LeralScolaire</span>}
       </div>
 
       {/* User Info Profile Card */}

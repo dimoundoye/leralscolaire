@@ -33,19 +33,19 @@ const PreInscriptionModel = {
     const {
       classe_id, etablissement_id, nom, prenom, sexe, date_naissance,
       lieu_naissance, nationalite, telephone, coordonnees_parent, statut,
-      identifiant_existant, photo_url
+      identifiant_existant, photo_url, email
     } = data;
 
     const { rows } = await db.query(`
       INSERT INTO pre_inscriptions (
         classe_id, etablissement_id, nom, prenom, sexe, date_naissance,
         lieu_naissance, nationalite, telephone, coordonnees_parent, statut,
-        identifiant_existant, photo_url
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *
+        identifiant_existant, photo_url, email
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *
     `, [
       classe_id, etablissement_id, nom, prenom, sexe || 'M', date_naissance,
       lieu_naissance, nationalite, telephone, coordonnees_parent, statut || 'APTE',
-      identifiant_existant || null, photo_url
+      identifiant_existant || null, photo_url, email || null
     ]);
     return rows[0];
   },
@@ -62,25 +62,31 @@ const PreInscriptionModel = {
   },
 
   async getPreInscriptionById(id) {
-    const { rows } = await db.query('SELECT * FROM pre_inscriptions WHERE id = $1', [id]);
+    const { rows } = await db.query(`
+      SELECT p.*, e.region as etablissement_region, e.nom as etablissement_nom, c.nom as classe_nom
+      FROM pre_inscriptions p
+      LEFT JOIN etablissements e ON p.etablissement_id = e.id
+      LEFT JOIN classes c ON p.classe_id = c.id
+      WHERE p.id = $1
+    `, [id]);
     return rows[0];
   },
 
   async updatePreInscription(id, fields) {
     const {
       nom, prenom, sexe, date_naissance, lieu_naissance,
-      nationalite, telephone, coordonnees_parent, statut, identifiant_existant
+      nationalite, telephone, coordonnees_parent, statut, identifiant_existant, email
     } = fields;
 
     const { rows } = await db.query(`
       UPDATE pre_inscriptions
       SET nom = $1, prenom = $2, sexe = $3, date_naissance = $4, lieu_naissance = $5,
           nationalite = $6, telephone = $7, coordonnees_parent = $8, statut = $9,
-          identifiant_existant = $10
-      WHERE id = $11 RETURNING *
+          identifiant_existant = $10, email = $11
+      WHERE id = $12 RETURNING *
     `, [
       nom, prenom, sexe || 'M', date_naissance, lieu_naissance,
-      nationalite, telephone, coordonnees_parent, statut, identifiant_existant || null, id
+      nationalite, telephone, coordonnees_parent, statut, identifiant_existant || null, email || null, id
     ]);
     return rows[0];
   },
@@ -95,12 +101,12 @@ const PreInscriptionModel = {
       UPDATE eleves
       SET etablissement_id = $1, nom = $2, prenom = $3, sexe = $4, date_naissance = $5,
           lieu_naissance = $6, nationalite = $7, telephone = $8, coordonnees_parent = $9, statut = $10,
-          photo_url = COALESCE($11, photo_url)
-      WHERE id = $12
+          photo_url = COALESCE($11, photo_url), email = COALESCE($12, email)
+      WHERE id = $13
     `, [
       data.etablissement_id, data.nom, data.prenom, data.sexe || 'M', data.date_naissance,
       data.lieu_naissance, data.nationalite, data.telephone, data.coordonnees_parent, data.statut,
-      data.photo_url, eleveId
+      data.photo_url, data.email || null, eleveId
     ]);
     return true;
   },
@@ -135,12 +141,12 @@ const PreInscriptionModel = {
       INSERT INTO eleves (
         identifiant_national, user_id, etablissement_id, nom, prenom, sexe,
         date_naissance, lieu_naissance, nationalite, telephone,
-        coordonnees_parent, statut, photo_url
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id
+        coordonnees_parent, statut, photo_url, email
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id
     `, [
       data.identifiant_national, data.user_id, data.etablissement_id, data.nom, data.prenom, data.sexe || 'M',
       data.date_naissance, data.lieu_naissance, data.nationalite, data.telephone,
-      data.coordonnees_parent, data.statut, data.photo_url
+      data.coordonnees_parent, data.statut, data.photo_url, data.email || null
     ]);
     return rows[0]?.id;
   }

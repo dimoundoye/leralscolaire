@@ -1,0 +1,64 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: leralscolaire-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASS:-Passer@2026#}
+      POSTGRES_DB: ${DB_NAME:-leralscolaire}
+    ports:
+      - "5433:5432"
+    volumes:
+      - leral_pgdata:/var/lib/postgresql/data
+    networks:
+      - leralscolaire-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-leralscolaire}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: leralscolaire-backend
+    restart: always
+    env_file:
+      - ./backend/.env
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      PORT: 5002
+    ports:
+      - "5002:5002"
+    volumes:
+      - leral_uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - leralscolaire-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: leralscolaire-frontend
+    restart: always
+    ports:
+      - "8082:80"
+    depends_on:
+      - backend
+    networks:
+      - leralscolaire-network
+
+networks:
+  leralscolaire-network:
+    driver: bridge
+
+volumes:
+  leral_pgdata:
+  leral_uploads:

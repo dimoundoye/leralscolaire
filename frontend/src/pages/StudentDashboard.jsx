@@ -29,7 +29,7 @@ import { StudentSidebar, StudentMobileDrawer } from '../components/eleve/Student
 import StudentTopbar from '../components/eleve/StudentTopbar';
 import './StudentDashboard.css';
 
-const API_BASE_URL = 'http://localhost:5002/api';
+const API_BASE_URL = '/api';
 
 const normalizeNotesData = (rawNotes) => {
   if (!rawNotes || typeof rawNotes !== 'object') return {};
@@ -985,7 +985,7 @@ const StudentDashboard = () => {
             <div className="cv-identity-banner">
               <div className="cv-photo-frame">
                 {profile?.photo_url ? (
-                  <img src={`http://localhost:5002${profile.photo_url}`} alt="Photo d'identité" className="cv-photo-img" />
+                  <img src={`${profile.photo_url}`} alt="Photo d'identité" className="cv-photo-img" />
                 ) : (
                   <div className="cv-photo-fallback">
                     {profile ? `${profile.prenom[0]}${profile.nom[0]}` : 'EL'}
@@ -2326,7 +2326,7 @@ const StudentDashboard = () => {
                         </span>
                       ) : (
                         <a 
-                          href={`http://localhost:5002/api/documents/bulletin/${bull.eleve_id}?semestre=${bull.semestre}&token=${token}`}
+                          href={`/api/documents/bulletin/${bull.eleve_id}?semestre=${bull.semestre}&token=${token}`}
                           target="_blank" 
                           rel="noopener noreferrer" 
                           className="download-action-btn"

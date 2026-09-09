@@ -15,7 +15,7 @@ export default function QrCodeLiveDisplay() {
 
   const fetchLiveToken = async () => {
     try {
-      const res = await fetch(`http://localhost:5002/api/emargement/live-qr/${targetEtabId}`);
+      const res = await fetch(`/api/emargement/live-qr/${targetEtabId}`);
       const data = await res.json();
       if (data.success) {
         setQrToken(data.token);

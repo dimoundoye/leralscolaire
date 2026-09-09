@@ -69,7 +69,7 @@
   letter-spacing: -0.5px;
   white-space: nowrap;
 }
-.ob-logo-text span { color: var(--accent-color); }
+.ob-logo-text span { color: var(--primary-color); }
 
 .ob-collapse-btn {
   background: var(--slate-100);

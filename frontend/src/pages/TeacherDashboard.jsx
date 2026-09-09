@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { useNavigate, useParams } from 'react-router-dom';
+import { offlineFetch } from '../services/api';
 import { 
   LayoutDashboard, Calendar, Users, FileText, CheckCircle2, Clock, 
   Settings, LogOut, Menu, X, Bell, Sparkles, Plus, Edit, Trash2, 
@@ -42,6 +43,14 @@ const TeacherDashboard = () => {
   const [dashboardDetails, setDashboardDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() =>
+    localStorage.getItem('teacher_sidebar_collapsed') === 'true'
+  );
+  const toggleSidebar = () => setIsSidebarCollapsed(prev => {
+    const next = !prev;
+    localStorage.setItem('teacher_sidebar_collapsed', String(next));
+    return next;
+  });
   const [toast, setToast] = useState({ message: '', type: null });
   const [searchTermSchools, setSearchTermSchools] = useState('');
   const [searchTermClasses, setSearchTermClasses] = useState('');
@@ -66,7 +75,7 @@ const TeacherDashboard = () => {
     formData.append('fichier', file);
 
     try {
-      const res = await fetch('http://localhost:5002/api/messages/upload', {
+      const res = await fetch('/api/messages/upload', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
@@ -114,8 +123,27 @@ const TeacherDashboard = () => {
   const [auditLoading, setAuditLoading] = useState(false);
   const [activeMotifText, setActiveMotifText] = useState('');
 
-  // Academic Year filter for Teacher Dashboard
-  const [profAnneeFilter, setProfAnneeFilter] = useState('2026-2027');
+  // Academic Years dynamically extracted from classes & schedule (no hardcoding)
+  const availableAcademicYears = React.useMemo(() => {
+    const yearsSet = new Set();
+    classes.forEach(c => { if (c.annee_scolaire) yearsSet.add(c.annee_scolaire); });
+    schedule.forEach(s => { if (s.annee_scolaire) yearsSet.add(s.annee_scolaire); });
+    if (dashboardDetails?.classes) {
+      dashboardDetails.classes.forEach(c => { if (c.annee_scolaire) yearsSet.add(c.annee_scolaire); });
+    }
+    const arr = Array.from(yearsSet).sort().reverse();
+    return arr.length > 0 ? arr : ['2025-2026', '2026-2027'];
+  }, [classes, schedule, dashboardDetails]);
+
+  const [profAnneeFilter, setProfAnneeFilter] = useState('');
+
+  // Automatically default to the latest academic year with data when loaded
+  useEffect(() => {
+    if (availableAcademicYears.length > 0 && (!profAnneeFilter || !availableAcademicYears.includes(profAnneeFilter))) {
+      setProfAnneeFilter(availableAcademicYears[0]);
+    }
+  }, [availableAcademicYears, profAnneeFilter]);
+
   const activeClasses = classes.filter(c => c.annee_scolaire === profAnneeFilter || !c.annee_scolaire);
   const activeSchedule = schedule.filter(s => s.annee_scolaire === profAnneeFilter || !s.annee_scolaire);
 
@@ -229,7 +257,7 @@ const TeacherDashboard = () => {
   const fetchChatChannels = async () => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5002/api/messages/channels', {
+      const res = await fetch('/api/messages/channels', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -246,14 +274,14 @@ const TeacherDashboard = () => {
     try {
       const params = new URLSearchParams({ type: contact.type, target_id: contact.id });
       if (contact.etablissement_id) params.append('etablissement_id', contact.etablissement_id);
-      const res = await fetch(`http://localhost:5002/api/messages/history?${params}`, {
+      const res = await fetch(`/api/messages/history?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
         const data = await res.json();
         setChatHistory(data);
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-        const detRes = await fetch('http://localhost:5002/api/professeurs-portal/dashboard-details', { headers: { 'Authorization': `Bearer ${token}` } });
+        const detRes = await fetch('/api/professeurs-portal/dashboard-details', { headers: { 'Authorization': `Bearer ${token}` } });
         if (detRes.ok) setDashboardDetails(await detRes.json());
       }
     } catch (err) { console.error(err); } finally { setChatLoading(false); }
@@ -265,7 +293,7 @@ const TeacherDashboard = () => {
     const token = localStorage.getItem('token');
     const destType = activeChatContact.type === 'ADMIN' ? 'ADMIN_ETABLISSEMENT' : activeChatContact.type === 'OFFICE_BAC' ? 'OFFICE_BAC' : 'CLASSE';
     try {
-      const res = await fetch('http://localhost:5002/api/messages', {
+      const res = await offlineFetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
@@ -277,11 +305,16 @@ const TeacherDashboard = () => {
           fichier_url: attachedFile ? attachedFile.url : null,
           fichier_nom: attachedFile ? attachedFile.name : null
         })
-      });
+      }, 'Envoi message');
       if (res.ok) {
+        const data = await res.json();
         setChatInput('');
         setAttachedFile(null);
-        fetchChatHistory(activeChatContact);
+        if (data.offline) {
+          showNotification('Message enregistré en local (⏳ sera envoyé automatiquement dès le retour du réseau) !', 'info');
+        } else {
+          fetchChatHistory(activeChatContact);
+        }
       } else {
         const errData = await res.json();
         showNotification(errData.message || "Erreur lors de l'envoi du message.", 'error');
@@ -315,7 +348,7 @@ const TeacherDashboard = () => {
         }
 
         // Fetch Profile
-        const profRes = await fetch('http://localhost:5002/api/professeurs-portal/profile', { headers: getHeaders() });
+        const profRes = await fetch('/api/professeurs-portal/profile', { headers: getHeaders() });
         if (profRes.status === 401) {
           navigate('/auth');
           return;
@@ -333,32 +366,32 @@ const TeacherDashboard = () => {
         }
 
         // Fetch Summary
-        const sumRes = await fetch('http://localhost:5002/api/professeurs-portal/summary', { headers: getHeaders() });
+        const sumRes = await fetch('/api/professeurs-portal/summary', { headers: getHeaders() });
         const sumData = await sumRes.json();
         if (sumRes.ok) setSummary(sumData);
 
         // Fetch Consolidated Dashboard Details
-        const detRes = await fetch('http://localhost:5002/api/professeurs-portal/dashboard-details', { headers: getHeaders() });
+        const detRes = await fetch('/api/professeurs-portal/dashboard-details', { headers: getHeaders() });
         const detData = await detRes.json();
         if (detRes.ok) setDashboardDetails(detData);
 
         // Fetch Invitations
-        const invRes = await fetch('http://localhost:5002/api/professeurs-portal/invitations', { headers: getHeaders() });
+        const invRes = await fetch('/api/professeurs-portal/invitations', { headers: getHeaders() });
         const invData = await invRes.json();
         if (invRes.ok) setInvitations(invData);
 
         // Fetch Affiliations
-        const affRes = await fetch('http://localhost:5002/api/professeurs-portal/summary', { headers: getHeaders() }); // reusing dashboard details
+        const affRes = await fetch('/api/professeurs-portal/summary', { headers: getHeaders() }); // reusing dashboard details
         
         // Fetch active affiliations list
-        const activeAffRes = await fetch('http://localhost:5002/api/professeurs-portal/profile', { headers: getHeaders() });
+        const activeAffRes = await fetch('/api/professeurs-portal/profile', { headers: getHeaders() });
         
         // Load classes and schedules
-        const classesRes = await fetch('http://localhost:5002/api/professeurs-portal/classes', { headers: getHeaders() });
+        const classesRes = await fetch('/api/professeurs-portal/classes', { headers: getHeaders() });
         const classesData = await classesRes.json();
         if (classesRes.ok) setClasses(classesData);
 
-        const scheduleRes = await fetch('http://localhost:5002/api/professeurs-portal/schedule', { headers: getHeaders() });
+        const scheduleRes = await fetch('/api/professeurs-portal/schedule', { headers: getHeaders() });
         const scheduleData = await scheduleRes.json();
         if (scheduleRes.ok) setSchedule(scheduleData);
 
@@ -386,7 +419,7 @@ const TeacherDashboard = () => {
     try {
       const params = new URLSearchParams();
       if (cahierFilterClasse) params.append('classe_id', cahierFilterClasse);
-      const res = await fetch(`http://localhost:5002/api/cahier-texte/professeur?${params}`, {
+      const res = await fetch(`/api/cahier-texte/professeur?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -413,7 +446,7 @@ const TeacherDashboard = () => {
     formData.append('fichier', file);
 
     try {
-      const res = await fetch('http://localhost:5002/api/cahier-texte/upload', {
+      const res = await fetch('/api/cahier-texte/upload', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
@@ -443,7 +476,7 @@ const TeacherDashboard = () => {
 
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5002/api/cahier-texte', {
+      const res = await offlineFetch('/api/cahier-texte', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
@@ -459,10 +492,15 @@ const TeacherDashboard = () => {
           fichier_url: cahierFile?.fichier_url || null,
           fichier_nom: cahierFile?.fichier_nom || null
         })
-      });
+      }, 'Cahier de texte');
 
       if (res.ok) {
-        showNotification('Séance enregistrée dans le Cahier de Texte.', 'success');
+        const data = await res.json();
+        if (data.offline) {
+          showNotification('Séance enregistrée localement (⏳ synchronisation dès le retour du réseau) !', 'info');
+        } else {
+          showNotification('Séance enregistrée dans le Cahier de Texte.', 'success');
+        }
         setCahierTitre('');
         setCahierContenu('');
         setCahierTravail('');
@@ -481,7 +519,7 @@ const TeacherDashboard = () => {
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch('http://localhost:5002/api/professeurs-portal/notifications', { headers: getHeaders() });
+      const res = await fetch('/api/professeurs-portal/notifications', { headers: getHeaders() });
       if (res.ok) {
         const data = await res.json();
         setNotifications(data);
@@ -494,7 +532,7 @@ const TeacherDashboard = () => {
 
   const handleMarkAsRead = async (notifId) => {
     try {
-      const res = await fetch(`http://localhost:5002/api/professeurs-portal/notifications/${notifId}/read`, {
+      const res = await fetch(`/api/professeurs-portal/notifications/${notifId}/read`, {
         method: 'PUT',
         headers: getHeaders()
       });
@@ -510,7 +548,7 @@ const TeacherDashboard = () => {
   const handleDownloadPDF = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5002/api/professeurs-portal/schedule/pdf', {
+      const res = await fetch('/api/professeurs-portal/schedule/pdf', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -535,7 +573,7 @@ const TeacherDashboard = () => {
     if (!classId || !matId) return;
     setPedLoading(true);
     try {
-      const res = await fetch(`http://localhost:5002/api/professeurs-portal/pedagogie/${classId}/${matId}`, {
+      const res = await fetch(`/api/professeurs-portal/pedagogie/${classId}/${matId}`, {
         headers: getHeaders()
       });
       const data = await res.json();
@@ -561,7 +599,7 @@ const TeacherDashboard = () => {
   const fetchPlanning = async () => {
     setPlanningLoading(true);
     try {
-      const res = await fetch('http://localhost:5002/api/professeurs-portal/planning', {
+      const res = await fetch('/api/professeurs-portal/planning', {
         headers: getHeaders()
       });
       const data = await res.json();
@@ -585,7 +623,7 @@ const TeacherDashboard = () => {
       return;
     }
     try {
-      const res = await fetch('http://localhost:5002/api/professeurs-portal/planning/propose', {
+      const res = await fetch('/api/professeurs-portal/planning/propose', {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({
@@ -631,7 +669,7 @@ const TeacherDashboard = () => {
 
   const handleRespondInvitation = async (etablissementId, accept) => {
     try {
-      const res = await fetch(`http://localhost:5002/api/professeurs-portal/invitations/${etablissementId}`, {
+      const res = await fetch(`/api/professeurs-portal/invitations/${etablissementId}`, {
         method: 'PUT',
         headers: getHeaders(),
         body: JSON.stringify({ accept })
@@ -640,12 +678,12 @@ const TeacherDashboard = () => {
       if (res.ok) {
         showNotification(data.message, 'success');
         // Refresh invitations
-        const invRes = await fetch('http://localhost:5002/api/professeurs-portal/invitations', { headers: getHeaders() });
+        const invRes = await fetch('/api/professeurs-portal/invitations', { headers: getHeaders() });
         const invData = await invRes.json();
         if (invRes.ok) setInvitations(invData);
 
         // Refresh Summary
-        const sumRes = await fetch('http://localhost:5002/api/professeurs-portal/summary', { headers: getHeaders() });
+        const sumRes = await fetch('/api/professeurs-portal/summary', { headers: getHeaders() });
         const sumData = await sumRes.json();
         if (sumRes.ok) setSummary(sumData);
       }
@@ -660,7 +698,7 @@ const TeacherDashboard = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5002/api/professeurs-portal/profile', {
+      const res = await fetch('/api/professeurs-portal/profile', {
         method: 'PUT',
         headers: getHeaders(),
         body: JSON.stringify(editProfileData)
@@ -707,7 +745,7 @@ const TeacherDashboard = () => {
     if (!selectedClasse || !selectedMatiere) return;
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:5002/api/professeurs-portal/grades/${selectedClasse}/${selectedMatiere}?periode=${selectedPeriode}`, {
+      const res = await fetch(`/api/professeurs-portal/grades/${selectedClasse}/${selectedMatiere}?periode=${selectedPeriode}`, {
         headers: getHeaders()
       });
       const data = await res.json();
@@ -735,7 +773,7 @@ const TeacherDashboard = () => {
 
       // Also load audit log for this class to check if there are pending/rejected modifications
       try {
-        const auditRes = await fetch(`http://localhost:5002/api/etablissement/audit?classe_id=${selectedClasse}`, {
+        const auditRes = await fetch(`/api/etablissement/audit?classe_id=${selectedClasse}`, {
           headers: getHeaders()
         });
         if (auditRes.ok) {
@@ -761,7 +799,7 @@ const TeacherDashboard = () => {
     if (!found || !found.etablissement_id) return;
     setSelectedEtabId(found.etablissement_id);
     fetch(
-      `http://localhost:5002/api/professeurs-portal/baremes/${found.etablissement_id}`,
+      `/api/professeurs-portal/baremes/${found.etablissement_id}`,
       { headers: getHeaders() }
     )
       .then(r => r.json())
@@ -781,7 +819,7 @@ const TeacherDashboard = () => {
     const draft = draftGrades[eleveId];
     if (!draft || draft.note === '') return;
     try {
-      const res = await fetch('http://localhost:5002/api/professeurs-portal/grades', {
+      const res = await offlineFetch('/api/professeurs-portal/grades', {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({
@@ -793,9 +831,14 @@ const TeacherDashboard = () => {
           appreciation: draft.appreciation,
           periode: selectedPeriode
         })
-      });
+      }, 'Saisie note');
       if (res.ok) {
-        showNotification('Note enregistrée !');
+        const data = await res.json();
+        if (data.offline) {
+          showNotification('Note sauvegardée localement (⏳ sera transmise dès le retour du réseau) !', 'info');
+        } else {
+          showNotification('Note enregistrée !', 'success');
+        }
         handleLoadGradesGrid();
       }
     } catch (err) {
@@ -820,7 +863,7 @@ const TeacherDashboard = () => {
     }
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:5002/api/professeurs-portal/grades/${modifyingGradeId}`, {
+      const res = await offlineFetch(`/api/professeurs-portal/grades/${modifyingGradeId}`, {
         method: 'PUT',
         headers: getHeaders(),
         body: JSON.stringify({
@@ -828,10 +871,14 @@ const TeacherDashboard = () => {
           appreciation: modifyingGradeAppreciation,
           motif: auditMotif
         })
-      });
+      }, 'Modification note');
       const data = await res.json();
       if (res.ok) {
-        showNotification('Note modifiée et tracée dans le journal d\'audit.', 'success');
+        if (data.offline) {
+          showNotification('Modification enregistrée localement (⏳ en attente de synchro) !', 'info');
+        } else {
+          showNotification('Note modifiée et tracée dans le journal d\'audit.', 'success');
+        }
         setModifyingGradeId(null);
         setAuditMotif('');
         handleLoadGradesGrid();
@@ -854,7 +901,7 @@ const TeacherDashboard = () => {
       if (!attClasse) return;
       setAttLoading(true);
       try {
-        const res = await fetch(`http://localhost:5002/api/professeurs-portal/classes/${attClasse}/students`, {
+        const res = await fetch(`/api/professeurs-portal/classes/${attClasse}/students`, {
           headers: getHeaders()
         });
         const data = await res.json();
@@ -899,7 +946,7 @@ const TeacherDashboard = () => {
         motif: attendanceRoster[eleveId].motif
       }));
 
-      const res = await fetch(`http://localhost:5002/api/professeurs-portal/attendance/${attClasse}`, {
+      const res = await offlineFetch(`/api/professeurs-portal/attendance/${attClasse}`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({
@@ -907,10 +954,14 @@ const TeacherDashboard = () => {
           matiere_id: attMatiere,
           roster: rosterList
         })
-      });
+      }, 'Appel / Présences');
       const data = await res.json();
       if (res.ok) {
-        showNotification('Appel enregistré avec succès !', 'success');
+        if (data.offline) {
+          showNotification('Appel sauvegardé en local (⏳ synchronisation automatique dès retour réseau) !', 'info');
+        } else {
+          showNotification('Appel enregistré avec succès !', 'success');
+        }
       } else {
         showNotification(data.message || 'Erreur lors de l\'enregistrement.', 'error');
       }
@@ -946,37 +997,43 @@ const TeacherDashboard = () => {
 
   return (
     <div className="teacher-dashboard">
-      {/* HEADER TOPBAR & CONFLICT NOTIFICATION */}
-      <TeacherTopbar
-        setIsMobileMenuOpen={setIsMobileMenuOpen}
-        profAnneeFilter={profAnneeFilter}
-        setProfAnneeFilter={setProfAnneeFilter}
-        unreadNotificationsCount={unreadNotificationsCount}
-        invitations={invitations}
-        setShowNotificationsDrawer={setShowNotificationsDrawer}
-        fetchNotifications={fetchNotifications}
+      {/* SIDEBAR */}
+      <TeacherSidebar
         profile={profile}
+        invitations={invitations}
+        activeTab={activeTab}
         navigate={navigate}
+        isMobileMenuOpen={isMobileMenuOpen}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
         handleLogout={handleLogout}
-        schedule={schedule}
-        hasConflict={hasConflict}
+        isCollapsed={isSidebarCollapsed}
       />
 
-      {/* CONTAINER */}
-      <div className="td-container">
-        {/* SIDEBAR & MOBILE DRAWER */}
-        <TeacherSidebar
-          profile={profile}
-          invitations={invitations}
-          activeTab={activeTab}
-          navigate={navigate}
-          isMobileMenuOpen={isMobileMenuOpen}
+      {/* ZONE PRINCIPALE */}
+      <div className="td-main-area">
+        {/* HEADER TOPBAR */}
+        <TeacherTopbar
           setIsMobileMenuOpen={setIsMobileMenuOpen}
+          profAnneeFilter={profAnneeFilter}
+          setProfAnneeFilter={setProfAnneeFilter}
+          unreadNotificationsCount={unreadNotificationsCount}
+          invitations={invitations}
+          setShowNotificationsDrawer={setShowNotificationsDrawer}
+          fetchNotifications={fetchNotifications}
+          profile={profile}
+          navigate={navigate}
           handleLogout={handleLogout}
+          schedule={schedule}
+          hasConflict={hasConflict}
+          toggleSidebar={toggleSidebar}
+          isSidebarCollapsed={isSidebarCollapsed}
+          availableAcademicYears={availableAcademicYears}
         />
 
-        {/* MAIN CONTENT */}
-        <main className="td-main-content">
+        {/* CONTENU SCROLLABLE */}
+        <div className="td-container">
+          <div className="td-main-content">
+
           {loading && (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px' }}>
               <Loader2 className="animate-spin" size={32} color="var(--primary-blue)" />
@@ -988,6 +1045,8 @@ const TeacherDashboard = () => {
               profile={profile}
               summary={summary}
               activeSchedule={activeSchedule}
+              activeClasses={activeClasses}
+              profAnneeFilter={profAnneeFilter}
               dashboardDetails={dashboardDetails}
               invitations={invitations}
               navigate={navigate}
@@ -1180,8 +1239,9 @@ const TeacherDashboard = () => {
 
           {!loading && activeTab === 'discipline' && <TeacherDisciplineView />}
           {!loading && activeTab === 'emargement' && <ProfDashboardEmargement />}
-        </main>
-      </div>
+          </div>{/* .td-main-content */}
+        </div>{/* .td-container */}
+      </div>{/* .td-main-area */}
 
 
 
@@ -1291,14 +1351,14 @@ const TeacherDashboard = () => {
                 <input
                   type="text"
                   readOnly
-                  value={`http://localhost:5002/api/professeurs-portal/public-schedule/ical/${profile?.id}`}
+                  value={`/api/professeurs-portal/public-schedule/ical/${profile?.id}`}
                   style={{ flex: 1, padding: '8px 12px', border: '1px solid var(--border-slate-200)', borderRadius: '8px', fontSize: '11px', background: '#f8fafc', fontWeight: 600 }}
                   onClick={e => e.target.select()}
                 />
                 <button
                   className="btn btn-outline"
                   onClick={() => {
-                    navigator.clipboard.writeText(`http://localhost:5002/api/professeurs-portal/public-schedule/ical/${profile?.id}`);
+                    navigator.clipboard.writeText(`/api/professeurs-portal/public-schedule/ical/${profile?.id}`);
                     showNotification('Lien copié dans le presse-papier !');
                   }}
                   style={{ fontSize: '12px', whiteSpace: 'nowrap' }}

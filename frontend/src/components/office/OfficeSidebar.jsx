@@ -15,11 +15,17 @@ export const OfficeSidebar = ({
   setExamenMode,
   setFilters,
   navigate,
-  logout
+  logout,
+  pendingDemandesCount = 0
 }) => {
   const navItems = [
     { id: 'overview', label: 'Vue d’ensemble', icon: <BarChart3 size={18} /> },
-    { id: 'demandes', label: 'Agrégations & Licences', icon: <Inbox size={18} /> },
+    { 
+      id: 'demandes', 
+      label: 'Pré-inscriptions', 
+      icon: <Inbox size={18} />,
+      badge: pendingDemandesCount > 0 ? pendingDemandesCount : null
+    },
     { id: 'etablissements', label: 'Établissements Sénégal', icon: <School size={18} /> },
     { id: 'professeurs', label: 'Professeurs & Correcteurs', icon: <Users size={18} /> },
     { id: 'carte-prof', label: 'Fiches & Score Profs (1000 Pts)', icon: <Award size={18} />, route: '/office/professeurs/carte-identite' },
@@ -38,19 +44,43 @@ export const OfficeSidebar = ({
       {/* Header mobile */}
       <header className="ob-mobile-header">
         <button className="ob-mobile-menu-btn" onClick={() => setIsMobileMenuOpen(true)}><X size={22} /></button>
-        <div className="ob-mobile-logo">Leral<span>Scolaire</span> · Office BAC & BFEM</div>
+        <div className="ob-mobile-logo"><span style={{ color: '#1e3a8a', fontWeight: 800 }}>LéralScolaire</span> · Office BAC &amp; BFEM</div>
       </header>
 
       {/* Mobile drawer */}
       {isMobileMenuOpen && (
-        <div className="ob-drawer-overlay" onClick={() => setIsMobileMenuOpen(false)}>
+        <div className="ob-drawer-backdrop" onClick={() => setIsMobileMenuOpen(false)}>
           <div className="ob-drawer" onClick={e => e.stopPropagation()}>
-            <button className="ob-drawer-close" onClick={() => setIsMobileMenuOpen(false)}><X size={20} /></button>
+            <div className="ob-drawer-header">
+              <span className="ob-logo-text" style={{ color: '#1e3a8a', fontWeight: 800 }}>LéralScolaire</span>
+              <button className="ob-drawer-close" onClick={() => setIsMobileMenuOpen(false)}><X size={18} /></button>
+            </div>
             <nav className="ob-drawer-nav">
               {navItems.map(item => (
                 <button key={item.id} className={`ob-drawer-item ${tab === item.id ? 'active' : ''}`}
                   onClick={() => { navigate(`/office/dashboard/${item.id}`); setIsMobileMenuOpen(false); }}>
-                  {item.icon} {item.label}
+                  {item.icon} <span style={{ flex: 1 }}>{item.label}</span>
+                  {item.badge && (
+                    <span style={{
+                      flexShrink: 0,
+                      marginLeft: '8px',
+                      background: tab === item.id ? '#fde047' : '#fef08a',
+                      color: tab === item.id ? '#1e1b4b' : '#854d0e',
+                      border: tab === item.id ? '1px solid #eab308' : '1px solid #fde047',
+                      minWidth: '22px',
+                      height: '20px',
+                      padding: '0 6px',
+                      borderRadius: '10px',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      lineHeight: 1
+                    }}>
+                      {item.badge}
+                    </span>
+                  )}
                 </button>
               ))}
             </nav>
@@ -63,8 +93,9 @@ export const OfficeSidebar = ({
       <aside className={`ob-sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}>
         <div className="ob-sidebar-top">
           <div className="ob-sidebar-logo">
+            <img src="/logo_leralscolaire.png" alt="LeralScolaire" style={{ width: '28px', height: '28px', objectFit: 'contain', borderRadius: '6px', flexShrink: 0 }} />
             {!isSidebarCollapsed && (
-              <span className="ob-logo-text">Leral<span>Scolaire</span></span>
+              <span className="ob-logo-text">LeralScolaire</span>
             )}
           </div>
           <button className="ob-collapse-btn" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}>
@@ -171,7 +202,28 @@ export const OfficeSidebar = ({
               onClick={() => navigate(`/office/dashboard/${item.id}`)}
               title={isSidebarCollapsed ? item.label : ''}>
               {item.icon}
-              {!isSidebarCollapsed && <span>{item.label}</span>}
+              {!isSidebarCollapsed && <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>}
+              {!isSidebarCollapsed && item.badge && (
+                <span style={{
+                  flexShrink: 0,
+                  marginLeft: '8px',
+                  background: tab === item.id ? '#fde047' : '#fef08a',
+                  color: tab === item.id ? '#1e1b4b' : '#854d0e',
+                  border: tab === item.id ? '1px solid #eab308' : '1px solid #fde047',
+                  minWidth: '22px',
+                  height: '20px',
+                  padding: '0 6px',
+                  borderRadius: '10px',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  lineHeight: 1
+                }}>
+                  {item.badge}
+                </span>
+              )}
             </button>
           ))}
 

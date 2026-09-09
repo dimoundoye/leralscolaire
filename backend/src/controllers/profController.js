@@ -1,7 +1,10 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const ProfModel = require('../models/profModel');
 const db = require('../config/db'); // For transaction connection
 const response = require('../utils/response');
+const { generateIUP } = require('../utils/iupGenerator');
+const emailService = require('../services/emailService');
 
 const profController = {
   async listProfesseurs(req, res, next) {
@@ -21,28 +24,51 @@ const profController = {
   async createProfesseur(req, res, next) {
     const { email, password } = req.body;
     try {
-      const etablissementId = await ProfModel.getEtablissementIdByAdminId(req.user.id);
-      if (!etablissementId) {
+      const etab = await ProfModel.getEtablissementByAdminId(req.user.id);
+      if (!etab) {
         return response.error(res, "Seul l'admin peut créer un prof.", 404);
       }
+      const etablissementId = etab.id;
+      const etabRegion = etab.region || 'Dakar';
 
       const userExists = await ProfModel.checkUserExists(email);
       if (userExists) {
         return response.error(res, 'Cet email est déjà utilisé.', 400);
       }
 
-      const salt = await bcrypt.genSalt(10);
-      const passwordHash = await bcrypt.hash(password || 'prof-2025', salt);
-
       const client = await db.pool.connect();
       try {
         await client.query('BEGIN');
 
-        const profId = await ProfModel.createProfUser(email, passwordHash, client);
+        // Générer IUP Enseignant officiel (ex: ENS-2026-DKR-0001)
+        const identifiant_national = await generateIUP('ENS', etabRegion, null, client);
+
+        // Générer mot de passe temporaire si non fourni
+        const tempPassword = password || crypto.randomBytes(4).toString('hex');
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(tempPassword, salt);
+
+        const profId = await ProfModel.createProfUser(email, passwordHash, identifiant_national, tempPassword, client);
         await ProfModel.linkProfToEtablissement(profId, etablissementId, client);
 
         await client.query('COMMIT');
-        return res.status(201).json({ message: 'Professeur créé avec succès !', id: profId });
+
+        // Envoi automatique de l'email avec identifiant et mot de passe provisoire (non-bloquant)
+        emailService.sendProfesseurWelcome({
+          to: email,
+          nom: '',
+          prenom: '',
+          iupProf: identifiant_national,
+          tempPassword: tempPassword,
+          nomEtablissement: etab.nom
+        }).catch(e => console.error('Erreur email professeur:', e.message));
+
+        return res.status(201).json({
+          message: 'Professeur créé avec succès ! Identifiants envoyés par email.',
+          id: profId,
+          identifiant: identifiant_national,
+          password: tempPassword
+        });
       } catch (err) {
         await client.query('ROLLBACK');
         throw err;

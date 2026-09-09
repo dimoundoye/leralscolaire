@@ -213,7 +213,7 @@ const AdminElevesTab = ({
                     </td>
                     <td onClick={() => handleOpenGradesModal(e.id)} style={{ cursor: 'pointer' }} title="Cliquer pour voir les notes">
                       {e.photo_url ? (
-                        <img src={`http://localhost:5002${e.photo_url}`} alt="Photo" className="student-photo-mini student-photo-hover" />
+                        <img src={`${e.photo_url}`} alt="Photo" className="student-photo-mini student-photo-hover" />
                       ) : (
                         <div className="user-avatar-small user-avatar-hover"><User size={14}/></div>
                       )}
@@ -391,7 +391,7 @@ const AdminElevesTab = ({
                       </td>
                       <td>
                         {e.photo_url ? (
-                          <img src={`http://localhost:5002${e.photo_url}`} alt="Photo" className="student-photo-mini student-photo-hover" onClick={() => handleOpenGradesModal(e.id)} style={{ cursor: 'pointer' }} title="Cliquer pour voir les notes" />
+                          <img src={`${e.photo_url}`} alt="Photo" className="student-photo-mini student-photo-hover" onClick={() => handleOpenGradesModal(e.id)} style={{ cursor: 'pointer' }} title="Cliquer pour voir les notes" />
                         ) : (
                           <div className="user-avatar-small user-avatar-hover" onClick={() => handleOpenGradesModal(e.id)} style={{ cursor: 'pointer' }} title="Cliquer pour voir les notes"><User size={14} /></div>
                         )}

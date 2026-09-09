@@ -210,7 +210,7 @@ export const OfficeCandidatsTab = ({
       <div className="ob-filters-bar">
         <div className="ob-search-wrap">
           <Search size={16} />
-          <input placeholder="Rechercher un candidat, N° table, INE…" value={filters.search}
+          <input placeholder="Rechercher un candidat, N° table, IUP…" value={filters.search}
             onChange={e => setFilters(f => ({ ...f, search: e.target.value }))}
             onKeyDown={e => e.key === 'Enter' && fetchCandidats()} />
         </div>

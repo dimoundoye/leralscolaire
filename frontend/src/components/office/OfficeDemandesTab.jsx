@@ -122,8 +122,8 @@ export const OfficeDemandesTab = ({
             <thead>
               <tr>
                 <th style={{ whiteSpace: 'nowrap' }}>Date</th>
-                <th style={{ whiteSpace: 'nowrap' }}>Type</th>
-                <th style={{ whiteSpace: 'nowrap' }}>Nom &amp; Prénom</th>
+                <th style={{ whiteSpace: 'nowrap' }}>N° Dossier</th>
+                <th style={{ whiteSpace: 'nowrap' }}>Nom Établissement</th>
                 <th style={{ whiteSpace: 'nowrap' }}>Email &amp; Téléphone</th>
                 <th style={{ whiteSpace: 'nowrap' }}>Région / Ville</th>
                 <th style={{ whiteSpace: 'nowrap' }}>Réf. CNI / Arrêté / Solde</th>
@@ -144,14 +144,26 @@ export const OfficeDemandesTab = ({
                   <tr key={d.id}>
                     <td style={{ whiteSpace: 'nowrap' }}>{new Date(d.created_at).toLocaleDateString('fr-FR')}</td>
                     <td style={{ whiteSpace: 'nowrap' }}>
-                      <span className="ob-badge-type" style={{ background: d.type_demande === 'ETABLISSEMENT' ? '#131e6c' : '#7c3aed', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                        {d.type_demande === 'ETABLISSEMENT' ? <School size={12} /> : <UserCheck size={12} />}
-                        {d.type_demande === 'ETABLISSEMENT' ? 'ÉTABLISSEMENT' : 'PROFESSEUR'}
-                      </span>
+                      <code style={{
+                        fontWeight: 800,
+                        fontSize: '12px',
+                        color: '#1e3a8a',
+                        background: '#eff6ff',
+                        border: '1px solid #bfdbfe',
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        display: 'inline-block'
+                      }}>
+                        #DEM-{String(d.id).padStart(4, '0')}
+                      </code>
                     </td>
                     <td>
-                      <strong style={{ color: 'var(--primary-color)' }}>{d.prenom ? `${d.prenom} ${d.nom}` : d.nom}</strong>
-                      <div style={{ fontSize: 11, color: '#64748b' }}>{d.specialite_ou_code || '—'}</div>
+                      <strong style={{ color: 'var(--primary-color)' }}>
+                        {d.type_demande === 'ETABLISSEMENT' ? d.nom : (d.prenom ? `${d.prenom} ${d.nom}` : d.nom)}
+                      </strong>
+                      <div style={{ fontSize: 11, color: '#64748b' }}>
+                        {d.type_demande === 'ETABLISSEMENT' ? (d.specialite_ou_code || 'Établissement Scolaire') : (d.specialite_ou_code || 'Professeur')}
+                      </div>
                     </td>
                     <td>
                       <code>{d.email}</code>
@@ -212,7 +224,7 @@ export const OfficeDemandesTab = ({
                           <button className="ob-btn ob-btn-primary ob-btn-sm" style={{ whiteSpace: 'nowrap' }} onClick={() => handleValiderDemande(d.id)}>
                             <CheckCircle size={13} /> Valider &amp; Envoyer Accès par Email
                           </button>
-                          <button className="ob-btn ob-btn-danger ob-btn-sm" style={{ whiteSpace: 'nowrap' }} onClick={() => handleRejeterDemande(d.id)}>
+                          <button className="ob-btn ob-btn-danger ob-btn-sm" style={{ whiteSpace: 'nowrap' }} onClick={() => handleRejeterDemande(d)}>
                             ✕ Rejeter
                           </button>
                         </div>
@@ -251,7 +263,7 @@ export const OfficeDemandesTab = ({
             fName = fName.name || '';
           }
           if (fName.startsWith('data:') || fName.startsWith('http://') || fName.startsWith('https://')) return fName;
-          return `http://localhost:5002/uploads/${fName}`;
+          return `/uploads/${fName}`;
         };
 
         return (

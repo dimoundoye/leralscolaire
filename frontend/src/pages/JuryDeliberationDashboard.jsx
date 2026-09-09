@@ -8,7 +8,7 @@ import {
 import html2pdf from 'html2pdf.js';
 import './JuryDeliberationDashboard.css';
 
-const API = 'http://localhost:5002/api';
+const API = '/api';
 
 const JuryDeliberationDashboard = () => {
   const navigate = useNavigate();
@@ -503,7 +503,7 @@ const JuryDeliberationDashboard = () => {
         <div className="jdd-search-box">
           <Search size={16} />
           <input
-            placeholder="Rechercher par nom, N° de table, INE…"
+            placeholder="Rechercher par nom, N° de table, IUP…"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
           />
@@ -526,7 +526,7 @@ const JuryDeliberationDashboard = () => {
             <thead>
               <tr>
                 <th>N° Table</th>
-                <th>Candidat & INE</th>
+                <th>Candidat & IUP</th>
                 <th>Lycée / Origine</th>
                 <th>Série</th>
                 <th>Moyenne /20</th>
@@ -834,7 +834,7 @@ const JuryDeliberationDashboard = () => {
                         <tr style={{ background: '#f1f5f9', color: '#334155', textAlign: 'left', borderBottom: '1px solid #cbd5e1' }}>
                           <th style={{ padding: '8px', width: 60 }}>Rang</th>
                           <th style={{ padding: '8px' }}>N° Table</th>
-                          <th style={{ padding: '8px' }}>Candidat & INE</th>
+                          <th style={{ padding: '8px' }}>Candidat & IUP</th>
                           <th style={{ padding: '8px' }}>Lycée / Origine</th>
                           <th style={{ padding: '8px', textAlign: 'right' }}>Moyenne /20</th>
                           <th style={{ padding: '8px' }}>Mention</th>

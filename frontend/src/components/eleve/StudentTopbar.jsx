@@ -13,11 +13,11 @@ const StudentTopbar = ({
       <button className="mobile-burger-btn" onClick={() => setIsMobileMenuOpen(true)} title="Ouvrir le menu">
         <Menu size={20} />
       </button>
-      <div className="sd-brand" style={{ cursor: 'pointer' }} onClick={() => navigate('/student/dashboard/overview')}>
-        <ShieldCheck size={24} style={{ color: 'var(--accent-orange)' }} />
+      <div className="sd-brand" style={{ cursor: 'pointer' }} onClick={() => navigate('/')} title="Retour à l'accueil">
+        <img src="/logo_leralscolaire.png" alt="LeralScolaire" style={{ width: '28px', height: '28px', objectFit: 'contain', borderRadius: '6px', flexShrink: 0 }} />
         <div>
-          <h1 className="brand-name" style={{ fontSize: '18px', fontWeight: 800, color: 'var(--primary-green)', display: 'flex', alignItems: 'center' }}>
-            Leral<span style={{ color: 'var(--accent-orange)' }}>Scolaire</span>
+          <h1 className="brand-name" style={{ fontSize: '18px', fontWeight: 800, color: '#131e6c', display: 'flex', alignItems: 'center' }}>
+            LéralScolaire
           </h1>
           <p className="sd-sub" style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--text-slate-500)', marginTop: '-2px' }}>Portail Élève</p>
         </div>
@@ -32,7 +32,7 @@ const StudentTopbar = ({
         </button>
         <button className="icon-action-btn header-profile-avatar" onClick={() => navigate('/student/dashboard/profile')} title="Mon Profil">
           {profile?.photo_url ? (
-            <img src={`http://localhost:5002${profile.photo_url}`} alt="Avatar" className="header-avatar-img" />
+            <img src={`${profile.photo_url}`} alt="Avatar" className="header-avatar-img" />
           ) : (
             <User size={18} />
           )}

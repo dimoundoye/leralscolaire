@@ -73,7 +73,7 @@ export const OfficeLivretsTab = ({
           <table className="ob-table">
             <thead>
               <tr>
-                <th>Candidat &amp; INE</th>
+                <th>Candidat &amp; IUP</th>
                 <th>Établissement &amp; Région</th>
                 <th>Série</th>
                 <th>Moy. 2nde</th>

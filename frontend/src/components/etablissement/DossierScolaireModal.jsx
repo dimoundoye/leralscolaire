@@ -103,8 +103,8 @@ const DossierScolaireModal = ({ eleveId, onClose }) => {
                   <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#131e6c' }}>{eleve.prenom} {eleve.nom}</div>
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>INE / Identifiant</span>
-                  <div style={{ fontWeight: 700, color: '#f93f2d' }}>{eleve.identifiant_national || eleve.ine || 'N/A'}</div>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>IUP / Identifiant Unique</span>
+                  <div style={{ fontWeight: 700, color: '#131e6c' }}>{eleve.identifiant_national || eleve.ine || 'N/A'}</div>
                 </div>
                 <div>
                   <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>Classe Actuelle</span>

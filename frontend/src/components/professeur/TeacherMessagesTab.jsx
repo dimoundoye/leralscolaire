@@ -201,16 +201,16 @@ const TeacherMessagesTab = ({
                       {msg.fichier_url && (
                         <div style={{ marginTop: msg.contenu ? '8px' : '0' }}>
                           {/\.(jpg|jpeg|png|gif|webp)$/i.test(msg.fichier_url) ? (
-                            <a href={`http://localhost:5002${msg.fichier_url}`} target="_blank" rel="noopener noreferrer">
+                            <a href={`${msg.fichier_url}`} target="_blank" rel="noopener noreferrer">
                               <img 
-                                src={`http://localhost:5002${msg.fichier_url}`} 
+                                src={`${msg.fichier_url}`} 
                                 alt={msg.fichier_nom || 'Image'} 
                                 style={{ maxWidth: '100%', maxHeight: '220px', borderRadius: '8px', objectFit: 'cover', display: 'block', marginTop: '4px' }} 
                               />
                             </a>
                           ) : (
                             <a 
-                              href={`http://localhost:5002${msg.fichier_url}`} 
+                              href={`${msg.fichier_url}`} 
                               target="_blank" 
                               download={msg.fichier_nom}
                               rel="noopener noreferrer"

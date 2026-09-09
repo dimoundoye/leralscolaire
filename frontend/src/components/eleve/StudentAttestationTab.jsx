@@ -70,7 +70,7 @@ const StudentAttestationTab = ({
                   <CheckCircle size={18} color="#4ade80" /> Demande acceptée — votre attestation est disponible !
                 </div>
                 <a
-                  href={`http://localhost:5002/api/documents/attestation/${profile?.id}?token=${token}`}
+                  href={`/api/documents/attestation/${profile?.id}?token=${token}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => {

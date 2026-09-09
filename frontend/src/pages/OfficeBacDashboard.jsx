@@ -30,7 +30,7 @@ import OfficeSidebar from '../components/office/OfficeSidebar';
 import OfficeTopbar from '../components/office/OfficeTopbar';
 
 
-const API = 'http://localhost:5002/api';
+const API = '/api';
 
 const SENEGAL_REGIONS_ZONES = {
   'Dakar': ['Dakar Plateau', 'Grand Dakar', 'Parcelles Assainies', 'Guédiawaye', 'Pikine', 'Rufisque', 'Bambilor', 'Keur Massar'],
@@ -183,8 +183,11 @@ const OfficeBacDashboard = () => {
 
   // State Demandes publiques
   const [demandesList, setDemandesList] = useState([]);
-  const [demandeFilterType, setDemandeFilterType] = useState('ETABLISSEMENT');
+  const [demandeFilterType, setDemandeFilterType] = useState('ALL');
   const [demandeFilterStatut, setDemandeFilterStatut] = useState('ALL');
+  const [rejectModalData, setRejectModalData] = useState(null);
+  const [rejectMotif, setRejectMotif] = useState('');
+  const [rejectLoading, setRejectLoading] = useState(false);
 
   const safeFetch = async (url, options = {}) => {
     try {
@@ -441,8 +444,7 @@ const OfficeBacDashboard = () => {
       });
       const data = await r.json();
       if (r.ok) {
-        showToast(data.message);
-        setCredentialsModalData({ title: 'Accès transmis par Email', credentials: data.credentials });
+        showToast(data.message || 'Demande validée avec succès ! Les identifiants et le mot de passe ont été expédiés confidentiellement par email au demandeur.');
         fetchDemandes();
         fetchEtablissements();
         fetchProfesseurs();
@@ -453,20 +455,35 @@ const OfficeBacDashboard = () => {
     } catch (e) { showToast('Erreur réseau.', 'error'); }
   };
 
-  const handleRejeterDemande = async (id) => {
-    const motif = prompt('Motif du rejet de la demande :');
-    if (!motif) return;
+  const handleRejeterDemande = (demandeOrId) => {
+    const dem = typeof demandeOrId === 'object' ? demandeOrId : demandesList.find(x => x.id === demandeOrId);
+    setRejectModalData(dem || { id: demandeOrId, nom: 'cette demande' });
+    setRejectMotif('');
+  };
+
+  const handleConfirmReject = async (e) => {
+    e.preventDefault();
+    if (!rejectModalData || !rejectMotif.trim()) return;
+    setRejectLoading(true);
     try {
-      const r = await fetch(`${API}/office-bac/demandes/${id}/rejeter`, {
+      const r = await fetch(`${API}/office-bac/demandes/${rejectModalData.id}/rejeter`, {
         method: 'PUT', headers,
-        body: JSON.stringify({ motif_rejet: motif })
+        body: JSON.stringify({ motif_rejet: rejectMotif.trim() })
       });
       const data = await r.json();
       if (r.ok) {
-        showToast('Demande rejetée.');
+        showToast('Demande rejetée et email explicatif envoyé avec succès.');
+        setRejectModalData(null);
+        setRejectMotif('');
         fetchDemandes();
+      } else {
+        showToast(data.message || 'Erreur lors du rejet.', 'error');
       }
-    } catch (e) { showToast('Erreur réseau.', 'error'); }
+    } catch (e) {
+      showToast('Erreur réseau lors du rejet.', 'error');
+    } finally {
+      setRejectLoading(false);
+    }
   };
 
   const fetchPalmares = async () => {
@@ -878,6 +895,7 @@ const OfficeBacDashboard = () => {
         setFilters={setFilters}
         navigate={navigate}
         logout={logout}
+        pendingDemandesCount={demandesList.filter(d => d.statut === 'EN_ATTENTE').length}
       />
 
       {/* Main Container */}
@@ -897,6 +915,7 @@ const OfficeBacDashboard = () => {
                 navigate={navigate}
                 setShowPublierModal={setShowPublierModal}
                 getMentionColor={getMentionColor}
+                demandesList={demandesList}
               />
             )}
             {tab === 'demandes' && (
@@ -1057,7 +1076,7 @@ const OfficeBacDashboard = () => {
                 <label>Rechercher le candidat élève *</label>
                 <div className="ob-eleve-search-wrap">
                   <Search size={15} />
-                  <input placeholder="Nom, prénom ou identifiant national (INE)…"
+                  <input placeholder="Nom, prénom ou identifiant unique (IUP)…"
                     value={eleveSearch}
                     onChange={e => { setEleveSearch(e.target.value); searchEleves(e.target.value); }} />
                 </div>
@@ -1297,7 +1316,7 @@ const OfficeBacDashboard = () => {
               </div>
 
               <div className="ob-form-group">
-                <label>Identifiant National (INE / ID Unique Prof - optionnel)</label>
+                <label>Identifiant Unique Enseignant (IUP - optionnel)</label>
                 <input placeholder="Laisser vide pour auto-générer (ex: PROF-SN-940212)" value={newProf.identifiant_national}
                   onChange={e => setNewProf(f => ({ ...f, identifiant_national: e.target.value }))} />
               </div>
@@ -1336,7 +1355,7 @@ const OfficeBacDashboard = () => {
 
                 {credentialsModalData.credentials.identifiant_national && (
                   <div>
-                    <span style={{ fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>IDENTIFIANT NATIONAL PROF (INE)</span>
+                    <span style={{ fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>IDENTIFIANT UNIQUE PROF (IUP)</span>
                     <div style={{ fontSize: 16, fontFamily: 'monospace', fontWeight: 800, color: '#131e6c' }}>{credentialsModalData.credentials.identifiant_national}</div>
                   </div>
                 )}
@@ -2162,6 +2181,108 @@ const OfficeBacDashboard = () => {
               <div className="ob-modal-footer">
                 <button type="button" className="ob-btn ob-btn-ghost" onClick={() => setShowPublierModal(false)}>Annuler</button>
                 <button type="submit" className="ob-btn ob-btn-publish"><Send size={16} /> Confirmer la publication</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ══ MODAL REJET DE DEMANDE DE PRÉ-INSCRIPTION ══ */}
+      {rejectModalData && (
+        <div className="ob-modal-overlay" onClick={() => !rejectLoading && setRejectModalData(null)}>
+          <div className="ob-modal" style={{ maxWidth: '560px' }} onClick={e => e.stopPropagation()}>
+            <div className="ob-modal-header" style={{ borderBottom: '1.5px solid #fecaca', background: '#fff5f5' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <XCircle size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '17px', color: '#991b1b', fontWeight: 800 }}>Rejet de la pré-inscription</h3>
+                  <p style={{ margin: 0, fontSize: '12px', color: '#b91c1c' }}>Dossier #{rejectModalData.id} — {rejectModalData.prenom ? `${rejectModalData.prenom} ` : ''}{rejectModalData.nom}</p>
+                </div>
+              </div>
+              <button onClick={() => !rejectLoading && setRejectModalData(null)} disabled={rejectLoading}><X size={20} /></button>
+            </div>
+
+            <form onSubmit={handleConfirmReject} className="ob-modal-body">
+              <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '10px', padding: '12px 14px', marginBottom: '16px', fontSize: '12px', color: '#92400e', lineHeight: 1.5 }}>
+                ⚠️ <strong>Notification automatique par email :</strong> Le motif renseigné ci-dessous sera immédiatement expédié à <strong>{rejectModalData.email}</strong> pour l'informer de la décision et lui indiquer les pièces à corriger.
+              </div>
+
+              <div className="ob-form-group">
+                <label style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', marginBottom: '6px', display: 'block' }}>
+                  Motifs fréquents (cliquez pour insérer rapidement) :
+                </label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+                  {[
+                    "Arrêté d'ouverture MEN non conforme ou illisible",
+                    "Carte CNI expirée ou copie recto-verso manquante",
+                    "Décret de création ou attestation NINEA non joint",
+                    "Diplôme ou attestation académique non recevable",
+                    "Coordonnées de l'établissement ou contact erroné"
+                  ].map((preset, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setRejectMotif(preset)}
+                      style={{
+                        fontSize: '11px',
+                        background: '#f8fafc',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '6px',
+                        padding: '4px 8px',
+                        cursor: 'pointer',
+                        color: '#334155',
+                        textAlign: 'left'
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = '#e2e8f0'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = '#f8fafc'; }}
+                    >
+                      + {preset}
+                    </button>
+                  ))}
+                </div>
+
+                <label style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', display: 'block', marginBottom: '4px' }}>
+                  Motif explicite du rejet *
+                </label>
+                <textarea
+                  rows={4}
+                  required
+                  placeholder="Détaillez le motif du refus et indiquez la liste précise des documents ou informations à compléter ou corriger..."
+                  value={rejectMotif}
+                  onChange={e => setRejectMotif(e.target.value)}
+                  style={{
+                    width: '100%',
+                    borderRadius: '8px',
+                    border: '1.5px solid #cbd5e1',
+                    padding: '10px 12px',
+                    fontSize: '13px',
+                    fontFamily: 'inherit',
+                    resize: 'vertical',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div className="ob-modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+                <button 
+                  type="button" 
+                  className="ob-btn ob-btn-ghost" 
+                  onClick={() => setRejectModalData(null)}
+                  disabled={rejectLoading}
+                >
+                  Annuler
+                </button>
+                <button 
+                  type="submit" 
+                  className="ob-btn ob-btn-danger"
+                  disabled={rejectLoading || !rejectMotif.trim()}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#dc2626' }}
+                >
+                  <XCircle size={16} />
+                  {rejectLoading ? 'Envoi de la décision…' : 'Confirmer le Rejet & Notifier'}
+                </button>
               </div>
             </form>
           </div>

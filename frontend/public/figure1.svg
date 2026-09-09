@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 620" width="100%" height="100%" font-family="Arial, sans-serif">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="2" dy="3" stdDeviation="3" flood-opacity="0.15" />
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#1e3a8a" />
+    </marker>
+  </defs>
+
+  <!-- Arrière-plan -->
+  <rect width="1000" height="620" fill="#f8fafc" rx="10" />
+  
+  <!-- Titre -->
+  
+  <!-- ÉTAPE 1 -->
+  <g filter="url(#shadow)">
+    <rect x="50" y="80" width="400" height="210" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" />
+    <rect x="50" y="80" width="400" height="35" rx="8" fill="#1e3a8a" />
+    <text x="70" y="103" fill="#ffffff" font-size="14" font-weight="bold">1. Création et Saisie (6ème à la 1ère)</text>
+    
+    <text x="70" y="140" fill="#334155" font-size="12">• Évaluation trimestrielle / semestrielle par matière</text>
+    <text x="70" y="165" fill="#334155" font-size="12">• Report manuel des notes sur les bulletins papier</text>
+    <text x="70" y="190" fill="#334155" font-size="12">• Transcription par le secrétariat sur le livret cartonné</text>
+    <text x="70" y="215" fill="#334155" font-size="12">• Conservation aux archives physiques de l'établissement</text>
+    
+  </g>
+
+  <!-- Flèche 1 -> 2 -->
+  <path d="M 450 185 L 540 185" fill="none" stroke="#1e3a8a" stroke-width="3" marker-end="url(#arrow)" />
+
+  <!-- ÉTAPE 2 -->
+  <g filter="url(#shadow)">
+    <rect x="550" y="80" width="400" height="210" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" />
+    <rect x="550" y="80" width="400" height="35" rx="8" fill="#1e3a8a" />
+    <text x="570" y="103" fill="#ffffff" font-size="14" font-weight="bold">2. Consolidation en Classe de Terminale</text>
+    
+    <text x="570" y="140" fill="#334155" font-size="12">• Bilan académique de l'ensemble du cycle secondaire</text>
+    <text x="570" y="165" fill="#334155" font-size="12">• Calcul des moyennes globales et décompte des absences</text>
+    <text x="570" y="190" fill="#334155" font-size="12">• Tenue du conseil de classe et avis du chef d'établissement</text>
+    <text x="570" y="215" fill="#334155" font-size="12">• Clôture officielle et mise sous pli des cartons de livrets</text>
+  </g>
+
+  <!-- Flèche 2 -> 3 -->
+  <path d="M 750 290 L 750 360" fill="none" stroke="#1e3a8a" stroke-width="3" marker-end="url(#arrow)" />
+
+  <!-- ÉTAPE 3 -->
+  <g filter="url(#shadow)">
+    <rect x="550" y="370" width="400" height="210" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" />
+    <rect x="550" y="370" width="400" height="35" rx="8" fill="#1e3a8a" />
+    <text x="570" y="393" fill="#ffffff" font-size="14" font-weight="bold">3. Acheminement vers l'Inspection d'Académie (IA)</text>
+    
+    <text x="570" y="430" fill="#334155" font-size="12">• Rassemblement des livrets par série quelques semaines avant</text>
+    <text x="570" y="455" fill="#334155" font-size="12">• Transport physique routier vers l'Inspection d'Académie (IA)</text>
+    <text x="570" y="480" fill="#334155" font-size="12">• Contrôle de conformité et validation des candidatures</text>
+    <text x="570" y="505" fill="#334155" font-size="12">• Acheminement vers les Centres d'Examen et Jurys</text>
+  </g>
+
+  <!-- Flèche 3 -> 4 -->
+  <path d="M 550 475 L 460 475" fill="none" stroke="#1e3a8a" stroke-width="3" marker-end="url(#arrow)" />
+
+  <!-- ÉTAPE 4 -->
+  <g filter="url(#shadow)">
+    <rect x="50" y="370" width="400" height="210" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" />
+    <rect x="50" y="370" width="400" height="35" rx="8" fill="#1e3a8a" />
+    <text x="70" y="393" fill="#ffffff" font-size="14" font-weight="bold">4. Exploitation en Jury de Délibération</text>
+    
+    <text x="70" y="430" fill="#334155" font-size="12">• Réception sous pli fermé par le Président du Jury</text>
+    <text x="70" y="455" fill="#334155" font-size="12">• Identification des candidats "limites" (07.80/20 ou 09.80/20)</text>
+    <text x="70" y="480" fill="#334155" font-size="12">• Examen manuel du livret : régularité, conduite, assiduité</text>
+    <text x="70" y="505" fill="#334155" font-size="12">• Décision souveraine du jury : Repêchage ou Ajournement</text>
+  </g>
+</svg>

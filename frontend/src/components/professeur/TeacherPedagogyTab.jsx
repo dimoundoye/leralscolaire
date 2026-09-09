@@ -159,7 +159,7 @@ const TeacherPedagogyTab = ({
                           <td style={{ fontWeight: 700 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                               {stud.photo_url ? (
-                                <img src={`http://localhost:5002${stud.photo_url}`} alt="" style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
+                                <img src={`${stud.photo_url}`} alt="" style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
                               ) : (
                                 <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}><User size={10} /></div>
                               )}

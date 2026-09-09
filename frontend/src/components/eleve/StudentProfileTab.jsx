@@ -8,7 +8,7 @@ const StudentProfileTab = ({ profile }) => {
         <div className="profile-header-banner">
           <div className="profile-header-avatar">
             {profile?.photo_url ? (
-              <img src={`http://localhost:5002${profile.photo_url}`} alt="Student" />
+              <img src={`${profile.photo_url}`} alt="Student" />
             ) : (
               <div className="avatar-placeholder-large">
                 {profile ? `${profile.prenom[0]}${profile.nom[0]}` : 'EL'}

@@ -1,0 +1,1060 @@
+/* ==========================================================================
+   PAGE À PROPOS - LÉRAL SCOLAIRE (DESIGN ÉLÉGANT & 100% RESPONSIVE)
+   ========================================================================== */
+
+:root {
+  --ls-primary: #131e6c;
+  --ls-primary-dark: #0c1445;
+  --ls-primary-light: #1d2c94;
+  --ls-radius-sm: 8px;
+  --ls-radius-md: 14px;
+  --ls-radius-lg: 20px;
+  --ls-radius-xl: 24px;
+  --ls-radius-pill: 9999px;
+  --ls-transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.about-page-wrapper {
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #f8fafc;
+  color: #0f172a;
+  line-height: 1.6;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.about-container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.max-w-4xl {
+  max-width: 920px !important;
+}
+
+/* --------------------------------------------------------------------------
+   1. NAVBAR FLOTTANTE CAPSULE (UNIFIÉE & RESPONSIVE)
+   -------------------------------------------------------------------------- */
+.capsule-header {
+  position: fixed;
+  top: 1.15rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 92%;
+  max-width: 1040px;
+  z-index: 1000;
+}
+
+.capsule-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  padding: 0.35rem 0.5rem 0.35rem 1.15rem;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: var(--ls-radius-pill);
+  box-shadow: 0 12px 36px -6px rgba(19, 30, 108, 0.12);
+  transition: var(--ls-transition);
+}
+
+.capsule-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.capsule-logo-img {
+  height: 30px;
+  width: auto;
+  object-fit: contain;
+}
+
+.capsule-brand-text {
+  font-size: 1.12rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ls-primary) !important;
+  white-space: nowrap;
+}
+
+.capsule-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.nav-link {
+  font-size: 0.83rem;
+  font-weight: 500;
+  color: #64748b;
+  text-decoration: none;
+  transition: var(--ls-transition);
+  position: relative;
+  padding: 0.25rem 0.2rem;
+  white-space: nowrap;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: var(--ls-primary);
+  font-weight: 600;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  background-color: var(--ls-primary);
+  border-radius: 2px;
+  transition: var(--ls-transition);
+}
+
+.nav-link:hover::after, .nav-link.active::after {
+  width: 100%;
+}
+
+.capsule-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.btn-capsule-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 1rem;
+  background: var(--ls-primary);
+  color: #ffffff !important;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: var(--ls-radius-pill);
+  border: none;
+  cursor: pointer;
+  transition: var(--ls-transition);
+  box-shadow: 0 4px 14px rgba(19, 30, 108, 0.25);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn-capsule-text {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.btn-capsule-primary:hover {
+  background: var(--ls-primary-light);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(19, 30, 108, 0.35);
+}
+
+.capsule-burger {
+  display: none;
+  background: none;
+  border: none;
+  color: #0f172a;
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: 8px;
+}
+
+.capsule-burger:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Menu Mobile Déroulant */
+.capsule-mobile-drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  box-shadow: 0 20px 48px -12px rgba(15, 23, 42, 0.15);
+  animation: drawerSlideDown 0.25s ease-out forwards;
+}
+
+@keyframes drawerSlideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.mobile-nav-link {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #0f172a;
+  text-decoration: none;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.mobile-nav-link:hover, .mobile-nav-link.active {
+  color: var(--ls-primary);
+  font-weight: 600;
+}
+
+.mobile-drawer-btn {
+  margin-top: 0.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   SOVEREIGN MICRO-BAR (SÉNÉGAL QUADRICOLORE)
+   -------------------------------------------------------------------------- */
+.sovereign-micro-bar {
+  width: 100%;
+  height: 5px;
+  display: flex;
+}
+
+.bar-sn-green { flex: 1; background-color: #00853F; }
+.bar-sn-yellow { flex: 1; background-color: #FDEF42; }
+.bar-sn-red { flex: 1; background-color: #E31B23; }
+.bar-sn-cyan { flex: 1; background-color: #006973; }
+
+/* --------------------------------------------------------------------------
+   2. HERO DE LA PAGE À PROPOS
+   -------------------------------------------------------------------------- */
+.about-hero-section {
+  position: relative;
+  background: radial-gradient(circle at 50% 30%, #101c56 0%, #080d26 55%, #050818 100%);
+  color: #ffffff;
+  padding: 8.5rem 1.5rem 5rem;
+  overflow: hidden;
+}
+
+.about-hero-glow {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 700px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(0, 165, 181, 0.15) 0%, transparent 70%);
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.about-hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.about-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #67e8f9;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.about-hero-title {
+  font-size: 2.75rem;
+  font-weight: 800;
+  line-height: 1.22;
+  letter-spacing: -0.025em;
+  color: #ffffff;
+  margin: 0 0 1.25rem;
+}
+
+.text-highlight {
+  color: #ffffff;
+  text-shadow: 0 0 25px rgba(255, 255, 255, 0.5);
+}
+
+.about-hero-subtitle {
+  font-size: 1.15rem;
+  color: rgba(255, 255, 255, 0.88);
+  line-height: 1.7;
+  margin: 0 auto;
+}
+
+/* --------------------------------------------------------------------------
+   SECTIONS GÉNÉRALES
+   -------------------------------------------------------------------------- */
+.about-section {
+  padding: 5.5rem 0;
+  position: relative;
+}
+
+.bg-white { background-color: #ffffff; }
+.bg-slate-50 { background-color: #f8fafc; }
+
+.section-header-center {
+  text-align: center;
+  max-width: 740px;
+  margin: 0 auto 3.5rem;
+}
+
+.about-tag {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #006973;
+  margin-bottom: 0.75rem;
+}
+
+.about-section-title {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  margin: 0 0 0.85rem;
+}
+
+.about-section-subtitle {
+  font-size: 1.05rem;
+  color: #64748b;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.about-paragraph {
+  font-size: 1rem;
+  color: #334155;
+  line-height: 1.75;
+  margin-bottom: 1.25rem;
+}
+
+.grid-2cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+}
+
+.grid-3cols {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+/* --------------------------------------------------------------------------
+   SECTION 3 : QU'EST-CE QUE LÉRAL SCOLAIRE
+   -------------------------------------------------------------------------- */
+.about-bullet-list {
+  list-style: none;
+  padding: 0;
+  margin: 1.25rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.about-bullet-list li {
+  position: relative;
+  padding-left: 1.5rem;
+  font-size: 0.95rem;
+  color: #334155;
+  line-height: 1.65;
+}
+
+.about-bullet-list li::before {
+  content: '▪';
+  position: absolute;
+  left: 0;
+  color: #006973;
+  font-size: 1.25rem;
+  line-height: 1;
+  top: 1px;
+}
+
+.about-bullet-list li strong {
+  color: #0f172a;
+}
+
+.about-card-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.visual-inner-box {
+  background: #f8fafc;
+  border-radius: 24px;
+  padding: 3rem 2.5rem;
+  text-align: center;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  width: 100%;
+  max-width: 400px;
+}
+
+.visual-logo-large {
+  width: 110px;
+  height: 110px;
+  object-fit: contain;
+  margin-bottom: 1.25rem;
+}
+
+.visual-box-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #131e6c;
+  margin: 0 0 0.25rem;
+}
+
+.visual-box-sub {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0 0 1.25rem;
+}
+
+.visual-seal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 9999px;
+  background: rgba(0, 105, 115, 0.1);
+  color: #006973;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* --------------------------------------------------------------------------
+   SECTION 4 : QUI EST À L'ORIGINE DU PROJET (CARTE KHADIM NDOYE)
+   -------------------------------------------------------------------------- */
+.author-presentation-card {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 3rem 2.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.author-badge-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  background: rgba(19, 30, 108, 0.1);
+  color: #131e6c;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.85rem;
+}
+
+.author-name {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.35rem;
+}
+
+.author-title-sub {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #006973;
+  margin: 0 0 1.75rem;
+}
+
+.author-text-paragraphs {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.author-text-paragraphs p {
+  font-size: 0.98rem;
+  color: #334155;
+  line-height: 1.75;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   SECTION 5 : OBJECTIFS
+   -------------------------------------------------------------------------- */
+.objective-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 2.25rem 1.85rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.25s ease;
+}
+
+.objective-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 32px -4px rgba(15, 23, 42, 0.1);
+}
+
+.objective-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.bg-blue-900 { background-color: #0f1e36; }
+.bg-teal-700 { background-color: #006973; }
+.bg-orange-600 { background-color: #F37021; }
+
+.objective-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.75rem;
+}
+
+.objective-desc {
+  font-size: 0.9rem;
+  color: #64748b;
+  line-height: 1.65;
+  margin: 0 0 1.5rem;
+}
+
+.objective-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 1.25rem;
+}
+
+.objective-bullets li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   SECTION 6 : NOTRE VISION (HAUTE LISIBILITÉ & CONTRASTE BLANC)
+   -------------------------------------------------------------------------- */
+.about-vision-section {
+  background: #0c1445 !important;
+  color: #ffffff !important;
+}
+
+.vision-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #67e8f9 !important;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 1.25rem;
+}
+
+.vision-main-title {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #ffffff !important;
+  line-height: 1.25;
+  margin: 0 0 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.vision-main-desc {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.92) !important;
+  line-height: 1.75;
+  margin: 0 0 1.25rem;
+}
+
+.vision-main-desc-light {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.8) !important;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.vision-pillars-box {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.vision-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.vision-num {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #38bdf8 !important;
+  line-height: 1;
+  font-family: monospace;
+}
+
+.vision-item-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff !important;
+  margin: 0 0 0.35rem;
+}
+
+.vision-item-desc {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8) !important;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   SECTION 7 : WORKFLOW STEPS
+   -------------------------------------------------------------------------- */
+.workflow-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+.workflow-step-card {
+  background: #ffffff;
+  padding: 2rem 1.5rem;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.step-badge {
+  display: inline-block;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  background: rgba(19, 30, 108, 0.1);
+  color: #131e6c;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.step-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.5rem;
+}
+
+.step-text {
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   SECTION 8 : FAQ ACCORDÉON
+   -------------------------------------------------------------------------- */
+.faq-accordion-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.faq-item-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.35rem 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.faq-item-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+.faq-item-card.active {
+  border-color: #131e6c;
+  background: #f8fafc;
+}
+
+.faq-item-question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.faq-question-text {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.faq-arrow-icon {
+  color: #64748b;
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+
+.faq-arrow-icon.rotate {
+  transform: rotate(180deg);
+  color: #131e6c;
+}
+
+.faq-item-answer {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+  font-size: 0.92rem;
+  color: #475569;
+  line-height: 1.65;
+}
+
+.faq-item-answer p {
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   SECTION 9 : BANNIÈRE D'ENGAGEMENT
+   -------------------------------------------------------------------------- */
+.stitch-sovereign-banner {
+  background: linear-gradient(135deg, #0f1e36 0%, #003B46 60%, #000412 100%);
+  border-radius: 28px;
+  padding: 4rem 3rem;
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 48px -10px rgba(15, 30, 54, 0.4);
+}
+
+.banner-content-wrap {
+  position: relative;
+  z-index: 2;
+  max-width: 680px;
+}
+
+.banner-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  background: rgba(74, 222, 128, 0.2);
+  color: #86efac;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 1.25rem;
+}
+
+.banner-title-text {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #ffffff !important;
+  line-height: 1.25;
+  margin: 0 0 1rem;
+  letter-spacing: -0.02em;
+}
+
+.banner-desc-text {
+  font-size: 1.05rem;
+  color: rgba(255, 255, 255, 0.9) !important;
+  line-height: 1.65;
+  margin: 0 0 2rem;
+}
+
+.banner-buttons-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn-banner-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.85rem;
+  background: #00A5B5;
+  color: #ffffff !important;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 20px rgba(0, 165, 181, 0.35);
+  text-decoration: none;
+}
+
+.btn-banner-primary:hover {
+  background: #008f9c;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 165, 181, 0.5);
+}
+
+.btn-banner-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.85rem;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff !important;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-banner-secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.banner-watermark-bg {
+  position: absolute;
+  bottom: -40px;
+  right: -40px;
+  opacity: 0.08;
+  pointer-events: none;
+  color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   SECTION 10 : FOOTER INSTITUTIONNEL
+   -------------------------------------------------------------------------- */
+.stitch-footer {
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  padding: 4.5rem 1.5rem 2.5rem;
+}
+
+.footer-content-wrap {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.footer-grid-4cols {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1.2fr 1.2fr;
+  gap: 3.5rem;
+  margin-bottom: 3.5rem;
+}
+
+.footer-rep-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.footer-flag-box {
+  display: flex;
+  width: 26px;
+  height: 16px;
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
+.flag-stripe-green {
+  flex: 1;
+  background-color: #00853F;
+}
+
+.flag-stripe-yellow {
+  flex: 1;
+  background-color: #FDEF42;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flag-star {
+  color: #00853F !important;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.flag-stripe-red {
+  flex: 1;
+  background-color: #E31B23;
+}
+
+.footer-ministry-title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #0f172a;
+  letter-spacing: 0.03em;
+}
+
+.footer-about-text {
+  font-size: 0.88rem;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.footer-col-heading {
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #0f172a;
+  letter-spacing: 0.05em;
+  margin: 0 0 1.25rem 0;
+}
+
+.footer-links-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.footer-links-list a {
+  color: #64748b;
+  font-size: 0.88rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  display: inline-block;
+}
+
+.footer-links-list a:hover {
+  color: #131e6c;
+  transform: translateX(3px);
+}
+
+.footer-contact-line {
+  font-size: 0.88rem;
+  color: #64748b;
+  margin: 0 0 0.4rem 0;
+}
+
+.footer-contact-email {
+  font-family: monospace;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #131e6c;
+  margin-top: 0.75rem;
+  word-break: break-all;
+}
+
+.footer-bottom-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 2rem;
+  font-size: 0.85rem;
+  color: #64748b;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* --------------------------------------------------------------------------
+   RESPONSIVE DESIGN (TABLETTES & MOBILES)
+   -------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .capsule-nav {
+    display: none !important;
+  }
+  .capsule-burger {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+  .grid-2cols, .grid-3cols, .workflow-steps-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .footer-grid-4cols {
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+  }
+  .about-hero-title {
+    font-size: 2.15rem;
+  }
+  .author-presentation-card {
+    padding: 2.25rem 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .capsule-header {
+    width: 94%;
+  }
+  .about-hero-section {
+    padding: 7rem 1.25rem 3.5rem;
+  }
+  .about-hero-title {
+    font-size: 1.85rem;
+  }
+  .about-section {
+    padding: 3.5rem 0;
+  }
+  .about-section-title {
+    font-size: 1.75rem;
+  }
+  .footer-grid-4cols {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .footer-bottom-bar {
+    flex-direction: column;
+    text-align: center;
+  }
+  .stitch-sovereign-banner {
+    padding: 2.5rem 1.5rem;
+  }
+}

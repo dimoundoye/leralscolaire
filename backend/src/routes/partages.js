@@ -5,18 +5,9 @@ const fs = require('fs');
 const partageController = require('../controllers/partageController');
 const auth = require('../middleware/authMiddleware');
 
-const upload = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => {
-      const dir = 'uploads/partages/';
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      cb(null, dir);
-    },
-    filename: (req, file, cb) => {
-      cb(null, Date.now() + '-' + file.originalname);
-    }
-  })
-});
+const { createUploadMiddleware } = require('../config/cloudinary');
+
+const upload = createUploadMiddleware('partages');
 
 // Share document
 router.post('/', auth, upload.single('fichier'), partageController.shareDocument);

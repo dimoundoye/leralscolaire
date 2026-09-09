@@ -706,7 +706,7 @@ async function drawSenegalBulletin(doc, data) {
   try {
     const qrCodeImage = await QRCode.toDataURL(qrData);
     doc.image(qrCodeImage, startX, qrY, { width: 50 });
-    doc.font('Helvetica-Oblique').fontSize(7.5).fillColor('#64748b');
+    doc.font('Helvetica-Ob lique').fontSize(7.5).fillColor('#64748b');
     doc.text('Document officiel certifié et vérifié numériquement via la plateforme nationale LeralScolaire.', startX + 58, qrY + 18, { width: 400 });
   } catch (qrErr) {
     console.error('Erreur QR Code:', qrErr);

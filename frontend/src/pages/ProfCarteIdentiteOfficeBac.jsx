@@ -43,7 +43,7 @@ export default function ProfCarteIdentiteOfficeBac() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5002/api/emargement/office/carte-identite/${profId}`, {
+      const res = await fetch(`/api/emargement/office/carte-identite/${profId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();

@@ -7,20 +7,17 @@ const StudentModel = require('../models/studentModel');
 const db = require('../config/db'); // For transaction connection
 const response = require('../utils/response');
 
+const { generateIUP } = require('../utils/iupGenerator');
+const emailService = require('../services/emailService');
+
 // Helper to generate provisional temp password
 function generateTempPassword() {
   return crypto.randomBytes(4).toString('hex'); // 8 characters
 }
 
-// Helper to generate Unique National Student ID
-async function generateStudentId() {
-  const year = new Date().getFullYear();
-  const letters = Array.from({ length: 3 }, () =>
-    String.fromCharCode(65 + Math.floor(Math.random() * 26))
-  ).join('');
-  const count = await StudentModel.countStudents();
-  const sequence = (count + 1).toString().padStart(6, '0');
-  return `SN-${year}-${letters}-${sequence}`;
+// Helper to generate Unique National Student ID (IUP Élève)
+async function generateStudentId(region = 'Dakar', year = null, client = db) {
+  return await generateIUP('SN', region, year, client);
 }
 
 const studentController = {
@@ -47,11 +44,21 @@ const studentController = {
   async enrollStudent(req, res, next) {
     const {
       nom, prenom, sexe, date_naissance, lieu_naissance, nationalite,
-      telephone, coordonnees_parent, classe_id, statut
+      telephone, coordonnees_parent, classe_id, statut, email
     } = req.body;
 
-    const photo_url = req.files?.photo?.[0] ? `/uploads/photos/${req.files.photo[0].filename}` : null;
-    const justificatif_inapte_url = req.files?.justificatif_inapte?.[0] ? `/uploads/justificatifs_inapte/${req.files.justificatif_inapte[0].filename}` : null;
+    // Validation stricte des champs obligatoires
+    if (!telephone || !String(telephone).trim()) {
+      return response.error(res, 'Le numéro de téléphone est obligatoire.', 400);
+    }
+    const cleanEmail = email ? String(email).trim() : null;
+    if (!cleanEmail) {
+      return response.error(res, "L'adresse email (de l'élève ou du parent/tuteur) est obligatoire pour l'envoi des identifiants.", 400);
+    }
+
+    const { getUploadedFileUrl } = require('../config/cloudinary');
+    const photo_url = req.files?.photo?.[0] ? getUploadedFileUrl(req.files.photo[0], 'photos') : null;
+    const justificatif_inapte_url = req.files?.justificatif_inapte?.[0] ? getUploadedFileUrl(req.files.justificatif_inapte[0], 'justificatifs_inapte') : null;
 
     // Validation : si statut INAPTE, le justificatif est obligatoire
     if ((statut === 'INAPTE') && !justificatif_inapte_url) {
@@ -59,25 +66,25 @@ const studentController = {
     }
 
     try {
-      const etablissementId = await StudentModel.getEtablissementIdByAdminId(req.user.id);
-      if (!etablissementId) {
+      const etab = await StudentModel.getEtablissementByAdminId(req.user.id);
+      if (!etab) {
         return response.error(res, 'Établissement non trouvé.', 404);
       }
-
-      const identifiant_national = await generateStudentId();
-      const tempPassword = generateTempPassword();
-      const salt = await bcrypt.genSalt(10);
-      const passwordHash = await bcrypt.hash(tempPassword, salt);
-
-      const email = `${identifiant_national.toLowerCase()}@lernalscolaire.sn`;
+      const etablissementId = etab.id;
+      const etabRegion = etab.region || 'Dakar';
 
       // Use a database transaction
       const client = await db.pool.connect();
       try {
         await client.query('BEGIN');
 
+        const identifiant_national = await generateStudentId(etabRegion, null, client);
+        const tempPassword = generateTempPassword();
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(tempPassword, salt);
+
         // Create associated User account (Role: ELEVE)
-        const user = await StudentModel.createUser(email, identifiant_national, passwordHash, tempPassword, 'ELEVE', client);
+        const user = await StudentModel.createUser(cleanEmail, identifiant_national, passwordHash, tempPassword, 'ELEVE', client);
         const userId = user.id;
 
         // Create Student profile
@@ -91,24 +98,40 @@ const studentController = {
           date_naissance,
           lieu_naissance,
           nationalite,
-          telephone,
+          telephone: telephone.trim(),
           coordonnees_parent,
           photo_url,
           justificatif_inapte_url,
-          statut: statut || 'APTE'
+          statut: statut || 'APTE',
+          email: cleanEmail
         }, client);
 
         const eleveId = eleve.id;
+        let classeNom = null;
 
         // Inscribe student to class if provided
         if (classe_id) {
           await StudentModel.addInscriptionClass(eleveId, classe_id, client);
+          const classRes = await client.query('SELECT nom FROM classes WHERE id = $1', [classe_id]);
+          classeNom = classRes.rows[0]?.nom;
         }
 
         await client.query('COMMIT');
 
+        // Envoi automatique de l'email avec l'IUP et mot de passe temporaire (non-bloquant)
+        emailService.sendEleveWelcome({
+          to: cleanEmail,
+          nom,
+          prenom,
+          iupEleve: identifiant_national,
+          tempPassword: tempPassword,
+          nomEtablissement: etab.nom,
+          classeNom: classeNom,
+          isParent: false
+        }).catch(e => console.error('Erreur email élève:', e.message));
+
         return res.status(201).json({
-          message: 'Élève inscrit avec succès !',
+          message: 'Élève inscrit avec succès ! Identifiants d\'accès envoyés par email.',
           identifiant: identifiant_national,
           password: tempPassword,
           eleve
@@ -132,7 +155,11 @@ const studentController = {
     if (!req.file) return response.error(res, 'Aucun fichier fourni.', 400);
 
     try {
-      const etablissementId = await StudentModel.getEtablissementIdByAdminId(req.user.id);
+      const etab = await StudentModel.getEtablissementByAdminId(req.user.id);
+      if (!etab) return response.error(res, 'Établissement non trouvé.', 404);
+      const etablissementId = etab.id;
+      const etabRegion = etab.region || 'Dakar';
+
       const workbook = XLSX.readFile(req.file.path);
       const sheetName = workbook.SheetNames[0];
       const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
@@ -142,18 +169,18 @@ const studentController = {
         const { nom, prenom, sexe, civilite, date_naissance, lieu_naissance, nationalite, telephone, classe_nom } = row;
         const rawSexe = String(sexe || civilite || '').toUpperCase().trim();
         const sexeVal = (rawSexe === 'F' || rawSexe.startsWith('FEM') || rawSexe.includes('MME') || rawSexe.includes('MLLE')) ? 'F' : 'M';
-        const identifiant_national = await generateStudentId();
-        const tempPassword = generateTempPassword();
-        const salt = await bcrypt.genSalt(10);
-        const passwordHash = await bcrypt.hash(tempPassword, salt);
-        const email = `${identifiant_national.toLowerCase()}@lernalscolaire.sn`;
 
         // Use transaction for each row insertion to ensure consistency
         const client = await db.pool.connect();
         try {
           await client.query('BEGIN');
 
-          const user = await StudentModel.createUser(email, identifiant_national, passwordHash, tempPassword, 'ELEVE', client);
+          const identifiant_national = await generateStudentId(etabRegion, null, client);
+          const tempPassword = generateTempPassword();
+          const salt = await bcrypt.genSalt(10);
+          const passwordHash = await bcrypt.hash(tempPassword, salt);
+
+          const user = await StudentModel.createUser(null, identifiant_national, passwordHash, tempPassword, 'ELEVE', client);
           const userId = user.id;
 
           const eleve = await StudentModel.createStudent({
@@ -236,9 +263,10 @@ const studentController = {
    * Update student details (with optional photo)
    */
   async updateStudent(req, res, next) {
-    const { nom, prenom, sexe, date_naissance, lieu_naissance, nationalite, telephone, coordonnees_parent, statut, classe_id } = req.body;
-    const photo_url = req.files?.photo?.[0] ? `/uploads/photos/${req.files.photo[0].filename}` : undefined;
-    const justificatif_inapte_url = req.files?.justificatif_inapte?.[0] ? `/uploads/justificatifs_inapte/${req.files.justificatif_inapte[0].filename}` : undefined;
+    const { nom, prenom, sexe, date_naissance, lieu_naissance, nationalite, telephone, coordonnees_parent, statut, classe_id, email } = req.body;
+    const { getUploadedFileUrl } = require('../config/cloudinary');
+    const photo_url = req.files?.photo?.[0] ? getUploadedFileUrl(req.files.photo[0], 'photos') : undefined;
+    const justificatif_inapte_url = req.files?.justificatif_inapte?.[0] ? getUploadedFileUrl(req.files.justificatif_inapte[0], 'justificatifs_inapte') : undefined;
 
     // Validation : si statut INAPTE, le justificatif est obligatoire
     const currentStudent = await StudentModel.getStudentById(req.params.id);
@@ -258,8 +286,12 @@ const studentController = {
       }
 
       const updatedStudent = await StudentModel.updateStudent(req.params.id, {
-        nom, prenom, sexe, date_naissance, lieu_naissance, nationalite, telephone, coordonnees_parent, statut
+        nom, prenom, sexe, date_naissance, lieu_naissance, nationalite, telephone, coordonnees_parent, statut, email
       }, photo_url, justificatif_inapte_url);
+
+      if (email && student.user_id) {
+        await db.query('UPDATE users SET email = $1 WHERE id = $2', [email.trim(), student.user_id]);
+      }
 
       if (classe_id) {
         await StudentModel.clearStudentClassEnrollments(req.params.id);

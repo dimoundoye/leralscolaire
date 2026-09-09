@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   GraduationCap, Users, School, UserCheck, CheckCircle, Clock,
-  BarChart3, Medal, Send
+  BarChart3, Medal, Send, Inbox, ArrowRight
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
@@ -12,10 +12,52 @@ export const OfficeOverviewTab = ({
   palmares = [],
   navigate,
   setShowPublierModal,
-  getMentionColor
+  getMentionColor,
+  demandesList = []
 }) => {
+  const pendingDemandes = demandesList.filter(d => d.statut === 'EN_ATTENTE');
+
   return (
     <div className="ob-tab-pane">
+      {/* ALERTE NOUVELLES PRÉ-INSCRIPTIONS EN ATTENTE */}
+      {pendingDemandes.length > 0 && (
+        <div style={{
+          background: 'linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%)',
+          border: '1.5px solid #93c5fd',
+          borderRadius: 14,
+          padding: '16px 20px',
+          marginBottom: 20,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 12,
+          boxShadow: '0 4px 12px rgba(30, 58, 138, 0.08)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#dbeafe', color: '#1e3a8a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Inbox size={24} />
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#1e3a8a' }}>
+                {pendingDemandes.length} Demande(s) de pré-inscription en attente de traitement
+              </h3>
+              <p style={{ margin: '3px 0 0 0', fontSize: 13, color: '#475569' }}>
+                Des dossiers officiels d'établissements et/ou de professeurs ont été déposés avec pièces justificatives.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="ob-btn ob-btn-primary"
+            onClick={() => navigate('/office/dashboard/demandes')}
+            style={{ padding: '10px 18px', fontWeight: 700, borderRadius: 10, display: 'inline-flex', alignItems: 'center', gap: 8 }}
+          >
+            Examiner &amp; Valider les demandes <ArrowRight size={16} />
+          </button>
+        </div>
+      )}
+
       {/* Hero */}
       <div className="ob-hero">
         <div className="ob-hero-left">

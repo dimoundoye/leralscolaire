@@ -112,7 +112,7 @@ const AdminAttestationsTab = ({
                           )}
                           {item.statut === 'ACCEPTE' && (
                             <a 
-                              href={`http://localhost:5002/api/documents/attestation/${item.eleve_id}?token=${localStorage.getItem('token')}`} 
+                              href={`/api/documents/attestation/${item.eleve_id}?token=${localStorage.getItem('token')}`} 
                               target="_blank" 
                               rel="noopener noreferrer"
                               className="btn-text" 

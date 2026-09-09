@@ -112,7 +112,7 @@ const AdminTransfertsTab = ({
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         {t.photo_url ? (
-                          <img src={`http://localhost:5002${t.photo_url}`} alt="Photo" className="student-photo-mini" />
+                          <img src={`${t.photo_url}`} alt="Photo" className="student-photo-mini" />
                         ) : (
                           <div className="user-avatar-small"><User size={14}/></div>
                         )}

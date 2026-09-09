@@ -10,7 +10,7 @@ const AdminBaremesTab = ({
   useEffect(() => {
     if (baremes.length === 0 && !baremesSaving) {
       const token = localStorage.getItem('token');
-      fetch('http://localhost:5002/api/etablissement/baremes', {
+      fetch('/api/etablissement/baremes', {
         headers: { 'Authorization': `Bearer ${token}` }
       }).then(r => r.json()).then(data => { if (Array.isArray(data)) setBaremes(data); }).catch(console.error);
     }
@@ -107,7 +107,7 @@ const AdminBaremesTab = ({
               setBaremesSaving(true);
               const token = localStorage.getItem('token');
               try {
-                const res = await fetch('http://localhost:5002/api/etablissement/baremes', {
+                const res = await fetch('/api/etablissement/baremes', {
                   method: 'PUT',
                   headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                   body: JSON.stringify({ baremes })

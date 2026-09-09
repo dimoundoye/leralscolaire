@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { School, User, Calendar, MapPin, Phone, Globe, ShieldAlert, Award, FileText, CheckCircle2, AlertCircle, Camera } from 'lucide-react';
+import { School, User, Calendar, MapPin, Phone, Mail, Globe, ShieldAlert, Award, FileText, CheckCircle2, AlertCircle, Camera } from 'lucide-react';
 import './PublicRegistration.css';
 
 const PublicRegistration = () => {
@@ -26,6 +26,7 @@ const PublicRegistration = () => {
     lieu_naissance: '',
     nationalite: 'Sénégalaise',
     telephone: '',
+    email: '',
     coordonnees_parent: '',
     statut: 'APTE',
     identifiant_existant: ''
@@ -37,7 +38,7 @@ const PublicRegistration = () => {
 
   const fetchClassInfo = async () => {
     try {
-      const res = await fetch(`http://localhost:5002/api/pre-inscriptions/public/class/${classId}`);
+      const res = await fetch(`/api/pre-inscriptions/public/class/${classId}`);
       if (!res.ok) {
         throw new Error('Classe introuvable ou lien invalide.');
       }
@@ -83,7 +84,7 @@ const PublicRegistration = () => {
         formDataToSend.append('photo', photoFile);
       }
 
-      const res = await fetch('http://localhost:5002/api/pre-inscriptions/public/register', {
+      const res = await fetch('/api/pre-inscriptions/public/register', {
         method: 'POST',
         body: formDataToSend
       });
@@ -128,8 +129,13 @@ const PublicRegistration = () => {
       <div className="registration-container">
         
         {/* HEADER BRAND */}
-        <div className="brand-logo">
-          <div className="logo-badge">SN</div>
+        <div className="brand-logo" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <img 
+            src="/logo_leralscolaire.png" 
+            alt="Logo LéralScolaire" 
+            style={{ height: '48px', width: 'auto', objectFit: 'contain' }}
+            onError={(e) => { e.target.style.display = 'none'; }}
+          />
           <div>
             <h2>Portail LeralScolaire</h2>
             <p>Ministère de l'Éducation Nationale</p>
@@ -326,7 +332,7 @@ const PublicRegistration = () => {
 
                 <div className="form-row">
                   <div className="input-group">
-                    <label htmlFor="telephone">Téléphone (Élève - Optionnel)</label>
+                    <label htmlFor="telephone">Numéro de Téléphone *</label>
                     <div className="input-with-icon">
                       <Phone size={18} />
                       <input 
@@ -336,8 +342,27 @@ const PublicRegistration = () => {
                         placeholder="Ex: 77 123 45 67"
                         value={formData.telephone}
                         onChange={handleChange}
+                        required
                       />
                     </div>
+                  </div>
+                  <div className="input-group">
+                    <label htmlFor="email">Email (Élève ou Parent / Tuteur) *</label>
+                    <div className="input-with-icon">
+                      <Mail size={18} />
+                      <input 
+                        type="email" 
+                        id="email"
+                        name="email"
+                        placeholder="Ex: parent@gmail.com ou eleve@sn.sn"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                    <small style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', display: 'block' }}>
+                      Obligatoire : cet email recevra l'IUP et le mot de passe temporaire dès validation.
+                    </small>
                   </div>
                 </div>
 

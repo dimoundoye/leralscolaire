@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
-import { GraduationCap, School, UserCheck, Send, CheckCircle, AlertCircle, ArrowLeft, FileText, Upload, ShieldCheck, AlertOctagon, Scale } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { GraduationCap, School, UserCheck, Send, CheckCircle, AlertCircle, ArrowLeft, FileText, Upload, ShieldCheck, AlertOctagon, Scale, Home, Mail } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import './PublicOfficeRegistration.css';
 
 import { REFERENTIEL_IA_IEF, getIasByRegion, getIefsByIa } from '../utils/referentielIaIef';
 
-const API = 'http://localhost:5002/api';
+const API = '/api';
 
 const PublicOfficeRegistration = () => {
   const navigate = useNavigate();
-  const [typeDemande, setTypeDemande] = useState('ETABLISSEMENT');
+  const [searchParams] = useSearchParams();
+  const initialType = (searchParams.get('type') || 'ETABLISSEMENT').toUpperCase();
+  const [typeDemande, setTypeDemande] = useState(initialType === 'PROFESSEUR' ? 'PROFESSEUR' : 'ETABLISSEMENT');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState('');
   const [formData, setFormData] = useState({
     nom: '', prenom: '', email: '', telephone: '', region: 'Dakar', ville: 'Dakar',
     ia_nom: 'IA de Dakar', ief_nom: 'IEF Dakar-Centre',
@@ -59,6 +63,7 @@ const PublicOfficeRegistration = () => {
           ...d,
           [field]: {
             name: file.name,
+            size: file.size,
             type: file.type,
             data: reader.result
           }
@@ -66,6 +71,56 @@ const PublicOfficeRegistration = () => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const renderDocBox = (field, title, subtitle, IconComponent) => {
+    const fileInfo = docs[field];
+    const hasFile = Boolean(fileInfo && fileInfo.name);
+
+    return (
+      <div className={`por-doc-box ${hasFile ? 'has-file' : ''}`}>
+        {hasFile ? (
+          <CheckCircle size={22} color="#16a34a" style={{ flexShrink: 0 }} />
+        ) : (
+          <IconComponent size={20} style={{ flexShrink: 0 }} />
+        )}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <strong style={{ color: hasFile ? '#166534' : '#0f172a' }}>{title}</strong>
+          {hasFile ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '11px', color: '#15803d', fontWeight: 700 }}>
+                ✓ Pièce jointe sélectionnée :
+              </span>
+              <span style={{ fontSize: '11px', color: '#0f172a', fontWeight: 600, background: '#dcfce7', padding: '2px 8px', borderRadius: '4px', border: '1px solid #bbf7d0', maxWidth: '240px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                📄 {fileInfo.name}
+              </span>
+            </div>
+          ) : (
+            <p>{subtitle}</p>
+          )}
+        </div>
+
+        {hasFile ? (
+          <span style={{ fontSize: '11px', color: '#15803d', fontWeight: 700, background: '#dcfce7', padding: '4px 10px', borderRadius: '8px', border: '1px solid #86efac', flexShrink: 0 }}>
+            Pièce jointe ✓
+          </span>
+        ) : (
+          <span style={{ fontSize: '11px', color: '#64748b', background: '#f1f5f9', padding: '4px 8px', borderRadius: '6px', flexShrink: 0 }}>
+            Choisir un fichier
+          </span>
+        )}
+
+        <input 
+          type="file" 
+          accept=".pdf,.png,.jpg,.jpeg" 
+          onChange={e => {
+            if (e.target.files && e.target.files[0]) {
+              handleFileChange(field, e.target.files[0]);
+            }
+          }} 
+        />
+      </div>
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -94,6 +149,8 @@ const PublicOfficeRegistration = () => {
       const data = await r.json();
 
       if (r.ok) {
+        setSubmittedEmail(formData.email);
+        setShowSuccessModal(true);
         setSuccessMsg(data.message);
         setFormData({ nom: '', prenom: '', email: '', telephone: '', region: 'Dakar', ville: 'Dakar', specialite_ou_code: '', cni_numero: '', autorisation_numero: '', matricule_solde: '', sexe: 'M' });
         setDocs({ doc_autorisation: null, doc_cni: null, doc_ninea_ou_diplome: null, doc_rib_ou_pv: null });
@@ -316,32 +373,9 @@ const PublicOfficeRegistration = () => {
               </div>
 
               <div className="por-docs-grid">
-                <div className="por-doc-box">
-                  <FileText size={18} />
-                  <div>
-                    <strong>1. Arrêté / Autorisation d'Enseigner (MEN) *</strong>
-                    <p>Fichier PDF ou Image de l'arrêté ministériel</p>
-                  </div>
-                  <input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={e => handleFileChange('doc_autorisation', e.target.files[0])} />
-                </div>
-
-                <div className="por-doc-box">
-                  <ShieldCheck size={18} />
-                  <div>
-                    <strong>2. Carte CNI du Proviseur / Directeur *</strong>
-                    <p>Copie rectoverso CNI du responsable légal</p>
-                  </div>
-                  <input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={e => handleFileChange('doc_cni', e.target.files[0])} />
-                </div>
-
-                <div className="por-doc-box">
-                  <FileText size={18} />
-                  <div>
-                    <strong>3. NINEA / Décret de Création *</strong>
-                    <p>Attestation immatriculation fiscale ou Décret public</p>
-                  </div>
-                  <input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={e => handleFileChange('doc_ninea_ou_diplome', e.target.files[0])} />
-                </div>
+                {renderDocBox('doc_autorisation', "1. Arrêté / Autorisation d'Enseigner (MEN) *", "Fichier PDF ou Image de l'arrêté ministériel", FileText)}
+                {renderDocBox('doc_cni', "2. Carte CNI du Proviseur / Directeur *", "Copie rectoverso CNI du responsable légal", ShieldCheck)}
+                {renderDocBox('doc_ninea_ou_diplome', "3. NINEA / Décret de Création *", "Attestation immatriculation fiscale ou Décret public", FileText)}
               </div>
             </>
           ) : (
@@ -367,32 +401,9 @@ const PublicOfficeRegistration = () => {
               </div>
 
               <div className="por-docs-grid">
-                <div className="por-doc-box">
-                  <ShieldCheck size={18} />
-                  <div>
-                    <strong>1. Carte CNI (Recto-Verso) *</strong>
-                    <p>Copie CNI de l'enseignant examinateur</p>
-                  </div>
-                  <input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={e => handleFileChange('doc_cni', e.target.files[0])} />
-                </div>
-
-                <div className="por-doc-box">
-                  <FileText size={18} />
-                  <div>
-                    <strong>2. Diplôme Académique / Professionnel *</strong>
-                    <p>Master, Licence, Doctorat, CAES, BAPET...</p>
-                  </div>
-                  <input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={e => handleFileChange('doc_ninea_ou_diplome', e.target.files[0])} />
-                </div>
-
-                <div className="por-doc-box">
-                  <Upload size={18} />
-                  <div>
-                    <strong>3. Relevé d'Identité Bancaire (RIB) *</strong>
-                    <p>RIB officiel pour versement des indemnités BAC/BFEM</p>
-                  </div>
-                  <input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={e => handleFileChange('doc_rib_ou_pv', e.target.files[0])} />
-                </div>
+                {renderDocBox('doc_cni', "1. Carte CNI (Recto-Verso) *", "Copie CNI de l'enseignant examinateur", ShieldCheck)}
+                {renderDocBox('doc_ninea_ou_diplome', "2. Diplôme Académique / Professionnel *", "Master, Licence, Doctorat, CAES, BAPET...", FileText)}
+                {renderDocBox('doc_rib_ou_pv', "3. Relevé d'Identité Bancaire (RIB) *", "RIB officiel pour versement des indemnités BAC/BFEM", Upload)}
               </div>
             </>
           )}
@@ -416,6 +427,94 @@ const PublicOfficeRegistration = () => {
           </button>
         </form>
       </div>
+
+      {/* POPUP DE CONFIRMATION DE SOUMISSION */}
+      {showSuccessModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 99999,
+          background: 'rgba(15, 23, 42, 0.75)',
+          backdropFilter: 'blur(5px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '20px',
+            maxWidth: '500px',
+            width: '100%',
+            padding: '36px 28px',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            textAlign: 'center',
+            position: 'relative'
+          }}>
+            <div style={{
+              width: '76px', height: '76px',
+              borderRadius: '50%',
+              background: '#dcfce7',
+              color: '#16a34a',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 20px auto',
+              boxShadow: '0 0 0 8px #f0fdf4'
+            }}>
+              <CheckCircle size={44} />
+            </div>
+
+            <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#0f172a', margin: '0 0 10px 0' }}>
+              Demande soumise avec succès !
+            </h2>
+
+            <p style={{ fontSize: '14px', color: '#475569', lineHeight: 1.6, margin: '0 0 20px 0' }}>
+              Votre dossier de pré-inscription avec l'ensemble des pièces justificatives a bien été transmis aux services de l'<strong>Office du Baccalauréat du Sénégal</strong>.
+            </p>
+
+            <div style={{
+              background: '#f8fafc',
+              border: '1.5px solid #e2e8f0',
+              borderRadius: '12px',
+              padding: '14px 16px',
+              marginBottom: '24px',
+              textAlign: 'left',
+              fontSize: '13px',
+              color: '#334155'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', color: '#1e3a8a', fontWeight: 700 }}>
+                <Mail size={16} />
+                <span>Accusé de réception envoyé</span>
+              </div>
+              <p style={{ margin: 0, fontSize: '12px', color: '#64748b', lineHeight: 1.5 }}>
+                Un email officiel contenant votre référence a été expédié à <strong>{submittedEmail}</strong>. Nos équipes instruiront votre dossier dans les plus brefs délais.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              style={{
+                width: '100%',
+                padding: '14px 20px',
+                background: '#1e3a8a',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '12px',
+                fontSize: '15px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px',
+                boxShadow: '0 4px 12px rgba(30, 58, 138, 0.25)',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#172554'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = '#1e3a8a'; }}
+            >
+              <Home size={18} />
+              Revenir à la page d'accueil
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

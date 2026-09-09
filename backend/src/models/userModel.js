@@ -24,18 +24,18 @@ const User = {
     return rows[0];
   },
 
-  async create(email, passwordHash, role, client = db) {
+  async create(email, passwordHash, role, identifiantNational = null, client = db) {
     const { rows } = await client.query(
-      'INSERT INTO users (email, password_hash, role) VALUES ($1, $2, $3) RETURNING id, email, role',
-      [email, passwordHash, role]
+      'INSERT INTO users (email, password_hash, role, identifiant_national) VALUES ($1, $2, $3, $4) RETURNING id, email, role, identifiant_national',
+      [email, passwordHash, role, identifiantNational]
     );
     return rows[0];
   },
 
-  async createEtablissement(codeEtablissement, nom, region, ville, adminId, client = db) {
+  async createEtablissement(codeEtablissement, nom, region, ville, adminId, emailProfessionnel = null, client = db) {
     const { rows } = await client.query(
-      'INSERT INTO etablissements (code_etablissement, nom, region, ville, admin_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [codeEtablissement, nom, region || 'Sénégal', ville || 'Non précisée', adminId]
+      'INSERT INTO etablissements (code_etablissement, nom, region, ville, admin_id, email_professionnel) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [codeEtablissement, nom, region || 'Sénégal', ville || 'Non précisée', adminId, emailProfessionnel || null]
     );
     return rows[0];
   }

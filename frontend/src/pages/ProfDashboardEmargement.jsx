@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { QrCode, MapPin, CheckCircle, Clock, BookOpen, AlertCircle, PlusCircle, ShieldCheck, Award, Star, Compass } from 'lucide-react';
+import { offlineFetch } from '../services/api';
 
 export default function ProfDashboardEmargement() {
   const [activeTab, setActiveTab] = useState('scanne');
@@ -33,7 +34,7 @@ export default function ProfDashboardEmargement() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5002/api/emargement/scan', {
+      const res = await offlineFetch('/api/emargement/scan', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -48,11 +49,11 @@ export default function ProfDashboardEmargement() {
           heureDebut: '08:00',
           heureFin: '10:00'
         })
-      });
+      }, 'Émargement QR séance');
 
       const data = await res.json();
-      if (data.success) {
-        setMessage(data.message);
+      if (data.success || data.offline) {
+        setMessage(data.offline ? 'Émargement sauvegardé localement (⏳ sera synchronisé automatiquement dès retour réseau) !' : data.message);
         setQrTokenInput('');
         if (data.seance) setSelectedSeanceId(data.seance.id);
       } else {
@@ -79,7 +80,7 @@ export default function ProfDashboardEmargement() {
     navigator.geolocation.getCurrentPosition(async (pos) => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:5002/api/emargement/eps-terrain', {
+        const res = await offlineFetch('/api/emargement/eps-terrain', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -95,11 +96,11 @@ export default function ProfDashboardEmargement() {
             latitude: pos.coords.latitude,
             longitude: pos.coords.longitude
           })
-        });
+        }, 'Émargement EPS Terrain');
 
         const data = await res.json();
-        if (data.success) {
-          setMessage(data.message);
+        if (data.success || data.offline) {
+          setMessage(data.offline ? 'Émargement EPS sauvegardé localement (⏳ sera synchronisé au retour de la connexion) !' : data.message);
           setGpsStatus(`GPS Validé: Lat ${pos.coords.latitude.toFixed(4)}, Lng ${pos.coords.longitude.toFixed(4)}`);
         } else {
           setError(data.error);
@@ -127,7 +128,7 @@ export default function ProfDashboardEmargement() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5002/api/emargement/cahier-texte-complete', {
+      const res = await offlineFetch('/api/emargement/cahier-texte-complete', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -139,11 +140,11 @@ export default function ProfDashboardEmargement() {
           contenu: cahierContenu,
           devoirs: cahierDevoirs
         })
-      });
+      }, 'Validation cahier de texte émargement');
 
       const data = await res.json();
-      if (data.success) {
-        setMessage(data.message);
+      if (data.success || data.offline) {
+        setMessage(data.offline ? 'Cahier de texte enregistré en local (⏳ synchronisation automatique dès retour réseau) !' : data.message);
         setCahierTitre('');
         setCahierContenu('');
         setCahierDevoirs('');
@@ -169,7 +170,7 @@ export default function ProfDashboardEmargement() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5002/api/emargement/rattrapage/demande', {
+      const res = await offlineFetch('/api/emargement/rattrapage/demande', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

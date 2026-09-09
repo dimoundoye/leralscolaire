@@ -21,7 +21,7 @@ export default function EvaluationProfEleveModal({ isOpen, onClose, professeur, 
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5002/api/emargement/evaluation-eleve', {
+      const res = await fetch('/api/emargement/evaluation-eleve', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

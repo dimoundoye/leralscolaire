@@ -75,6 +75,13 @@ const partageController = {
       }
 
       const filePath = doc.chemin_fichier;
+      if (filePath && (filePath.startsWith('http://') || filePath.startsWith('https://'))) {
+        if (doc.destinataire_etablissement_id === etablissementId && !doc.lu) {
+          await PartageModel.markAsRead(req.params.id);
+        }
+        return res.redirect(filePath);
+      }
+
       if (!fs.existsSync(filePath)) {
         return response.error(res, 'Fichier introuvable sur le serveur.', 404);
       }

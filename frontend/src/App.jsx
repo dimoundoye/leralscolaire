@@ -1,6 +1,7 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
+import AboutPage from './pages/AboutPage'
 import Auth from './pages/Auth'
 import Dashboard from './pages/Dashboard'
 import StudentDashboard from './pages/StudentDashboard'
@@ -13,32 +14,39 @@ import QrCodeLiveDisplay from './pages/QrCodeLiveDisplay'
 import ProfCarteIdentiteOfficeBac from './pages/ProfCarteIdentiteOfficeBac'
 
 import { AuthProvider } from './contexts/AuthContext'
+import { OfflineProvider } from './contexts/OfflineContext'
+import OfflineBanner from './components/common/OfflineBanner'
 
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <div className="min-h-screen bg-gray-50">
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/inscription-nationale" element={<PublicOfficeRegistration />} />
-            <Route path="/register/class/:classId" element={<PublicRegistration />} />
-            <Route path="/emargement/live-qr/:etablissementId" element={<QrCodeLiveDisplay />} />
-            <Route path="/office/professeurs/carte-identite" element={<ProfCarteIdentiteOfficeBac />} />
-            <Route path="/professeur/emargement" element={<Navigate to="/professeur/dashboard/emargement" replace />} />
-            <Route path="/dashboard" element={<Navigate to="/dashboard/overview" replace />} />
-            <Route path="/dashboard/:tab" element={<Dashboard />} />
-            <Route path="/student/dashboard" element={<Navigate to="/student/dashboard/overview" replace />} />
-            <Route path="/student/dashboard/:tab" element={<StudentDashboard />} />
-            <Route path="/professeur/dashboard" element={<Navigate to="/professeur/dashboard/overview" replace />} />
-            <Route path="/professeur/dashboard/:tab" element={<TeacherDashboard />} />
-            <Route path="/office/dashboard" element={<Navigate to="/office/dashboard/overview" replace />} />
-            <Route path="/office/dashboard/:tab" element={<OfficeBacDashboard />} />
-            <Route path="/jury/dashboard" element={<JuryDeliberationDashboard />} />
-          </Routes>
-        </div>
-      </AuthProvider>
+      <OfflineProvider>
+        <AuthProvider>
+          <div className="min-h-screen bg-gray-50">
+            <OfflineBanner />
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/a-propos" element={<AboutPage />} />
+              <Route path="/about" element={<Navigate to="/a-propos" replace />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/inscription-nationale" element={<PublicOfficeRegistration />} />
+              <Route path="/register/class/:classId" element={<PublicRegistration />} />
+              <Route path="/emargement/live-qr/:etablissementId" element={<QrCodeLiveDisplay />} />
+              <Route path="/office/professeurs/carte-identite" element={<ProfCarteIdentiteOfficeBac />} />
+              <Route path="/professeur/emargement" element={<Navigate to="/professeur/dashboard/emargement" replace />} />
+              <Route path="/dashboard" element={<Navigate to="/dashboard/overview" replace />} />
+              <Route path="/dashboard/:tab" element={<Dashboard />} />
+              <Route path="/student/dashboard" element={<Navigate to="/student/dashboard/overview" replace />} />
+              <Route path="/student/dashboard/:tab" element={<StudentDashboard />} />
+              <Route path="/professeur/dashboard" element={<Navigate to="/professeur/dashboard/overview" replace />} />
+              <Route path="/professeur/dashboard/:tab" element={<TeacherDashboard />} />
+              <Route path="/office/dashboard" element={<Navigate to="/office/dashboard/overview" replace />} />
+              <Route path="/office/dashboard/:tab" element={<OfficeBacDashboard />} />
+              <Route path="/jury/dashboard" element={<JuryDeliberationDashboard />} />
+            </Routes>
+          </div>
+        </AuthProvider>
+      </OfflineProvider>
     </Router>
   )
 }

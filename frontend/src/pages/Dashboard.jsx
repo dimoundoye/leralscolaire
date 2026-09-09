@@ -81,7 +81,7 @@ import './Dashboard.css';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { tab } = useParams();
   const activeTab = tab || 'overview';
   const fileInputRef = useRef(null);
@@ -165,7 +165,7 @@ const Dashboard = () => {
     formData.append('fichier', file);
 
     try {
-      const res = await fetch('http://localhost:5002/api/messages/upload', {
+      const res = await fetch('/api/messages/upload', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
@@ -232,6 +232,9 @@ const Dashboard = () => {
   const [showPreModal, setShowPreModal] = useState(false);
   const [showCredsModal, setShowCredsModal] = useState(false);
   const [generatedCreds, setGeneratedCreds] = useState(null);
+  const [emailDuplicateModal, setEmailDuplicateModal] = useState(null);
+  const [newStudentEmail, setNewStudentEmail] = useState('');
+  const [resolvingDuplicateEmail, setResolvingDuplicateEmail] = useState(false);
 
   // Form states
   const [selectedYear, setSelectedYear] = useState('2025-2026');
@@ -245,7 +248,7 @@ const Dashboard = () => {
   const [newClass, setNewClass] = useState({ nom: '', niveau: '6ème', annee_scolaire: '2025-2026' });
   const [newEleve, setNewEleve] = useState({ 
     nom: '', prenom: '', sexe: 'M', date_naissance: '', lieu_naissance: '', 
-    nationalite: '', telephone: '', coordonnees_parent: '', 
+    nationalite: '', telephone: '', email: '', coordonnees_parent: '', 
     classe_id: '', statut: 'APTE', photo: null 
   });
   const [newMatiere, setNewMatiere] = useState({ nom: '', code: '' });
@@ -363,8 +366,8 @@ const Dashboard = () => {
     const token = localStorage.getItem('token');
     try {
       const [incRes, outRes] = await Promise.all([
-        fetch('http://localhost:5002/api/eleves/transfers/incoming', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('http://localhost:5002/api/eleves/transfers/outgoing', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch('/api/eleves/transfers/incoming', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/eleves/transfers/outgoing', { headers: { 'Authorization': `Bearer ${token}` } })
       ]);
       if (incRes.ok) setIncomingTransfers(await incRes.json());
       if (outRes.ok) setOutgoingTransfers(await outRes.json());
@@ -375,8 +378,8 @@ const Dashboard = () => {
     const token = localStorage.getItem('token');
     try {
       const [recusRes, envoyesRes] = await Promise.all([
-        fetch('http://localhost:5002/api/partages/received', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('http://localhost:5002/api/partages/sent', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch('/api/partages/received', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/partages/sent', { headers: { 'Authorization': `Bearer ${token}` } })
       ]);
       if (recusRes.ok) setPartagesRecus(await recusRes.json());
       if (envoyesRes.ok) setPartagesEnvoyes(await envoyesRes.json());
@@ -387,7 +390,7 @@ const Dashboard = () => {
     if (q.length < 2) { setPartageResults([]); return; }
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/etablissement/search?q=${encodeURIComponent(q)}`, {
+      const res = await fetch(`/api/etablissement/search?q=${encodeURIComponent(q)}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) setPartageResults(await res.json());
@@ -400,10 +403,10 @@ const Dashboard = () => {
     const token = localStorage.getItem('token');
     try {
       const [decisionsRes, reglesRes] = await Promise.all([
-        fetch(`http://localhost:5002/api/notes/decisions/${classeId}?annee_scolaire=${notesAnneeScolaire}`, {
+        fetch(`/api/notes/decisions/${classeId}?annee_scolaire=${notesAnneeScolaire}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
-        fetch('http://localhost:5002/api/notes/regles-passage', {
+        fetch('/api/notes/regles-passage', {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
@@ -417,7 +420,7 @@ const Dashboard = () => {
     setAuditLoading(true);
     const token = localStorage.getItem('token');
     try {
-      let url = 'http://localhost:5002/api/etablissement/audit';
+      let url = '/api/etablissement/audit';
       const params = new URLSearchParams();
       if (classeId) params.append('classe_id', classeId);
       if (trimestre) params.append('trimestre', trimestre);
@@ -442,7 +445,7 @@ const Dashboard = () => {
     const endpoint = type === 'confirm' ? 'confirm' : 'reject';
     
     try {
-      const res = await fetch(`http://localhost:5002/api/etablissement/audit/${entry.id}/${endpoint}`, {
+      const res = await fetch(`/api/etablissement/audit/${entry.id}/${endpoint}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -466,7 +469,7 @@ const Dashboard = () => {
     setSuiviLoading(true);
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/notes/suivi-remplissage?semestre=${sem}&annee_scolaire=${anneeScolaire}`, {
+      const res = await fetch(`/api/notes/suivi-remplissage?semestre=${sem}&annee_scolaire=${anneeScolaire}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) setSuiviRemplissage(await res.json());
@@ -477,7 +480,7 @@ const Dashboard = () => {
   const handleToggleBulletinPublication = async (classeId, anneeScolaire, currentStatus) => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/notes/publications/${classeId}`, {
+      const res = await fetch(`/api/notes/publications/${classeId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -519,7 +522,7 @@ const Dashboard = () => {
     setAbsLoading(true);
     const token = localStorage.getItem('token');
     try {
-      let url = 'http://localhost:5002/api/etablissement/absences';
+      let url = '/api/etablissement/absences';
       const params = new URLSearchParams();
       if (classeId) params.append('classe_id', classeId);
       if (justifiee !== '') params.append('justifiee', justifiee);
@@ -538,7 +541,7 @@ const Dashboard = () => {
     if (!selectedAbsenceForJustify) return;
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/etablissement/absences/${selectedAbsenceForJustify.id}/justifier`, {
+      const res = await fetch(`/api/etablissement/absences/${selectedAbsenceForJustify.id}/justifier`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -580,7 +583,7 @@ const Dashboard = () => {
       const params = new URLSearchParams();
       if (cahierFilterClasse) params.append('classe_id', cahierFilterClasse);
       if (cahierFilterProf) params.append('professeur_id', cahierFilterProf);
-      const res = await fetch(`http://localhost:5002/api/cahier-texte/admin?${params}`, {
+      const res = await fetch(`/api/cahier-texte/admin?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -597,7 +600,7 @@ const Dashboard = () => {
   const handleToggleVisa = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5002/api/cahier-texte/${id}/visa`, {
+      const res = await fetch(`/api/cahier-texte/${id}/visa`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -621,7 +624,7 @@ const Dashboard = () => {
     e.preventDefault();
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5002/api/notes/regles-passage', {
+      const res = await fetch('/api/notes/regles-passage', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(reglesPassage)
@@ -638,7 +641,7 @@ const Dashboard = () => {
     setLoading(true);
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/notes/decisions/${decisionsClasseId}`, {
+      const res = await fetch(`/api/notes/decisions/${decisionsClasseId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ decisions, annee_scolaire: notesAnneeScolaire })
@@ -693,9 +696,14 @@ const Dashboard = () => {
   const fetchClasses = async () => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5002/api/classes', {
+      const res = await fetch('/api/classes', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      if (res.status === 401) {
+        logout?.();
+        navigate('/auth');
+        return;
+      }
       const data = await res.json();
       if (res.ok) setClasses(data);
     } catch (err) { console.error(err); }
@@ -704,9 +712,14 @@ const Dashboard = () => {
   const fetchEleves = async () => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5002/api/eleves', {
+      const res = await fetch('/api/eleves', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      if (res.status === 401) {
+        logout?.();
+        navigate('/auth');
+        return;
+      }
       const data = await res.json();
       if (res.ok) setEleves(data);
     } catch (err) { console.error(err); }
@@ -715,7 +728,7 @@ const Dashboard = () => {
   const fetchMatieres = async () => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5002/api/notes/matieres', {
+      const res = await fetch('/api/notes/matieres', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -726,7 +739,7 @@ const Dashboard = () => {
   const fetchProfs = async () => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5002/api/professeurs', {
+      const res = await fetch('/api/professeurs', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -737,7 +750,7 @@ const Dashboard = () => {
   const fetchSchedule = async (classeId) => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/classes/${classeId}/schedule`, {
+      const res = await fetch(`/api/classes/${classeId}/schedule`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -748,7 +761,7 @@ const Dashboard = () => {
   const fetchExams = async (classeId) => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/classes/${classeId}/exams`, {
+      const res = await fetch(`/api/classes/${classeId}/exams`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -759,7 +772,7 @@ const Dashboard = () => {
   const fetchProposedDevoirs = async () => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5002/api/etablissement/planning/propositions', {
+      const res = await fetch('/api/etablissement/planning/propositions', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -772,7 +785,7 @@ const Dashboard = () => {
   const handleDecideProposal = async (proposalId, action) => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/etablissement/planning/propositions/${proposalId}/decider`, {
+      const res = await fetch(`/api/etablissement/planning/propositions/${proposalId}/decider`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -797,7 +810,7 @@ const Dashboard = () => {
   const fetchAllExams = async (debut, fin) => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/classes/exams/all?debut=${debut}&fin=${fin}`, {
+      const res = await fetch(`/api/classes/exams/all?debut=${debut}&fin=${fin}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -808,7 +821,7 @@ const Dashboard = () => {
   const fetchScheduleMatieres = async (classeId) => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/classes/${classeId}/matieres`, {
+      const res = await fetch(`/api/classes/${classeId}/matieres`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -819,7 +832,7 @@ const Dashboard = () => {
   const fetchProfile = async () => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5002/api/etablissement/profile', {
+      const res = await fetch('/api/etablissement/profile', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -831,7 +844,7 @@ const Dashboard = () => {
     const token = localStorage.getItem('token');
     const targetYear = anneeScolaire || overviewAnneeFilter;
     try {
-      const res = await fetch(`http://localhost:5002/api/notes/moyennes-classes?semestre=${semestre || 1}&annee_scolaire=${encodeURIComponent(targetYear)}`, {
+      const res = await fetch(`/api/notes/moyennes-classes?semestre=${semestre || 1}&annee_scolaire=${encodeURIComponent(targetYear)}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -844,7 +857,7 @@ const Dashboard = () => {
   const fetchMessages = async () => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5002/api/messages/inbox', {
+      const res = await fetch('/api/messages/inbox', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -855,7 +868,7 @@ const Dashboard = () => {
   const fetchChatChannels = async () => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5002/api/messages/channels', {
+      const res = await fetch('/api/messages/channels', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -872,7 +885,7 @@ const Dashboard = () => {
     try {
       const params = new URLSearchParams({ type: contact.type, target_id: contact.id });
       if (chatChannels.etablissement_id) params.append('etablissement_id', chatChannels.etablissement_id);
-      const res = await fetch(`http://localhost:5002/api/messages/history?${params}`, {
+      const res = await fetch(`/api/messages/history?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -891,7 +904,7 @@ const Dashboard = () => {
                      activeChatContact.type === 'ELEVE' ? 'ELEVE' :
                      activeChatContact.type === 'CLASSE' ? 'CLASSE' : 'ADMIN_ETABLISSEMENT';
     try {
-      const res = await fetch('http://localhost:5002/api/messages', {
+      const res = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
@@ -920,7 +933,7 @@ const Dashboard = () => {
   const toggleMessagePermission = async (profId, currentValue) => {
     const token = localStorage.getItem('token');
     try {
-      await fetch(`http://localhost:5002/api/professeurs/${profId}/permission`, {
+      await fetch(`/api/professeurs/${profId}/permission`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ droit_envoi_message: !currentValue })
@@ -949,7 +962,7 @@ const Dashboard = () => {
     setLoading(true);
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/notes/classe/${classeId}/matiere/${matiereId}?semestre=${selectedSemestre}`, {
+      const res = await fetch(`/api/notes/classe/${classeId}/matiere/${matiereId}?semestre=${selectedSemestre}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -1049,7 +1062,7 @@ const Dashboard = () => {
     const delayDebounceFn = setTimeout(async () => {
       const token = localStorage.getItem('token');
       try {
-        const res = await fetch(`http://localhost:5002/api/etablissement/search?q=${encodeURIComponent(transferSearch.trim())}`, {
+        const res = await fetch(`/api/etablissement/search?q=${encodeURIComponent(transferSearch.trim())}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
@@ -1074,7 +1087,7 @@ const Dashboard = () => {
     setSelectedGradesData(null);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5002/api/notes/eleve/${eleveId}`, {
+      const res = await fetch(`/api/notes/eleve/${eleveId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -1158,7 +1171,7 @@ const Dashboard = () => {
     };
 
     try {
-      const res = await fetch(`http://localhost:5002/api/notes/eleve/${student.id}/decision`, {
+      const res = await fetch(`/api/notes/eleve/${student.id}/decision`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -1207,7 +1220,7 @@ const Dashboard = () => {
     setRankingLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5002/api/notes/classe/${classeId}/classement?period=${period}`, {
+      const res = await fetch(`/api/notes/classe/${classeId}/classement?period=${period}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -1246,7 +1259,7 @@ const Dashboard = () => {
   const handleDownloadRankingPDF = () => {
     if (!rankingClasseId) return;
     const token = localStorage.getItem('token');
-    const url = `http://localhost:5002/api/documents/classe/${rankingClasseId}/classement-pdf?period=${rankingPeriod}&token=${token}`;
+    const url = `/api/documents/classe/${rankingClasseId}/classement-pdf?period=${rankingPeriod}&token=${token}`;
     window.open(url, '_blank');
   };
 
@@ -1268,7 +1281,7 @@ const Dashboard = () => {
     setLoading(true);
     const token = localStorage.getItem('token');
     const formData = new FormData();
-    const fields = ['nom', 'prenom', 'sexe', 'date_naissance', 'lieu_naissance', 'nationalite', 'telephone', 'coordonnees_parent', 'classe_id', 'statut'];
+    const fields = ['nom', 'prenom', 'sexe', 'date_naissance', 'lieu_naissance', 'nationalite', 'telephone', 'email', 'coordonnees_parent', 'classe_id', 'statut'];
     fields.forEach(key => {
       if (newEleve[key] !== null && newEleve[key] !== '') formData.append(key, newEleve[key]);
     });
@@ -1276,7 +1289,7 @@ const Dashboard = () => {
     if (newEleve.justificatif_inapte) formData.append('justificatif_inapte', newEleve.justificatif_inapte);
 
     try {
-      const res = await fetch('http://localhost:5002/api/eleves', {
+      const res = await fetch('/api/eleves', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
@@ -1288,7 +1301,7 @@ const Dashboard = () => {
         setShowEleveModal(false);
         setNewEleve({ 
           nom: '', prenom: '', sexe: 'M', date_naissance: '', lieu_naissance: '', 
-          nationalite: '', telephone: '', coordonnees_parent: '', 
+          nationalite: '', telephone: '', email: '', coordonnees_parent: '', 
           classe_id: '', statut: 'APTE', photo: null, justificatif_inapte: null
         });
         fetchEleves();
@@ -1301,7 +1314,7 @@ const Dashboard = () => {
     setLoading(true);
     const token = localStorage.getItem('token');
     const formData = new FormData();
-    const fields = ['nom', 'prenom', 'sexe', 'date_naissance', 'lieu_naissance', 'nationalite', 'telephone', 'coordonnees_parent', 'statut', 'classe_id'];
+    const fields = ['nom', 'prenom', 'sexe', 'date_naissance', 'lieu_naissance', 'nationalite', 'telephone', 'email', 'coordonnees_parent', 'statut', 'classe_id'];
     fields.forEach(key => {
       if (editingEleve[key] !== null && editingEleve[key] !== '' && editingEleve[key] !== undefined) {
         formData.append(key, editingEleve[key]);
@@ -1315,7 +1328,7 @@ const Dashboard = () => {
     }
 
     try {
-      const res = await fetch(`http://localhost:5002/api/eleves/${editingEleve.id}`, {
+      const res = await fetch(`/api/eleves/${editingEleve.id}`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
@@ -1331,7 +1344,7 @@ const Dashboard = () => {
     if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet élève et son compte ?')) return;
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/eleves/${id}`, {
+      const res = await fetch(`/api/eleves/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -1344,7 +1357,7 @@ const Dashboard = () => {
     if (!token) return;
     setLoadingPreInscriptions(true);
     try {
-      const res = await fetch('http://localhost:5002/api/pre-inscriptions', {
+      const res = await fetch('/api/pre-inscriptions', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -1359,26 +1372,44 @@ const Dashboard = () => {
     }
   };
 
-  const handleValidatePreInscription = async (id) => {
+  const handleValidatePreInscription = async (id, overrideEmail = null) => {
     const token = localStorage.getItem('token');
+    if (overrideEmail !== null) setResolvingDuplicateEmail(true);
     try {
-      const res = await fetch(`http://localhost:5002/api/pre-inscriptions/${id}/validate`, {
+      const body = overrideEmail !== null ? JSON.stringify({ email: overrideEmail }) : undefined;
+      const res = await fetch(`/api/pre-inscriptions/${id}/validate`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          ...(body ? { 'Content-Type': 'application/json' } : {})
+        },
+        body
       });
       const data = await res.json();
       if (res.ok) {
+        setEmailDuplicateModal(null);
+        setNewStudentEmail('');
         setGeneratedCreds(data.credentials);
         setShowCredsModal(true);
         showNotification(data.message);
         fetchPreInscriptions();
         fetchEleves();
+      } else if (res.status === 409 || data.error === 'EMAIL_DUPLICATE') {
+        setEmailDuplicateModal({
+          preInscriptionId: id,
+          email: data.email || '',
+          eleveNom: data.eleveNom || 'Élève',
+          message: data.message || `L'adresse email "${data.email}" est déjà enregistrée dans le système.`
+        });
+        setNewStudentEmail('');
       } else {
         showNotification(data.message || 'Erreur lors de la validation.', 'error');
       }
     } catch (err) {
       console.error(err);
       showNotification('Erreur de serveur lors de la validation.', 'error');
+    } finally {
+      setResolvingDuplicateEmail(false);
     }
   };
 
@@ -1386,7 +1417,7 @@ const Dashboard = () => {
     if (!window.confirm('Êtes-vous sûr de vouloir rejeter cette demande ?')) return;
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/pre-inscriptions/${id}/reject`, {
+      const res = await fetch(`/api/pre-inscriptions/${id}/reject`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -1406,7 +1437,7 @@ const Dashboard = () => {
     e.preventDefault();
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/pre-inscriptions/${editingPreInscription.id}`, {
+      const res = await fetch(`/api/pre-inscriptions/${editingPreInscription.id}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -1443,8 +1474,8 @@ const Dashboard = () => {
     try {
       const isBulk = selectedEleveIds.length > 0;
       const url = isBulk 
-        ? 'http://localhost:5002/api/eleves/transfer-bulk'
-        : `http://localhost:5002/api/eleves/${transferEleve.id}/transfer`;
+        ? '/api/eleves/transfer-bulk'
+        : `/api/eleves/${transferEleve.id}/transfer`;
       
       const body = isBulk
         ? { eleve_ids: selectedEleveIds, nouveau_etablissement_id: selectedTargetEtab.id, motif: transferMotif }
@@ -1476,7 +1507,7 @@ const Dashboard = () => {
     setConfirmTransferModal(null);
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/eleves/transfers/${transferId}/accept`, {
+      const res = await fetch(`/api/eleves/transfers/${transferId}/accept`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -1496,7 +1527,7 @@ const Dashboard = () => {
     setConfirmTransferModal(null);
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/eleves/transfers/${transferId}/reject`, {
+      const res = await fetch(`/api/eleves/transfers/${transferId}/reject`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -1515,7 +1546,7 @@ const Dashboard = () => {
     setConfirmTransferModal(null);
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/eleves/transfers/${transferId}/cancel`, {
+      const res = await fetch(`/api/eleves/transfers/${transferId}/cancel`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -1535,7 +1566,7 @@ const Dashboard = () => {
     setLoading(true);
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/eleves/${eleve.id}/assign-class`, {
+      const res = await fetch(`/api/eleves/${eleve.id}/assign-class`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ classe_id: classeId })
@@ -1561,7 +1592,7 @@ const Dashboard = () => {
     setLoading(true);
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/classes/${scheduleClassId}/schedule`, {
+      const res = await fetch(`/api/classes/${scheduleClassId}/schedule`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(newSchedule)
@@ -1579,7 +1610,7 @@ const Dashboard = () => {
     if (!window.confirm('Supprimer ce créneau ?')) return;
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/classes/${scheduleClassId}/schedule/${scheduleId}`, {
+      const res = await fetch(`/api/classes/${scheduleClassId}/schedule/${scheduleId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -1596,8 +1627,8 @@ const Dashboard = () => {
       : newExam.date_examen;
     const isEdit = !!editingExam;
     const url = isEdit
-      ? `http://localhost:5002/api/classes/${examClassId}/exams/${editingExam.id}`
-      : `http://localhost:5002/api/classes/${examClassId}/exams`;
+      ? `/api/classes/${examClassId}/exams/${editingExam.id}`
+      : `/api/classes/${examClassId}/exams`;
     try {
       const res = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',
@@ -1619,7 +1650,7 @@ const Dashboard = () => {
     if (!window.confirm('Supprimer cet examen ?')) return;
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/classes/${examClassId}/exams/${examId}`, {
+      const res = await fetch(`/api/classes/${examClassId}/exams/${examId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -1632,7 +1663,7 @@ const Dashboard = () => {
     setLoading(true);
     const token = localStorage.getItem('token');
     const method = editingClass ? 'PUT' : 'POST';
-    const url = editingClass ? `http://localhost:5002/api/classes/${editingClass.id}` : 'http://localhost:5002/api/classes';
+    const url = editingClass ? `/api/classes/${editingClass.id}` : '/api/classes';
     try {
       const res = await fetch(url, {
         method,
@@ -1653,7 +1684,7 @@ const Dashboard = () => {
     setLoading(true);
     const token = localStorage.getItem('token');
     const method = editingMatiere ? 'PUT' : 'POST';
-    const url = editingMatiere ? `http://localhost:5002/api/notes/matieres/${editingMatiere.id}` : 'http://localhost:5002/api/notes/matieres';
+    const url = editingMatiere ? `/api/notes/matieres/${editingMatiere.id}` : '/api/notes/matieres';
     const payload = editingMatiere 
       ? { nom: editingMatiere.nom, code: editingMatiere.code_matiere } 
       : newMatiere;
@@ -1676,7 +1707,7 @@ const Dashboard = () => {
     if (!window.confirm('Supprimer cette matière ?')) return;
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/notes/matieres/${id}`, {
+      const res = await fetch(`/api/notes/matieres/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -1692,7 +1723,7 @@ const Dashboard = () => {
       const editable = notesGrid.filter(n => !n.readonly);
 
       // 1. Envoi des Devoirs
-      const resDevoir = await fetch('http://localhost:5002/api/notes/batch', {
+      const resDevoir = await fetch('/api/notes/batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
@@ -1709,7 +1740,7 @@ const Dashboard = () => {
       }
 
       // 2. Envoi des Examens
-      const resExamen = await fetch('http://localhost:5002/api/notes/batch', {
+      const resExamen = await fetch('/api/notes/batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
@@ -1741,7 +1772,7 @@ const Dashboard = () => {
     setLoading(true);
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/classes/${classe.id}/matieres`, {
+      const res = await fetch(`/api/classes/${classe.id}/matieres`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -1764,7 +1795,7 @@ const Dashboard = () => {
     }));
 
     try {
-      const res = await fetch(`http://localhost:5002/api/classes/${selectedClassCoef.id}/matieres`, {
+      const res = await fetch(`/api/classes/${selectedClassCoef.id}/matieres`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ matieres: matieresToUpdate })
@@ -1783,7 +1814,7 @@ const Dashboard = () => {
 
   const handleExportExcel = async () => {
     const token = localStorage.getItem('token');
-    window.open(`http://localhost:5002/api/eleves/export?token=${token}&classe_id=${selectedClasseFilter}`, '_blank');
+    window.open(`/api/eleves/export?token=${token}&classe_id=${selectedClasseFilter}`, '_blank');
   };
 
 
@@ -1795,7 +1826,7 @@ const Dashboard = () => {
     formData.append('file', file);
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5002/api/eleves/import', {
+      const res = await fetch('/api/eleves/import', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
@@ -1819,7 +1850,7 @@ const Dashboard = () => {
     formData.append('image', file);
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5002/api/ai/scan-students', {
+      const res = await fetch('/api/ai/scan-students', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
@@ -1862,10 +1893,10 @@ const Dashboard = () => {
     let fileName = '';
 
     if (docPreviewModal.type === 'bulletin') {
-      url = `http://localhost:5002/api/documents/bulletin/${eleve.id}?token=${token}&semestre=${docPreviewModal.semestre}`;
+      url = `/api/documents/bulletin/${eleve.id}?token=${token}&semestre=${docPreviewModal.semestre}`;
       fileName = `Bulletin_${eleve.prenom}_${eleve.nom}_S${docPreviewModal.semestre}.pdf`.replace(/\s+/g, '_');
     } else if (docPreviewModal.type === 'dossier') {
-      url = `http://localhost:5002/api/documents/dossier-transfert/${eleve.id}?token=${token}`;
+      url = `/api/documents/dossier-transfert/${eleve.id}?token=${token}`;
       fileName = `Dossier_Transfert_${eleve.prenom}_${eleve.nom}.pdf`.replace(/\s+/g, '_');
     }
 
@@ -1901,7 +1932,7 @@ const Dashboard = () => {
       formData.append('description', partageDescription);
       if (partageEleveId) formData.append('eleve_id', partageEleveId);
 
-      const res = await fetch('http://localhost:5002/api/partages', {
+      const res = await fetch('/api/partages', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
@@ -1925,14 +1956,14 @@ const Dashboard = () => {
 
   const handleDownloadPartage = async (id) => {
     const token = localStorage.getItem('token');
-    window.open(`http://localhost:5002/api/partages/${id}/download?token=${token}`, '_blank');
+    window.open(`/api/partages/${id}/download?token=${token}`, '_blank');
     fetchPartages();
   };
 
   const handleDeletePartage = async (id) => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/partages/${id}`, {
+      const res = await fetch(`/api/partages/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -1948,7 +1979,7 @@ const Dashboard = () => {
     setLoading(true);
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5002/api/messages', {
+      const res = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(newMessage)
@@ -1966,7 +1997,7 @@ const Dashboard = () => {
     if (!window.confirm(" Transmettre officiellement les Livrets Scolaires des élèves de Terminale / BFEM vers l'Office du BAC et la Zone d'Examen attribuée ?")) return;
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5002/api/office-bac/transmettre-livrets-zone', {
+      const res = await fetch('/api/office-bac/transmettre-livrets-zone', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -1985,7 +2016,7 @@ const Dashboard = () => {
   const fetchAttestations = async () => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5002/api/documents/attestations/requests', {
+      const res = await fetch('/api/documents/attestations/requests', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -1998,7 +2029,7 @@ const Dashboard = () => {
   const handleAcceptAttestation = async (id) => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/documents/attestations/requests/${id}/accept`, {
+      const res = await fetch(`/api/documents/attestations/requests/${id}/accept`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -2014,7 +2045,7 @@ const Dashboard = () => {
     if (!motifRefusAttestation) return;
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/documents/attestations/requests/${refusingAttestation.id}/refuse`, {
+      const res = await fetch(`/api/documents/attestations/requests/${refusingAttestation.id}/refuse`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -2036,7 +2067,7 @@ const Dashboard = () => {
     setLoading(true);
     const token = localStorage.getItem('token');
     const method = editingProf ? 'PUT' : 'POST';
-    const url = editingProf ? `http://localhost:5002/api/professeurs/${editingProf.id}` : 'http://localhost:5002/api/professeurs';
+    const url = editingProf ? `/api/professeurs/${editingProf.id}` : '/api/professeurs';
     try {
       const res = await fetch(url, {
         method,
@@ -2060,7 +2091,7 @@ const Dashboard = () => {
     setSearchedProf(null);
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/professeurs/search/${profSearchId.trim()}`, {
+      const res = await fetch(`/api/professeurs/search/${profSearchId.trim()}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -2082,7 +2113,7 @@ const Dashboard = () => {
     setLoading(true);
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5002/api/professeurs/invite', {
+      const res = await fetch('/api/professeurs/invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ professeur_id: searchedProf.id })
@@ -2116,7 +2147,7 @@ const Dashboard = () => {
     // Fetch current assignments
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/professeurs/${p.id}/assignments`, {
+      const res = await fetch(`/api/professeurs/${p.id}/assignments`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -2134,7 +2165,7 @@ const Dashboard = () => {
     setLoading(true);
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5002/api/professeurs/assignments', {
+      const res = await fetch('/api/professeurs/assignments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
@@ -2148,7 +2179,7 @@ const Dashboard = () => {
         showNotification('Classe/Matière affectée avec succès !', 'success');
         
         // Refresh assignments list
-        const resList = await fetch(`http://localhost:5002/api/professeurs/${editingProf.id}/assignments`, {
+        const resList = await fetch(`/api/professeurs/${editingProf.id}/assignments`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const dataList = await resList.json();
@@ -2172,7 +2203,7 @@ const Dashboard = () => {
     setLoading(true);
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5002/api/professeurs/assignments/${assignmentId}`, {
+      const res = await fetch(`/api/professeurs/assignments/${assignmentId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -2181,7 +2212,7 @@ const Dashboard = () => {
         showNotification(data.message || 'Affectation retirée.', 'success');
         
         // Refresh assignments list
-        const resList = await fetch(`http://localhost:5002/api/professeurs/${editingProf.id}/assignments`, {
+        const resList = await fetch(`/api/professeurs/${editingProf.id}/assignments`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const dataList = await resList.json();
@@ -2216,7 +2247,7 @@ const Dashboard = () => {
     }
 
     try {
-      const res = await fetch('http://localhost:5002/api/etablissement/profile', {
+      const res = await fetch('/api/etablissement/profile', {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
@@ -2627,14 +2658,22 @@ const Dashboard = () => {
       {(showEleveModal || editingEleve) && (
         <div className="modal-overlay">
           <div className="modal-card" style={{maxWidth: '700px'}}>
-            <h3>{editingEleve ? 'Modifier l\'élève' : 'Inscrire un Élève'}</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
+              <img 
+                src="/logo_leralscolaire.png" 
+                alt="LéralScolaire" 
+                style={{ height: '36px', width: 'auto', objectFit: 'contain' }} 
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+              <h3 style={{ margin: 0 }}>{editingEleve ? 'Modifier l\'élève' : 'Inscrire un Élève'}</h3>
+            </div>
             <form onSubmit={editingEleve ? handleUpdateEleve : handleAddEleve}>
               <div className="form-row">
                 <div style={{flex: '0 0 100px'}}>
                     <div className="photo-upload-container" onClick={() => editingEleve ? editPhotoInputRef.current.click() : photoInputRef.current.click()}>
                         {(() => {
                             const src = editingEleve
-                                ? (editingEleve.photoPreview || (editingEleve.photo_url ? `http://localhost:5002${editingEleve.photo_url}` : null))
+                                ? (editingEleve.photoPreview || (editingEleve.photo_url ? `${editingEleve.photo_url}` : null))
                                 : newEleve.photoPreview;
                             return src ? (
                                 <img src={src} alt="Preview" className="photo-preview" />
@@ -2677,8 +2716,11 @@ const Dashboard = () => {
                 <div className="input-group"><label>Nationalité</label><input type="text" value={editingEleve ? editingEleve.nationalite : newEleve.nationalite} onChange={e => editingEleve ? setEditingEleve({...editingEleve, nationalite: e.target.value}) : setNewEleve({...newEleve, nationalite: e.target.value})} /></div>
               </div>
               <div className="form-row">
-                <div className="input-group"><label>Téléphone</label><input type="text" value={editingEleve ? editingEleve.telephone : newEleve.telephone} onChange={e => editingEleve ? setEditingEleve({...editingEleve, telephone: e.target.value}) : setNewEleve({...newEleve, telephone: e.target.value})} /></div>
-                <div className="input-group"><label>Coordonnées Parent</label><input type="text" value={editingEleve ? editingEleve.coordonnees_parent : newEleve.coordonnees_parent} onChange={e => editingEleve ? setEditingEleve({...editingEleve, coordonnees_parent: e.target.value}) : setNewEleve({...newEleve, coordonnees_parent: e.target.value})} /></div>
+                <div className="input-group"><label>Téléphone *</label><input type="text" required value={editingEleve ? (editingEleve.telephone || '') : newEleve.telephone} onChange={e => editingEleve ? setEditingEleve({...editingEleve, telephone: e.target.value}) : setNewEleve({...newEleve, telephone: e.target.value})} /></div>
+                <div className="input-group"><label>Email (Élève ou Parent / Tuteur) *</label><input type="email" required placeholder="parent@gmail.com ou eleve@sn.sn" value={editingEleve ? (editingEleve.email || '') : newEleve.email} onChange={e => editingEleve ? setEditingEleve({...editingEleve, email: e.target.value}) : setNewEleve({...newEleve, email: e.target.value})} /></div>
+              </div>
+              <div className="form-row">
+                <div className="input-group" style={{ flex: 1 }}><label>Coordonnées Parent (Nom, Adresse)</label><input type="text" value={editingEleve ? (editingEleve.coordonnees_parent || '') : newEleve.coordonnees_parent} onChange={e => editingEleve ? setEditingEleve({...editingEleve, coordonnees_parent: e.target.value}) : setNewEleve({...newEleve, coordonnees_parent: e.target.value})} /></div>
               </div>
               <div className="form-row">
                 <div className="input-group">
@@ -2722,7 +2764,7 @@ const Dashboard = () => {
                   </p>
                   {editingEleve?.justificatif_inapte_url && (
                     <a
-                      href={`http://localhost:5002${editingEleve.justificatif_inapte_url}`}
+                      href={`${editingEleve.justificatif_inapte_url}`}
                       target="_blank"
                       rel="noreferrer"
                       style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 8, fontSize: 12, color: '#2563eb', fontWeight: 700 }}
@@ -2973,7 +3015,7 @@ const Dashboard = () => {
                   <div className="grades-student-card">
                     <div className="grades-avatar-wrapper">
                       {selectedGradesData.student.photo_url ? (
-                        <img src={`http://localhost:5002${selectedGradesData.student.photo_url}`} alt="Photo de l'élève" className="grades-student-photo" />
+                        <img src={`${selectedGradesData.student.photo_url}`} alt="Photo de l'élève" className="grades-student-photo" />
                       ) : (
                         <div className="grades-student-avatar-placeholder"><User size={48} /></div>
                       )}
@@ -4288,6 +4330,104 @@ const Dashboard = () => {
         </div>
       )}
 
+      {/* MODAL CONFLIT DOUBLON EMAIL PRÉ-INSCRIPTION */}
+      {emailDuplicateModal && (
+        <div className="modal-overlay" style={{ zIndex: 1200 }}>
+          <div className="modal-card" style={{ maxWidth: 520, padding: '28px 30px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+              <div style={{
+                width: 46, height: 46, borderRadius: '50%',
+                background: '#fff7ed', border: '1.5px solid #fed7aa',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#ea580c', flexShrink: 0
+              }}>
+                <AlertTriangle size={24} />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#9a3412' }}>
+                  Conflit d'adresse Email détecté
+                </h3>
+                <p style={{ margin: 0, fontSize: 12, color: '#c2410c' }}>
+                  Validation impossible pour l'élève <strong>{emailDuplicateModal.eleveNom}</strong>
+                </p>
+              </div>
+            </div>
+
+            <div style={{
+              background: '#fffbeb',
+              border: '1.5px solid #fde68a',
+              borderRadius: 10,
+              padding: '14px 16px',
+              fontSize: 13,
+              color: '#92400e',
+              lineHeight: 1.5,
+              marginBottom: 18
+            }}>
+              <p style={{ margin: '0 0 8px 0', fontWeight: 600 }}>
+                L'adresse email <code style={{ background: '#fef3c7', padding: '2px 6px', borderRadius: 4, color: '#b45309', fontWeight: 800 }}>{emailDuplicateModal.email}</code> est déjà enregistrée dans le système LéralScolaire.
+              </p>
+              <div style={{ fontSize: 12, background: 'rgba(255,255,255,0.8)', padding: '8px 12px', borderRadius: 6, border: '1px solid #fef08a' }}>
+                • <strong>Règle de sécurité &amp; confidentialité :</strong> Chaque compte doit disposer d'une adresse email unique afin de garantir la réception sécurisée de ses accès et de ses notifications.
+              </div>
+            </div>
+
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              if (!newStudentEmail.trim()) return;
+              handleValidatePreInscription(emailDuplicateModal.preInscriptionId, newStudentEmail.trim());
+            }}>
+              <div style={{ marginBottom: 18 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>
+                  Renseigner une autre adresse email pour cet élève (ou son tuteur) :
+                </label>
+                <input
+                  type="email"
+                  required
+                  autoFocus
+                  placeholder="ex: parent2@gmail.com ou eleve@gmail.com"
+                  value={newStudentEmail}
+                  onChange={(e) => setNewStudentEmail(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    borderRadius: 8,
+                    border: '1.5px solid #cbd5e1',
+                    fontSize: 13,
+                    boxSizing: 'border-box'
+                  }}
+                />
+                <span style={{ fontSize: 11, color: '#64748b', marginTop: 4, display: 'block' }}>
+                  Cette nouvelle adresse sera mise à jour dans le dossier et recevra instantanément les identifiants de l'élève.
+                </span>
+              </div>
+
+              <div className="flex gap-2 justify-end" style={{ marginTop: 20 }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  disabled={resolvingDuplicateEmail}
+                  onClick={() => {
+                    setEmailDuplicateModal(null);
+                    setNewStudentEmail('');
+                  }}
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={resolvingDuplicateEmail || !newStudentEmail.trim()}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  <Check size={16} />
+                  {resolvingDuplicateEmail ? 'Mise à jour & Validation…' : 'Modifier l\'email & Valider'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
 
       {/* SIGNATURE SCANNER MODAL */}
       {showSignatureScanner && (
@@ -4576,8 +4716,8 @@ const Dashboard = () => {
                 ref={docIframeRef}
                 src={
                   docPreviewModal.type === 'bulletin'
-                    ? `http://localhost:5002/api/documents/bulletin/${docPreviewModal.eleve.id}?token=${localStorage.getItem('token')}&semestre=${docPreviewModal.semestre}`
-                    : `http://localhost:5002/api/documents/dossier-transfert/${docPreviewModal.eleve.id}?token=${localStorage.getItem('token')}`
+                    ? `/api/documents/bulletin/${docPreviewModal.eleve.id}?token=${localStorage.getItem('token')}&semestre=${docPreviewModal.semestre}`
+                    : `/api/documents/dossier-transfert/${docPreviewModal.eleve.id}?token=${localStorage.getItem('token')}`
                 }
                 title="Prévisualisation du document"
                 style={{ width: '100%', height: '100%', border: 'none' }}

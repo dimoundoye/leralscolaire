@@ -9,6 +9,22 @@ const StudentModel = {
     return rows[0]?.id;
   },
 
+  async getEtablissementByAdminId(adminId) {
+    const { rows } = await db.query(
+      'SELECT id, nom, region, ville, code_etablissement FROM etablissements WHERE admin_id = $1',
+      [adminId]
+    );
+    return rows[0];
+  },
+
+  async getEtablissementById(id) {
+    const { rows } = await db.query(
+      'SELECT id, nom, region, ville, code_etablissement FROM etablissements WHERE id = $1',
+      [id]
+    );
+    return rows[0];
+  },
+
   async countStudents() {
     const { rows } = await db.query('SELECT COUNT(*) FROM eleves');
     return parseInt(rows[0].count);
@@ -40,19 +56,19 @@ const StudentModel = {
     const {
       identifiant_national, user_id, etablissement_id, nom, prenom, sexe,
       date_naissance, lieu_naissance, nationalite, telephone,
-      coordonnees_parent, photo_url, justificatif_inapte_url, statut
+      coordonnees_parent, photo_url, justificatif_inapte_url, statut, email
     } = data;
 
     const { rows } = await client.query(
       `INSERT INTO eleves (
         identifiant_national, user_id, etablissement_id, nom, prenom, sexe,
         date_naissance, lieu_naissance, nationalite, telephone,
-        coordonnees_parent, photo_url, justificatif_inapte_url, statut
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
+        coordonnees_parent, photo_url, justificatif_inapte_url, statut, email
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *`,
       [
         identifiant_national, user_id, etablissement_id, nom, prenom, sexe || 'M',
         date_naissance, lieu_naissance, nationalite, telephone,
-        coordonnees_parent, photo_url, justificatif_inapte_url || null, statut || 'APTE'
+        coordonnees_parent, photo_url, justificatif_inapte_url || null, statut || 'APTE', email || null
       ]
     );
     return rows[0];
@@ -68,7 +84,7 @@ const StudentModel = {
 
   async getEtablissementClassByName(classeNom, etablissementId) {
     const { rows } = await db.query(
-      'SELECT id FROM classes WHERE nom = $1 AND etablissement_id = $2',
+      'SELECT id FROM classes WHERE nom ILIKE $1 AND etablissement_id = $2 LIMIT 1',
       [classeNom, etablissementId]
     );
     return rows[0]?.id;
@@ -96,9 +112,9 @@ const StudentModel = {
   },
 
   async updateStudent(id, fields, photoUrl = null, justificatifUrl = undefined) {
-    const { nom, prenom, sexe, date_naissance, lieu_naissance, nationalite, telephone, coordonnees_parent, statut } = fields;
-    let query = `UPDATE eleves SET nom = $1, prenom = $2, sexe = $3, date_naissance = $4, lieu_naissance = $5, nationalite = $6, telephone = $7, coordonnees_parent = $8, statut = $9`;
-    let params = [nom, prenom, sexe || 'M', date_naissance, lieu_naissance, nationalite, telephone, coordonnees_parent, statut];
+    const { nom, prenom, sexe, date_naissance, lieu_naissance, nationalite, telephone, coordonnees_parent, statut, email } = fields;
+    let query = `UPDATE eleves SET nom = $1, prenom = $2, sexe = $3, date_naissance = $4, lieu_naissance = $5, nationalite = $6, telephone = $7, coordonnees_parent = $8, statut = $9, email = $10`;
+    let params = [nom, prenom, sexe || 'M', date_naissance, lieu_naissance, nationalite, telephone, coordonnees_parent, statut, email || null];
     if (photoUrl !== null && photoUrl !== undefined) {
       query += `, photo_url = $${params.length + 1}`;
       params.push(photoUrl);

@@ -91,7 +91,7 @@ const StudentPortfolioTab = ({
           <div className="cv-identity-banner">
             <div className="cv-photo-frame">
               {profile?.photo_url ? (
-                <img src={`http://localhost:5002${profile.photo_url}`} alt="Photo d'identité" className="cv-photo-img" />
+                <img src={`${profile.photo_url}`} alt="Photo d'identité" className="cv-photo-img" />
               ) : (
                 <div className="cv-photo-fallback">
                   {profile ? `${profile.prenom[0]}${profile.nom[0]}` : 'EL'}

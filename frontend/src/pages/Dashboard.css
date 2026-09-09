@@ -46,6 +46,14 @@
   padding: 0;
 }
 
+.sidebar-brand-logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
 .brand-name {
   font-size: 1.15rem;
   font-weight: 700;
@@ -54,7 +62,7 @@
 }
 
 .brand-name span {
-  color: var(--accent-color);
+  color: var(--primary-color);
 }
 
 .sidebar-toggle {
@@ -1315,19 +1323,19 @@
   display: flex !important;
   flex-direction: row !important;
   justify-content: space-between !important;
-  align-items: center !important;
+  align-items: flex-start !important;
   min-height: 94px;
 }
 
 .stat-card-main {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 6px;
 }
 
 .stat-card-icon {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
