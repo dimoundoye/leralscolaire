@@ -9,6 +9,7 @@ const path = require('path');
 const { generateConvocationPDF } = require('../utils/convocationPdfService');
 const { generateIUP } = require('../utils/iupGenerator');
 const emailService = require('../services/emailService');
+const { cloudinary, isCloudinaryConfigured } = require('../config/cloudinary');
 
 // Middleware : réservé au rôle OFFICE_BAC
 const checkOfficeBac = (req, res, next) => {
@@ -877,24 +878,48 @@ router.post('/demande-public', async (req, res) => {
       return res.status(400).json({ message: 'Une demande d\'inscription est déjà en cours de validation pour cet email.' });
     }
 
-    // Traitement et sauvegarde physique des fichiers justificatifs sur le serveur
+    // Traitement et sauvegarde des fichiers justificatifs (Cloudinary ou local)
     const processedDocs = {};
     if (documents_fournis && typeof documents_fournis === 'object') {
       const uploadsDir = path.join(__dirname, '../../uploads');
       const publicUploadsDir = path.join(__dirname, '../../../frontend/public/uploads');
-      if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-      if (!fs.existsSync(publicUploadsDir)) fs.mkdirSync(publicUploadsDir, { recursive: true });
 
       for (const [key, item] of Object.entries(documents_fournis)) {
         if (!item) continue;
         if (typeof item === 'object' && item.data && item.name) {
-          const fileExt = path.extname(item.name) || '.png';
-          const safeName = `${Date.now()}_${key}${fileExt}`;
-          const base64Data = item.data.replace(/^data:([A-Za-z-+\/]+);base64,/, '');
-          const buffer = Buffer.from(base64Data, 'base64');
-          fs.writeFileSync(path.join(uploadsDir, safeName), buffer);
-          fs.writeFileSync(path.join(publicUploadsDir, safeName), buffer);
-          processedDocs[key] = safeName;
+          let uploadedUrl = null;
+
+          // 1. Tenter l'envoi sur Cloudinary si configuré
+          if (isCloudinaryConfigured) {
+            try {
+              const isPdf = item.name.toLowerCase().endsWith('.pdf');
+              const resUpload = await cloudinary.uploader.upload(item.data, {
+                folder: 'leralscolaire/justificatifs',
+                resource_type: isPdf ? 'raw' : 'auto',
+                public_id: `${Date.now()}_${key}`
+              });
+              if (resUpload && resUpload.secure_url) {
+                uploadedUrl = resUpload.secure_url;
+                processedDocs[key] = uploadedUrl;
+              }
+            } catch (cloudErr) {
+              console.warn(`⚠️ Échec upload Cloudinary pour ${key}, repli local :`, cloudErr.message);
+            }
+          }
+
+          // 2. Sauvegarde locale en secours ou si Cloudinary non configuré
+          if (!uploadedUrl) {
+            if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+            const fileExt = path.extname(item.name) || '.png';
+            const safeName = `${Date.now()}_${key}${fileExt}`;
+            const base64Data = item.data.replace(/^data:([A-Za-z-+\/]+);base64,/, '');
+            const buffer = Buffer.from(base64Data, 'base64');
+            fs.writeFileSync(path.join(uploadsDir, safeName), buffer);
+            if (fs.existsSync(publicUploadsDir)) {
+              fs.writeFileSync(path.join(publicUploadsDir, safeName), buffer);
+            }
+            processedDocs[key] = safeName;
+          }
         } else if (typeof item === 'string') {
           processedDocs[key] = item;
         }

@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const fs = require('fs');
 const path = require('path');
 
 const SMTP_HOST = process.env.SMTP_HOST || 'mail.leralscolaire.com';
@@ -6,11 +7,25 @@ const SMTP_PORT = parseInt(process.env.SMTP_PORT || '465', 10);
 const SMTP_SECURE = process.env.SMTP_SECURE === 'true' || SMTP_PORT === 465;
 const SMTP_USER = process.env.SMTP_USER || 'noreply@leralscolaire.com';
 const SMTP_PASS = process.env.SMTP_PASS || '';
-const EMAIL_FROM = process.env.EMAIL_FROM || '"LéralScolaire" <noreply@leralscolaire.com>';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const RAW_EMAIL_FROM = process.env.EMAIL_FROM || '"LéralScolaire" <noreply@leralscolaire.com>';
+const EMAIL_FROM = RAW_EMAIL_FROM.replace(/^"|"$/g, '');
+const FRONTEND_URL = (process.env.FRONTEND_URL || 'https://leralscolaire.com').replace(/\/$/, '');
 
-// Logo officiel LéralScolaire pour inclusion CID dans les emails
-const LOGO_PATH = path.join(__dirname, '../../../frontend/public/logo_leralscolaire.png');
+// Chemins possibles pour localiser le logo (dans backend/src/assets, cwd, ou frontend)
+const POSSIBLE_LOGO_PATHS = [
+  path.join(__dirname, '../assets/logo_leralscolaire.png'),
+  path.join(__dirname, '../../uploads/logo_leralscolaire.png'),
+  path.join(__dirname, '../../../frontend/public/logo_leralscolaire.png'),
+  path.join(process.cwd(), 'src/assets/logo_leralscolaire.png'),
+  path.join(process.cwd(), 'assets/logo_leralscolaire.png')
+];
+
+function getExistingLogoPath() {
+  for (const p of POSSIBLE_LOGO_PATHS) {
+    if (fs.existsSync(p)) return p;
+  }
+  return null;
+}
 
 // Création du transporteur Nodemailer
 const transporter = nodemailer.createTransport({
@@ -30,18 +45,30 @@ const transporter = nodemailer.createTransport({
   maxMessages: 100
 });
 
-// Envoi d'email avec logo CID embarqué garanti
+// Envoi d'email avec logo CID embarqué garanti (ou fallback URL publique si absent)
 async function sendMailWithLogo(mailOptions) {
-  const attachments = [
-    ...(mailOptions.attachments || []),
-    {
+  const attachments = [...(mailOptions.attachments || [])];
+  const logoPath = getExistingLogoPath();
+  let html = mailOptions.html || '';
+
+  if (logoPath) {
+    attachments.push({
       filename: 'logo_leralscolaire.png',
-      path: LOGO_PATH,
+      path: logoPath,
       cid: 'logo_leralscolaire'
-    }
-  ];
+    });
+  } else {
+    // Si le logo local n'est pas trouvé, utiliser l'URL web absolue
+    const publicLogoUrl = `${FRONTEND_URL}/logo_leralscolaire.png`;
+    html = html.replace(/cid:logo_leralscolaire/g, publicLogoUrl);
+  }
+
+  const fromClean = (mailOptions.from || EMAIL_FROM).replace(/^"|"$/g, '');
+
   return transporter.sendMail({
     ...mailOptions,
+    from: fromClean,
+    html,
     attachments
   });
 }
