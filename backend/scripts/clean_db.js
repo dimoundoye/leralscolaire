@@ -1,90 +1,122 @@
-const { Pool } = require('pg');
-require('dotenv').config({ path: __dirname + '/../.env' });
-
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT
-});
+const db = require('../src/config/db');
+const bcrypt = require('bcryptjs');
 
 async function cleanDatabase() {
-  const client = await pool.connect();
+  const client = await db.pool.connect();
   try {
-    console.log('🧹 Démarrage du nettoyage complet de la base de données...');
+    console.log('🧹 Démarrage de la réinitialisation de la base de données...');
+    console.log('🔒 Protection active : Seul le compte OFFICE_BAC sera conservé.\n');
+
     await client.query('BEGIN');
 
-    // Liste des tables opérationnelles et transactionnelles à vider
-    const tablesToTruncate = [
-      'absences',
-      'bulletins',
-      'bulletins_autorises',
-      'bulletins_telechargements',
-      'cahier_de_texte',
-      'campagnes_evaluation_eleves',
-      'centres_examen_bac',
-      'classe_matieres',
-      'demandes_attestation',
-      'demandes_inscription_office',
-      'documents_partages',
-      'emargements',
-      'emplois_du_temps',
-      'evaluations_eleves',
-      'examens_planification',
-      'historique_notes',
-      'inscription_classes',
-      'jurys_bac',
-      'livrets_scolaires_bac',
-      'messages',
-      'notes',
-      'notes_candidats_bac',
-      'notifications',
-      'portfolio_items',
-      'pre_inscriptions',
-      'professeur_matieres',
-      'professeurs_etablissements',
-      'professeurs',
-      'regles_passage',
-      'resultats_examens_nationaux',
-      'seances_cours',
-      'signalements_discipline',
-      'transferts_eleves',
-      'eleves',
-      'classes',
-      'etablissements'
-    ];
+    // 1. Récupération dynamique de toutes les tables publiques
+    const tablesRes = await client.query(`
+      SELECT tablename 
+      FROM pg_tables 
+      WHERE schemaname = 'public' 
+        AND tablename NOT IN ('users', 'matieres', 'office_bac_settings')
+      ORDER BY tablename ASC;
+    `);
 
+    const tablesToTruncate = tablesRes.rows.map(r => r.tablename);
+
+    console.log(`📋 ${tablesToTruncate.length} table(s) identifiée(s) pour nettoyage :`);
     for (const table of tablesToTruncate) {
       try {
-        await client.query(`TRUNCATE TABLE ${table} CASCADE;`);
-        console.log(`  ✓ Table ${table} vidée.`);
+        await client.query(`TRUNCATE TABLE "${table}" CASCADE;`);
+        console.log(`  ✓ Table [${table}] vidée.`);
       } catch (err) {
-        console.warn(`  ⚠️ Impossible de vider ${table} : ${err.message}`);
+        console.warn(`  ⚠️ Table [${table}] ignorée ou inexistante : ${err.message}`);
       }
     }
 
-    // Supprimer tous les utilisateurs SAUF le compte Office du Bac
+    // 2. Suppression de tous les utilisateurs sauf OFFICE_BAC
     const userDeleteRes = await client.query(`
       DELETE FROM users 
       WHERE role != 'OFFICE_BAC';
     `);
-    console.log(`  ✓ ${userDeleteRes.rowCount} utilisateur(s) supprimé(s).`);
+    console.log(`\n  ✓ ${userDeleteRes.rowCount || 0} utilisateur(s) (élèves, profs, établissements, etc.) supprimé(s).`);
 
-    // Vérifier les utilisateurs restants
-    const remainingUsers = await client.query('SELECT id, email, role, identifiant_national FROM users;');
-    console.log('\nComptes restants en base :');
-    console.log(remainingUsers.rows);
+    // 3. Réinitialiser les séquences auto-incrémentées (ID auto)
+    try {
+      await client.query(`
+        DO $$ 
+        DECLARE 
+          seq RECORD;
+        BEGIN 
+          FOR seq IN (SELECT sequence_name FROM information_schema.sequences WHERE sequence_schema = 'public') 
+          LOOP 
+            EXECUTE 'ALTER SEQUENCE ' || quote_ident(seq.sequence_name) || ' RESTART WITH 1;'; 
+          END LOOP; 
+        END $$;
+      `);
+      console.log('  ✓ Séquences et compteurs ID réinitialisés à 1.');
+    } catch (seqErr) {
+      console.warn('  ⚠️ Note sur les séquences :', seqErr.message);
+    }
+
+    // 4. Vérifier et assurer la présence du compte OFFICE_BAC
+    const officeCheck = await client.query(`
+      SELECT id, email, role, identifiant_national 
+      FROM users 
+      WHERE role = 'OFFICE_BAC';
+    `);
+
+    if (officeCheck.rows.length === 0) {
+      console.log('  ⚠️ Aucun compte OFFICE_BAC trouvé ! Création automatique du compte officiel...');
+      const salt = await bcrypt.genSalt(10);
+      const hash = await bcrypt.hash('OfficeBAC@2026', salt);
+      await client.query(`
+        INSERT INTO users (email, password_hash, role, identifiant_national)
+        VALUES ('OFFICE-BAC-SN', $1, 'OFFICE_BAC', 'OFFICE-BAC-SN');
+      `, [hash]);
+      console.log('  ✓ Compte OFFICE-BAC-SN créé par défaut (Login: OFFICE-BAC-SN / Mdp: OfficeBAC@2026)');
+    }
+
+    // 5. Assurer les matières de base si la table est vide
+    const matieresCheck = await client.query('SELECT COUNT(*) FROM matieres;');
+    if (parseInt(matieresCheck.rows[0].count, 10) === 0) {
+      const defaultMatieres = [
+        ['Mathématiques', 'MATH'],
+        ['Français', 'FRA'],
+        ['Sciences de la Vie et de la Terre', 'SVT'],
+        ['Physique-Chimie', 'PC'],
+        ['Histoire-Géographie', 'HG'],
+        ['Anglais', 'ANG'],
+        ['Philosophie', 'PHIL'],
+        ['Éducation Physique et Sportive', 'EPS']
+      ];
+      for (const [nom, code] of defaultMatieres) {
+        await client.query(
+          'INSERT INTO matieres (nom, code_matiere) VALUES ($1, $2) ON CONFLICT (code_matiere) DO NOTHING;',
+          [nom, code]
+        );
+      }
+      console.log('  ✓ Matières nationales de base réinitialisées.');
+    }
 
     await client.query('COMMIT');
-    console.log('\n🎉 Base de données réinitialisée avec succès ! Seul le compte OFFICE_BAC est conservé.');
+
+    // 6. Affichage du bilan final
+    const remainingUsers = await client.query(`
+      SELECT id, email, role, identifiant_national, created_at 
+      FROM users;
+    `);
+
+    console.log('\n======================================================');
+    console.log('🎉 BASE DE DONNÉES RÉINITIALISÉE AVEC SUCCÈS !');
+    console.log('======================================================');
+    console.log('Comptes préservés en base :');
+    console.table(remainingUsers.rows);
+    console.log('======================================================\n');
+
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error('❌ Erreur lors du nettoyage :', err);
+    console.error('\n❌ Erreur critique lors du nettoyage :', err);
     process.exit(1);
   } finally {
     client.release();
-    await pool.end();
+    await db.pool.end();
   }
 }
 

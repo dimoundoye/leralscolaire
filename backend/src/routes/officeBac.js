@@ -988,7 +988,9 @@ router.put('/demandes/:id/valider', auth, checkOfficeBac, async (req, res) => {
     let credentials = {};
 
     if (d.type_demande === 'ETABLISSEMENT') {
-      const generatedCode = d.specialite_ou_code || await generateIUP('ETAB', d.region || 'Dakar');
+      const generatedCode = (d.specialite_ou_code && d.specialite_ou_code.startsWith('ETAB-'))
+        ? d.specialite_ou_code
+        : await generateIUP('ETAB', d.region || 'Dakar');
       const tempPassword = `Etab@${Math.floor(100000 + Math.random() * 900000)}`;
 
       const salt = await bcrypt.genSalt(10);
@@ -1016,7 +1018,8 @@ router.put('/demandes/:id/valider', auth, checkOfficeBac, async (req, res) => {
       }).catch(e => console.error('Erreur email validation établissement:', e.message));
 
     } else {
-      const generatedIne = d.specialite_ou_code || await generateIUP('ENS', d.region || 'Dakar');
+      // Pour les enseignants, générer systématiquement un véritable IUP (ENS-AAAA-TRI-XXXX)
+      const generatedIne = await generateIUP('ENS', d.region || 'Dakar');
       const tempPassword = `Prof@${Math.floor(100000 + Math.random() * 900000)}`;
 
       const salt = await bcrypt.genSalt(10);

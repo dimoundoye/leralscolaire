@@ -23,6 +23,8 @@ const app = express();
 const PORT = process.env.PORT || 5002;
 
 const path = require('path');
+const { generateIUP } = require('./utils/iupGenerator');
+const emailService = require('./services/emailService');
 
 // Middlewares
 app.use(cors());
@@ -149,6 +151,36 @@ db.pool.connect(async (err, client, release) => {
     `);
   } catch (schemaErr) {
     console.warn('⚠️ Auto-vérification schéma :', schemaErr.message);
+  }
+
+  // Auto-correction des comptes enseignants ayant reçu une matière ou un mauvais identifiant au lieu d'un IUP officiel
+  try {
+    const badIupProfs = await db.query(`
+      SELECT u.id, u.email, u.identifiant_national, p.region, p.nom, p.prenom, u.password_provisoire
+      FROM users u
+      LEFT JOIN professeurs p ON u.id = p.id
+      WHERE u.role = 'PROFESSEUR' AND (u.identifiant_national NOT LIKE 'ENS-%' OR u.identifiant_national IS NULL)
+    `);
+
+    for (const prof of badIupProfs.rows) {
+      const fixedIup = await generateIUP('ENS', prof.region || 'Dakar');
+      await db.query('UPDATE users SET identifiant_national = $1 WHERE id = $2', [fixedIup, prof.id]);
+      console.log(`✅ IUP corrigé pour l'enseignant ${prof.email} (${prof.identifiant_national} -> ${fixedIup})`);
+
+      if (prof.email) {
+        emailService.sendDemandeValidee({
+          to: prof.email,
+          nom: [prof.prenom, prof.nom].filter(Boolean).join(' ') || 'Enseignant',
+          typeDemande: 'PROFESSEUR',
+          iup: fixedIup,
+          tempPassword: prof.password_provisoire || 'Prof@283193'
+        }).then(() => {
+          console.log(`📧 Confirmation envoyée avec le nouvel IUP officiel (${fixedIup}) à ${prof.email}`);
+        }).catch(e => console.error('Erreur renvoi email avec IUP corrigé:', e.message));
+      }
+    }
+  } catch (corrErr) {
+    console.warn('⚠️ Auto-correction IUP professeurs :', corrErr.message);
   }
 
   // Start server
