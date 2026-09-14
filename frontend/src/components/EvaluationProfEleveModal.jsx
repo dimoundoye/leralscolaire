@@ -97,7 +97,7 @@ export default function EvaluationProfEleveModal({ isOpen, onClose, professeur, 
               <ShieldCheck size={14} /> Vote 100% Anonyme • Fin 2nd Semestre
             </div>
             <h3 style={{ margin: '4px 0 0', fontSize: '17px', fontWeight: 900, color: '#131e6c' }}>
-              Évaluation de M./Mme {professeur?.nom || 'l\'Enseignant'}
+              Évaluation de {(String(professeur?.civilite || professeur?.sexe || '').toUpperCase() === 'F' || String(professeur?.sexe || '').toUpperCase().startsWith('FEM')) ? 'Mme' : 'M.'} {professeur?.nom || 'l\'Enseignant'}
             </h3>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}>

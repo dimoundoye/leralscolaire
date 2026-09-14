@@ -152,7 +152,7 @@ const EmargementModel = {
 
     const total = parseInt(statsSeances[0]?.total || 0, 10);
     const effectues = parseInt(statsSeances[0]?.effectues || 0, 10);
-    const ratioAssiduite = total > 0 ? (effectues / total) : 0.95;
+    const ratioAssiduite = total > 0 ? (effectues / total) : 0;
     const ptsAssiduite = Math.round(ratioAssiduite * 350);
 
     const { rows: statsCahier } = await db.query(`
@@ -160,7 +160,7 @@ const EmargementModel = {
       WHERE professeur_id = $1 AND statut = 'VALIDE_COMPLET'
     `, [profId]);
     const complets = parseInt(statsCahier[0]?.complets || 0, 10);
-    const ratioCahier = total > 0 ? (complets / total) : 0.90;
+    const ratioCahier = total > 0 ? (complets / total) : 0;
     const ptsCahier = Math.round(ratioCahier * 250);
 
     const { rows: profInfo } = await db.query(`
@@ -168,8 +168,8 @@ const EmargementModel = {
       FROM professeurs WHERE id = $1
     `, [profId]);
 
-    const noteInspection = parseFloat(profInfo[0]?.note_inspection || 16.5);
-    const ptsInspection = Math.round((noteInspection / 20.0) * 200);
+    const noteInspection = profInfo[0]?.note_inspection ? parseFloat(profInfo[0].note_inspection) : null;
+    const ptsInspection = noteInspection ? Math.round((noteInspection / 20.0) * 200) : 0;
 
     const { rows: evalStats } = await db.query(`
       SELECT 
@@ -182,30 +182,36 @@ const EmargementModel = {
       FROM evaluations_eleves WHERE professeur_id = $1
     `, [profId]);
 
-    let avgGlobalScore = 4.2;
-    if (evalStats[0] && parseInt(evalStats[0].total_votes, 10) > 0) {
-      const q1 = parseFloat(evalStats[0].avg_q1 || 4);
-      const q2 = parseFloat(evalStats[0].avg_q2 || 4);
-      const q3 = parseFloat(evalStats[0].avg_q3 || 4);
-      const q4 = parseFloat(evalStats[0].avg_q4 || 4);
-      const q5 = parseFloat(evalStats[0].avg_q5 || 4);
-      avgGlobalScore = (q1 + q2 + q3 + q4 + q5) / 5.0;
-    }
-    const ptsEleves = Math.round((avgGlobalScore / 5.0) * 100);
+    const totalVotes = parseInt(evalStats[0]?.total_votes || 0, 10);
+    let avgGlobalScore = null;
+    let ptsEleves = 0;
 
-    const participations = parseInt(profInfo[0]?.nombre_participations_bac || 3, 10);
-    const ptsExperience = Math.min(100, 50 + (participations * 10));
+    if (totalVotes > 0) {
+      const q1 = parseFloat(evalStats[0].avg_q1 || 0);
+      const q2 = parseFloat(evalStats[0].avg_q2 || 0);
+      const q3 = parseFloat(evalStats[0].avg_q3 || 0);
+      const q4 = parseFloat(evalStats[0].avg_q4 || 0);
+      const q5 = parseFloat(evalStats[0].avg_q5 || 0);
+      avgGlobalScore = (q1 + q2 + q3 + q4 + q5) / 5.0;
+      ptsEleves = Math.round((avgGlobalScore / 5.0) * 100);
+    }
+
+    const participations = parseInt(profInfo[0]?.nombre_participations_bac || 0, 10);
+    const ptsExperience = participations > 0 ? Math.min(100, participations * 15) : 0;
 
     const totalScore = Math.min(1000, ptsAssiduite + ptsCahier + ptsInspection + ptsEleves + ptsExperience);
 
-    let gradeTier = 'BRONZE';
-    let badgeLabel = 'Professeur Titulaire';
+    let gradeTier = 'INITIAL';
+    let badgeLabel = 'Nouveau profil (En cours de constitution)';
     if (totalScore >= 880) {
       gradeTier = 'OR';
       badgeLabel = 'Professeur Émérite (Prioritaire Président de Jury)';
-    } else if (totalScore >= 750) {
+    } else if (totalScore >= 700) {
       gradeTier = 'ARGENT';
       badgeLabel = 'Professeur Senior (Éligible Correcteur Principal)';
+    } else if (totalScore >= 350) {
+      gradeTier = 'BRONZE';
+      badgeLabel = 'Professeur Titulaire';
     }
 
     return {
@@ -218,7 +224,11 @@ const EmargementModel = {
         ptsInspection,
         ptsEleves,
         ptsExperience,
-        avgGlobalScore: avgGlobalScore.toFixed(1)
+        avgGlobalScore: avgGlobalScore !== null ? avgGlobalScore.toFixed(1) : null,
+        totalVotes,
+        totalSeances: total,
+        seancesEffectuees: effectues,
+        cahiersComplets: complets
       }
     };
   },
@@ -241,7 +251,7 @@ const EmargementModel = {
     const prof = profDetails[0];
 
     const { rows: classesEnseignees } = await db.query(`
-      SELECT DISTINCT c.id, c.nom as classe_nom, c.niveau, e.nom_etablissement, e.ville
+      SELECT DISTINCT c.id, c.nom as classe_nom, c.niveau, e.nom as nom_etablissement, e.ville
       FROM seances_cours s
       JOIN classes c ON s.classe_id = c.id
       JOIN etablissements e ON s.etablissement_id = e.id

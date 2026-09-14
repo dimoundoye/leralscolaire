@@ -8,6 +8,8 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, Legend, ReferenceLine, Cell
 } from 'recharts';
+import TeacherQuickAccess from './TeacherQuickAccess';
+
 
 const TeacherOverviewTab = ({
   profile,
@@ -201,7 +203,7 @@ const TeacherOverviewTab = ({
       <div className="dashboard-grid">
         <div className="welcome-card card-box">
           <div className="welcome-info">
-            <h2>Bienvenue dans votre Espace, M./Mme {profile?.nom} !</h2>
+            <h2>Bienvenue dans votre Espace, {(String(profile?.civilite || profile?.sexe || '').toUpperCase() === 'F' || String(profile?.sexe || '').toUpperCase().startsWith('FEM')) ? 'Mme' : 'M.'} {profile?.nom || ''} !</h2>
             <p>Gérez vos enseignements, planifiez vos cours et suivez les résultats et assiduités de vos classes sur l'ensemble de vos établissements partenaires.</p>
             <div className="welcome-meta">
               <span className="meta-tag"><ShieldCheck size={14} /> ID Enseignant : {profile?.identifiant_national}</span>
@@ -336,6 +338,14 @@ const TeacherOverviewTab = ({
         </div>
       </div>
 
+      {/* BOUTONS D'ACCÈS RAPIDE STYLE WAVE SÉNÉGAL */}
+      <TeacherQuickAccess
+        navigate={navigate}
+        profile={profile}
+        invitations={invitations}
+        setActiveTab={setActiveTab}
+      />
+
       {/* SECTION DYNAMIQUE : COURS EN DIRECT OU PROCHAIN COURS */}
       <div className="card-box" style={{
         background: courseStatus.type === 'CURRENT'
@@ -462,100 +472,6 @@ const TeacherOverviewTab = ({
         )}
       </div>
 
-      {/* BOUTONS D'ACCÈS RAPIDE */}
-      <div>
-        <h3 style={{ fontSize: 14, fontWeight: 800, color: 'var(--primary-blue)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Sparkles size={16} /> Accès Rapide aux Fonctionnalités
-        </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
-          {[
-            {
-              title: 'Émarger',
-              desc: 'Scanner QR',
-              icon: <QrCode size={20} />,
-              color: '#16a34a',
-              bg: 'rgba(22, 163, 74, 0.08)',
-              action: () => navigate('/professeur/emargement')
-            },
-            {
-              title: "Faire l'Appel",
-              desc: 'Absences & Retards élèves',
-              icon: <UserCheck size={20} />,
-              color: '#0284c7',
-              bg: 'rgba(2, 132, 199, 0.08)',
-              action: () => navigate('/professeur/dashboard/attendance')
-            },
-            {
-              title: 'Saisie des Notes',
-              desc: 'Devoirs & Compositions',
-              icon: <PenTool size={20} />,
-              color: 'var(--primary-blue)',
-              bg: 'rgba(19, 30, 108, 0.08)',
-              action: () => navigate('/professeur/dashboard/grades')
-            },
-            {
-              title: 'Cahier de Texte',
-              desc: 'Contenus des séances & devoirs',
-              icon: <BookMarked size={20} />,
-              color: '#8b5cf6',
-              bg: 'rgba(139, 92, 246, 0.08)',
-              action: () => navigate('/professeur/dashboard/cahier-texte')
-            },
-            {
-              title: 'Emploi du Temps',
-              desc: 'Planning hebdomadaire',
-              icon: <Calendar size={20} />,
-              color: '#ea580c',
-              bg: 'rgba(234, 88, 12, 0.08)',
-              action: () => navigate('/professeur/dashboard/schedule')
-            }
-          ].map((item, idx) => (
-            <div
-              key={idx}
-              onClick={item.action}
-              className="card-box"
-              style={{
-                cursor: 'pointer',
-                margin: 0,
-                padding: '16px',
-                borderRadius: 12,
-                transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)';
-                e.currentTarget.style.borderColor = item.color;
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
-                e.currentTarget.style.borderColor = 'var(--border-slate-200)';
-              }}
-            >
-              <div style={{
-                width: 40, height: 40, borderRadius: 10,
-                background: item.bg, color: item.color,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0
-              }}>
-                {item.icon}
-              </div>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontWeight: 800, fontSize: 13, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {item.title}
-                </div>
-                <div style={{ fontSize: 11, color: 'var(--text-slate-500)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {item.desc}
-                </div>
-              </div>
-              <ArrowRight size={14} style={{ color: 'var(--text-slate-400)', flexShrink: 0 }} />
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* SECTION GRAPHIQUES : 2 DIAGRAMMES CLÉS */}
       <div className="charts-grid">

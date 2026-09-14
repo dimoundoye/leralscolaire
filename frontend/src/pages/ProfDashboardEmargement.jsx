@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
-import { QrCode, MapPin, CheckCircle, Clock, BookOpen, AlertCircle, PlusCircle, ShieldCheck, Award, Star, Compass } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  QrCode, Camera, CameraOff, RefreshCw, FlipHorizontal, MapPin, CheckCircle, 
+  Clock, BookOpen, AlertCircle, PlusCircle, ShieldCheck, Award, Star, 
+  Compass, Calendar, History, Sparkles, UserCheck, ChevronRight
+} from 'lucide-react';
+import { Html5Qrcode } from 'html5-qrcode';
 import { offlineFetch } from '../services/api';
 
-export default function ProfDashboardEmargement() {
+export default function ProfDashboardEmargement({ classes: propClasses = [], schedule: propSchedule = [], profile: propProfile = null, onNavigateTab = null }) {
   const [activeTab, setActiveTab] = useState('scanne');
   const [qrTokenInput, setQrTokenInput] = useState('');
   const [gpsStatus, setGpsStatus] = useState(null);
@@ -10,22 +15,290 @@ export default function ProfDashboardEmargement() {
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
 
-  // Form states for Cahier de Texte
-  const [selectedSeanceId, setSelectedSeanceId] = useState('');
-  const [cahierTitre, setCahierTitre] = useState('');
-  const [cahierContenu, setCahierContenu] = useState('');
-  const [cahierDevoirs, setCahierDevoirs] = useState('');
+  // Dynamic Data States
+  const [classesList, setClassesList] = useState(propClasses || []);
+  const [scheduleList, setScheduleList] = useState(propSchedule || []);
+  const [myStats, setMyStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  // Active Seance Selection for Emargement
+  const [selectedClassId, setSelectedClassId] = useState('');
+  const [selectedMatiereCode, setSelectedMatiereCode] = useState('');
+  const [selectedMatiereNom, setSelectedMatiereNom] = useState('');
+  const [selectedEtabId, setSelectedEtabId] = useState('');
+  const [heureDebut, setHeureDebut] = useState('08:00');
+  const [heureFin, setHeureFin] = useState('10:00');
+  const [autoDetectedCourse, setAutoDetectedCourse] = useState(null);
+
+  // Camera Scanner States
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [isCameraStarting, setIsCameraStarting] = useState(false);
+  const [cameraError, setCameraError] = useState(null);
+  const [availableCameras, setAvailableCameras] = useState([]);
+  const [selectedCameraId, setSelectedCameraId] = useState('');
+  const [showManualInput, setShowManualInput] = useState(false);
+  const scannerRef = useRef(null);
 
   // Form states for Rattrapage
+  const [rattrapageClassId, setRattrapageClassId] = useState('');
   const [rattrapageDate, setRattrapageDate] = useState('');
   const [rattrapageHeureDeb, setRattrapageHeureDeb] = useState('09:00');
   const [rattrapageHeureFin, setRattrapageHeureFin] = useState('11:00');
   const [rattrapageMotif, setRattrapageMotif] = useState('');
 
+  // 1. Fetch Dynamic Stats & Classes if not provided
+  const fetchMyStats = async () => {
+    try {
+      setStatsLoading(true);
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/emargement/my-stats', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setMyStats(data);
+        }
+      }
+    } catch (err) {
+      console.warn('Impossible de charger les stats emargement:', err);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  const fetchClassesAndSchedule = async () => {
+    const token = localStorage.getItem('token');
+    const headers = { Authorization: `Bearer ${token}` };
+    try {
+      if (classesList.length === 0) {
+        const res = await fetch('/api/professeurs-portal/classes', { headers });
+        if (res.ok) {
+          const data = await res.json();
+          setClassesList(data || []);
+        }
+      }
+      if (scheduleList.length === 0) {
+        const sRes = await fetch('/api/professeurs-portal/schedule', { headers });
+        if (sRes.ok) {
+          const sData = await sRes.json();
+          setScheduleList(sData || []);
+        }
+      }
+    } catch (e) {
+      console.warn('Erreur chargement classes/schedule:', e);
+    }
+  };
+
+  useEffect(() => {
+    fetchMyStats();
+    fetchClassesAndSchedule();
+  }, []);
+
+  // Update classes when props change
+  useEffect(() => {
+    if (propClasses && propClasses.length > 0) setClassesList(propClasses);
+  }, [propClasses]);
+
+  useEffect(() => {
+    if (propSchedule && propSchedule.length > 0) setScheduleList(propSchedule);
+  }, [propSchedule]);
+
+  // 2. Auto-detect current active course from Schedule
+  useEffect(() => {
+    if (!scheduleList || scheduleList.length === 0) {
+      if (classesList && classesList.length > 0 && !selectedClassId) {
+        const first = classesList[0];
+        setSelectedClassId(first.id || first.classe_id || '');
+        setSelectedMatiereCode(first.matiere_code || 'GEN');
+        setSelectedMatiereNom(first.matiere_nom || first.nom || 'Cours');
+        setSelectedEtabId(first.etablissement_id || 'default');
+      }
+      return;
+    }
+
+    const now = new Date();
+    const daysMap = ['DIMANCHE', 'LUNDI', 'MARDI', 'MERCREDI', 'JEUDI', 'VENDREDI', 'SAMEDI'];
+    const currentDay = daysMap[now.getDay()];
+    const currentHour = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    const match = scheduleList.find(s => {
+      const matchDay = (s.jour || '').toUpperCase() === currentDay;
+      const matchTime = s.heure_debut <= currentHour && s.heure_fin >= currentHour;
+      return matchDay && matchTime;
+    });
+
+    if (match) {
+      setAutoDetectedCourse(match);
+      setSelectedClassId(match.classe_id || match.id || '');
+      setSelectedMatiereCode(match.matiere_code || 'GEN');
+      setSelectedMatiereNom(match.matiere_nom || match.matiere || 'Matière');
+      setSelectedEtabId(match.etablissement_id || 'default');
+      setHeureDebut(match.heure_debut || '08:00');
+      setHeureFin(match.heure_fin || '10:00');
+    } else if (classesList && classesList.length > 0 && !selectedClassId) {
+      const first = classesList[0];
+      setSelectedClassId(first.id || first.classe_id || '');
+      setSelectedMatiereCode(first.matiere_code || 'GEN');
+      setSelectedMatiereNom(first.matiere_nom || first.nom || 'Cours');
+      setSelectedEtabId(first.etablissement_id || 'default');
+    }
+  }, [scheduleList, classesList]);
+
+  // Handle class select change
+  const handleClassChange = (e) => {
+    const classId = e.target.value;
+    setSelectedClassId(classId);
+    const found = classesList.find(c => (c.id || c.classe_id) === classId);
+    if (found) {
+      setSelectedMatiereCode(found.matiere_code || 'GEN');
+      setSelectedMatiereNom(found.matiere_nom || found.nom || 'Cours');
+      setSelectedEtabId(found.etablissement_id || 'default');
+    }
+  };
+
+  // 3. Audio Feedback on Scan
+  const playScanBeep = () => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.25);
+    } catch (e) {
+      // Audio not supported or blocked
+    }
+  };
+
+  // 4. Camera Scanner Control
+  const startCamera = async (overrideCamId = null) => {
+    setCameraError(null);
+    setIsCameraStarting(true);
+    setMessage(null);
+
+    try {
+      const devices = await Html5Qrcode.getCameras();
+      if (!devices || devices.length === 0) {
+        setCameraError("Aucune caméra physique détectée sur votre appareil.");
+        setIsCameraStarting(false);
+        return;
+      }
+      setAvailableCameras(devices);
+
+      let targetCamId = overrideCamId || selectedCameraId;
+      if (!targetCamId) {
+        const backCam = devices.find(d => /back|rear|environnement|arrière/i.test(d.label));
+        targetCamId = backCam ? backCam.id : devices[0].id;
+        setSelectedCameraId(targetCamId);
+      }
+
+      // Cleanup existing instance if any
+      if (scannerRef.current) {
+        try {
+          if (scannerRef.current.isScanning) await scannerRef.current.stop();
+          scannerRef.current.clear();
+        } catch (e) {}
+      }
+
+      const html5Qr = new Html5Qrcode('ls-camera-reader-viewport');
+      scannerRef.current = html5Qr;
+
+      await html5Qr.start(
+        targetCamId,
+        {
+          fps: 12,
+          qrbox: (viewWidth, viewHeight) => {
+            const minSide = Math.min(viewWidth, viewHeight);
+            const edge = Math.max(190, Math.min(minSide * 0.75, 270));
+            return { width: edge, height: edge };
+          },
+          aspectRatio: 1.0
+        },
+        (decodedText) => {
+          // Success callback
+          playScanBeep();
+          if (navigator.vibrate) {
+            try { navigator.vibrate([100, 50, 100]); } catch (e) {}
+          }
+          setQrTokenInput(decodedText);
+          stopCamera();
+          setMessage("✅ QR Code détecté et numérisé avec succès ! Cliquez sur 'Valider l'Émargement'.");
+        },
+        () => {
+          // Scanning frames in progress...
+        }
+      );
+
+      setIsCameraActive(true);
+    } catch (err) {
+      console.error('Erreur démarrage caméra:', err);
+      const isDenied = err?.name === 'NotAllowedError' || String(err).toLowerCase().includes('permission');
+      setCameraError(
+        isDenied 
+          ? "Accès à la caméra refusé. Veuillez autoriser la caméra dans votre navigateur (icône cadenas)." 
+          : "Impossible d'accéder au flux vidéo (" + (err.message || err) + "). Vous pouvez coller le token manuellement ci-dessous."
+      );
+      setIsCameraActive(false);
+    } finally {
+      setIsCameraStarting(false);
+    }
+  };
+
+  const stopCamera = async () => {
+    if (scannerRef.current) {
+      try {
+        if (scannerRef.current.isScanning) {
+          await scannerRef.current.stop();
+        }
+        scannerRef.current.clear();
+      } catch (e) {
+        console.warn('Arrêt caméra info:', e);
+      }
+      scannerRef.current = null;
+    }
+    setIsCameraActive(false);
+    setIsCameraStarting(false);
+  };
+
+  const switchCamera = async () => {
+    if (!availableCameras || availableCameras.length <= 1) return;
+    const currentIndex = availableCameras.findIndex(c => c.id === selectedCameraId);
+    const nextIndex = (currentIndex + 1) % availableCameras.length;
+    const nextCam = availableCameras[nextIndex];
+    setSelectedCameraId(nextCam.id);
+    await stopCamera();
+    setTimeout(() => {
+      startCamera(nextCam.id);
+    }, 250);
+  };
+
+  // Cleanup camera on unmount or tab change
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (activeTab !== 'scanne' && isCameraActive) {
+      stopCamera();
+    }
+  }, [activeTab]);
+
+  // 5. Submit QR Attendance
   const handleScanQrSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!qrTokenInput) {
-      setError('Veuillez coller ou scanner le token QR Code');
+      setError('Veuillez scanner ou saisir le token du QR Code.');
       return;
     }
     setLoading(true);
@@ -42,37 +315,41 @@ export default function ProfDashboardEmargement() {
         },
         body: JSON.stringify({
           token: qrTokenInput,
-          etablissementId: 'default',
-          classeId: 'classe-tles2',
-          matiereCode: 'MATH',
-          matiereNom: 'Mathématiques',
-          heureDebut: '08:00',
-          heureFin: '10:00'
+          etablissementId: selectedEtabId || 'default',
+          classeId: selectedClassId || 'classe-auto',
+          matiereCode: selectedMatiereCode || 'GEN',
+          matiereNom: selectedMatiereNom || 'Cours Général',
+          heureDebut: heureDebut || '08:00',
+          heureFin: heureFin || '10:00'
         })
       }, 'Émargement QR séance');
 
       const data = await res.json();
       if (data.success || data.offline) {
-        setMessage(data.offline ? 'Émargement sauvegardé localement (⏳ sera synchronisé automatiquement dès retour réseau) !' : data.message);
+        setMessage(data.offline ? 'Émargement sauvegardé localement (⏳ synchronisation dès retour du réseau) !' : data.message);
         setQrTokenInput('');
-        if (data.seance) setSelectedSeanceId(data.seance.id);
+        if (data.seance) {
+          setSelectedSeanceId(data.seance.id);
+        }
+        fetchMyStats(); // Refresh real stats
       } else {
-        setError(data.error);
+        setError(data.error || 'Erreur lors de la validation du scan.');
       }
     } catch (err) {
-      setError('Erreur lors de la validation du QR Code');
+      setError('Erreur lors de la communication avec le serveur d\'émargement.');
     } finally {
       setLoading(false);
     }
   };
 
+  // 6. Submit EPS Attendance
   const handleEpsGpsEmargement = async () => {
     setLoading(true);
     setError(null);
     setMessage(null);
 
     if (!navigator.geolocation) {
-      setError('Géolocalisation non supportée par votre navigateur');
+      setError('La géolocalisation n\'est pas supportée par votre navigateur.');
       setLoading(false);
       return;
     }
@@ -87,12 +364,12 @@ export default function ProfDashboardEmargement() {
             Authorization: `Bearer ${token}`
           },
           body: JSON.stringify({
-            etablissementId: 'default',
-            classeId: 'classe-3a',
+            etablissementId: selectedEtabId || 'default',
+            classeId: selectedClassId || 'classe-eps',
             matiereCode: 'EPS',
             matiereNom: 'Éducation Physique & Sportive',
-            heureDebut: '08:00',
-            heureFin: '10:00',
+            heureDebut: heureDebut || '08:00',
+            heureFin: heureFin || '10:00',
             latitude: pos.coords.latitude,
             longitude: pos.coords.longitude
           })
@@ -100,73 +377,35 @@ export default function ProfDashboardEmargement() {
 
         const data = await res.json();
         if (data.success || data.offline) {
-          setMessage(data.offline ? 'Émargement EPS sauvegardé localement (⏳ sera synchronisé au retour de la connexion) !' : data.message);
-          setGpsStatus(`GPS Validé: Lat ${pos.coords.latitude.toFixed(4)}, Lng ${pos.coords.longitude.toFixed(4)}`);
+          setMessage(data.offline ? 'Émargement EPS enregistré en cache local !' : data.message);
+          setGpsStatus(`GPS Validé : Lat ${pos.coords.latitude.toFixed(4)}, Lng ${pos.coords.longitude.toFixed(4)}`);
+          fetchMyStats();
         } else {
-          setError(data.error);
+          setError(data.error || 'Position hors périmètre du stade.');
         }
       } catch (err) {
-        setError('Erreur de connexion serveur EPS');
+        setError('Erreur de transmission EPS.');
       } finally {
         setLoading(false);
       }
     }, () => {
-      setError('Accès GPS refusé. Veuillez autoriser la géolocalisation pour le Mode EPS.');
+      setError('Accès GPS refusé. Veuillez autoriser la localisation pour valider votre séance EPS sur le terrain.');
       setLoading(false);
-    });
+    }, { enableHighAccuracy: true });
   };
 
-  const handleCahierTexteSubmit = async (e) => {
-    e.preventDefault();
-    if (!cahierTitre || !cahierContenu) {
-      setError('Le titre et le contenu du cours sont requis.');
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    setMessage(null);
-
-    try {
-      const token = localStorage.getItem('token');
-      const res = await offlineFetch('/api/emargement/cahier-texte-complete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          seanceId: selectedSeanceId || 'seance-demo-1',
-          titre: cahierTitre,
-          contenu: cahierContenu,
-          devoirs: cahierDevoirs
-        })
-      }, 'Validation cahier de texte émargement');
-
-      const data = await res.json();
-      if (data.success || data.offline) {
-        setMessage(data.offline ? 'Cahier de texte enregistré en local (⏳ synchronisation automatique dès retour réseau) !' : data.message);
-        setCahierTitre('');
-        setCahierContenu('');
-        setCahierDevoirs('');
-      } else {
-        setError(data.error);
-      }
-    } catch (err) {
-      setError('Erreur serveur cahier de texte');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // 7. Submit Rattrapage
   const handleRattrapageSubmit = async (e) => {
     e.preventDefault();
     if (!rattrapageDate || !rattrapageMotif) {
-      setError('Veuillez remplir la date et le motif du rattrapage.');
+      setError('Veuillez renseigner la date et le motif du cours de rattrapage.');
       return;
     }
     setLoading(true);
     setError(null);
     setMessage(null);
+
+    const targetClass = classesList.find(c => (c.id || c.classe_id) === (rattrapageClassId || selectedClassId));
 
     try {
       const token = localStorage.getItem('token');
@@ -177,10 +416,10 @@ export default function ProfDashboardEmargement() {
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          etablissementId: 'default',
-          classeId: 'classe-tles2',
-          matiereCode: 'MATH',
-          matiereNom: 'Mathématiques',
+          etablissementId: targetClass?.etablissement_id || selectedEtabId || 'default',
+          classeId: rattrapageClassId || selectedClassId,
+          matiereCode: targetClass?.matiere_code || selectedMatiereCode || 'GEN',
+          matiereNom: targetClass?.matiere_nom || selectedMatiereNom || 'Matière',
           dateSeance: rattrapageDate,
           heureDebut: rattrapageHeureDeb,
           heureFin: rattrapageHeureFin,
@@ -192,15 +431,28 @@ export default function ProfDashboardEmargement() {
       if (data.success) {
         setMessage(data.message);
         setRattrapageMotif('');
+        fetchMyStats();
       } else {
         setError(data.error);
       }
     } catch (err) {
-      setError('Erreur lors de la demande de rattrapage');
+      setError('Erreur lors de la transmission de la demande de rattrapage');
     } finally {
       setLoading(false);
     }
   };
+
+  // Derived Dynamic Display Metrics (100% real, no fake fallbacks)
+  const totalScore = myStats?.score1000?.totalScore ?? 0;
+  const gradeTier = myStats?.score1000?.gradeTier || 'INITIAL';
+  const badgeLabel = myStats?.score1000?.badgeLabel || 'Nouveau profil (En cours de constitution)';
+  
+  const heuresEffectuees = myStats?.metrics?.heuresEffectuees ?? 0;
+  const heuresTotal = myStats?.metrics?.heuresTotal ?? 0;
+  const tauxEmargement = myStats?.metrics?.tauxEmargement;
+  const tauxCahier = myStats?.metrics?.tauxCahier;
+  const noteEleves = myStats?.metrics?.noteEleves;
+  const totalVotes = myStats?.metrics?.totalVotes ?? 0;
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', fontFamily: 'Poppins, system-ui, sans-serif' }}>
@@ -211,7 +463,7 @@ export default function ProfDashboardEmargement() {
         border: '1px solid #e2e8f0',
         borderRadius: '16px',
         padding: '24px',
-        marginBottom: '24px',
+        marginBottom: '20px',
         boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)',
         display: 'flex',
         justifyContent: 'space-between',
@@ -228,83 +480,125 @@ export default function ProfDashboardEmargement() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(19, 30, 108, 0.25)'
+            boxShadow: '0 4px 12px rgba(19, 30, 108, 0.25)',
+            flexShrink: 0
           }}>
             <ShieldCheck size={28} color="#ffffff" />
           </div>
           <div>
-            <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: '#131e6c' }}>
-              Émargement & Assiduité Enseignant
-            </h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: '#131e6c' }}>
+                Émargement & Assiduité Enseignant
+              </h1>
+              <span style={{
+                background: '#e0e7ff',
+                color: '#3730a3',
+                fontSize: '11px',
+                fontWeight: 700,
+                padding: '3px 9px',
+                borderRadius: '12px'
+              }}>
+                Direct Caméra 20s
+              </span>
+            </div>
             <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#64748b' }}>
-              Pointez votre présence par QR Code 20s, géofencez vos séances d'EPS ou renseignez vos cahiers de texte.
+              Pointez votre présence par scan vidéo QR Code 20s, géofencez vos cours EPS ou complétez vos cahiers de texte.
             </p>
           </div>
         </div>
 
-        {/* Score Card */}
+        {/* Dynamic Score Card */}
         <div style={{
-          background: '#f8fafc',
+          background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
           border: '1px solid #cbd5e1',
           padding: '10px 18px',
-          borderRadius: '12px',
+          borderRadius: '14px',
           display: 'flex',
           alignItems: 'center',
-          gap: '12px'
+          gap: '12px',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
         }}>
-          <Award size={28} color="#f59e0b" />
+          <Award size={30} color={gradeTier === 'OR' ? '#f59e0b' : gradeTier === 'ARGENT' ? '#3b82f6' : gradeTier === 'BRONZE' ? '#b45309' : '#94a3b8'} />
           <div>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Score LeralScolaire</div>
-            <div style={{ fontSize: '17px', fontWeight: 900, color: '#131e6c' }}>
-              920 <span style={{ fontSize: '12px', fontWeight: 500, color: '#94a3b8' }}>/ 1000 pts</span>
+            <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Score LeralScolaire
             </div>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: '#16a34a' }}>Grade Or • Éligible Président de Jury</div>
+            <div style={{ fontSize: '18px', fontWeight: 900, color: '#131e6c' }}>
+              {statsLoading ? '...' : totalScore} <span style={{ fontSize: '12px', fontWeight: 500, color: '#94a3b8' }}>/ 1000 pts</span>
+            </div>
+            <div style={{ fontSize: '11px', fontWeight: 700, color: gradeTier === 'OR' ? '#16a34a' : gradeTier === 'ARGENT' ? '#2563eb' : gradeTier === 'BRONZE' ? '#b45309' : '#64748b' }}>
+              Grade {gradeTier} • {badgeLabel}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* 2. Quick Metrics Row */}
+      {/* 2. Dynamic Metrics Row (Honest Data, No Fake Percentages) */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-        gap: '16px',
-        marginBottom: '24px'
+        gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+        gap: '14px',
+        marginBottom: '20px'
       }}>
+        {/* Heures */}
         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#131e6c', marginBottom: '6px' }}>
             <Clock size={16} />
             <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b' }}>Heures Effectuées</span>
           </div>
-          <div style={{ fontSize: '20px', fontWeight: 900, color: '#0f172a' }}>84h / 90h</div>
+          <div style={{ fontSize: '20px', fontWeight: 900, color: '#0f172a' }}>
+            {heuresEffectuees}h {heuresTotal > 0 && <span style={{ fontSize: '13px', fontWeight: 600, color: '#94a3b8' }}>/ {heuresTotal}h</span>}
+          </div>
+          <div style={{ fontSize: '11px', color: '#64748b', marginTop: '3px' }}>
+            {heuresTotal > 0 ? `${heuresEffectuees}h validées` : 'Aucun cours émargé'}
+          </div>
         </div>
 
+        {/* Taux d'émargement */}
         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#16a34a', marginBottom: '6px' }}>
             <CheckCircle size={16} />
             <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b' }}>Taux d'Émargement</span>
           </div>
-          <div style={{ fontSize: '20px', fontWeight: 900, color: '#16a34a' }}>98%</div>
+          <div style={{ fontSize: '20px', fontWeight: 900, color: tauxEmargement !== null && tauxEmargement !== undefined ? '#16a34a' : '#64748b' }}>
+            {tauxEmargement !== null && tauxEmargement !== undefined ? `${tauxEmargement}%` : '—'}
+          </div>
+          <div style={{ fontSize: '11px', color: '#64748b', marginTop: '3px' }}>
+            {tauxEmargement !== null && tauxEmargement !== undefined ? 'Assiduité calculée' : 'Aucune séance à émarger'}
+          </div>
         </div>
 
+        {/* Cahiers de texte */}
         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#7c3aed', marginBottom: '6px' }}>
             <BookOpen size={16} />
             <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b' }}>Cahiers de Texte</span>
           </div>
-          <div style={{ fontSize: '20px', fontWeight: 900, color: '#7c3aed' }}>100% à jour</div>
+          <div style={{ fontSize: '20px', fontWeight: 900, color: tauxCahier !== null && tauxCahier !== undefined ? '#7c3aed' : '#64748b' }}>
+            {tauxCahier !== null && tauxCahier !== undefined ? `${tauxCahier}%` : '—'}
+          </div>
+          <div style={{ fontSize: '11px', color: '#64748b', marginTop: '3px' }}>
+            {tauxCahier !== null && tauxCahier !== undefined ? (tauxCahier === 100 ? '100% à jour' : `${tauxCahier}% complétés`) : 'Aucune séance effectuée'}
+          </div>
         </div>
 
+        {/* Évaluation élèves */}
         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f59e0b', marginBottom: '6px' }}>
             <Star size={16} />
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b' }}>Vote Élèves (5 Qs)</span>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b' }}>Évaluation Élèves</span>
           </div>
-          <div style={{ fontSize: '20px', fontWeight: 900, color: '#d97706' }}>4.7 / 5.0 ⭐</div>
+          <div style={{ fontSize: '20px', fontWeight: 900, color: noteEleves ? '#d97706' : '#64748b' }}>
+            {noteEleves ? `${noteEleves} / 5.0 ⭐` : '— / 5.0'}
+          </div>
+          <div style={{ fontSize: '11px', color: '#64748b', marginTop: '3px' }}>
+            {totalVotes > 0 ? `${totalVotes} avis d'élèves` : '0 avis d\'élève enregistré'}
+          </div>
         </div>
       </div>
 
       {/* 3. Action Tab Buttons */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
         <button
           onClick={() => setActiveTab('scanne')}
           style={{
@@ -313,10 +607,11 @@ export default function ProfDashboardEmargement() {
             border: activeTab === 'scanne' ? 'none' : '1px solid #cbd5e1',
             background: activeTab === 'scanne' ? '#131e6c' : '#ffffff',
             color: activeTab === 'scanne' ? '#ffffff' : '#475569',
-            cursor: 'pointer', boxShadow: activeTab === 'scanne' ? '0 4px 12px rgba(19, 30, 108, 0.2)' : 'none'
+            cursor: 'pointer', boxShadow: activeTab === 'scanne' ? '0 4px 12px rgba(19, 30, 108, 0.2)' : 'none',
+            transition: 'all 0.2s ease'
           }}
         >
-          <QrCode size={16} /> 1. Émerger (QR Code 20s)
+          <Camera size={16} /> 1. Scanner QR Code Caméra
         </button>
 
         <button
@@ -327,24 +622,11 @@ export default function ProfDashboardEmargement() {
             border: activeTab === 'eps' ? 'none' : '1px solid #cbd5e1',
             background: activeTab === 'eps' ? '#059669' : '#ffffff',
             color: activeTab === 'eps' ? '#ffffff' : '#475569',
-            cursor: 'pointer', boxShadow: activeTab === 'eps' ? '0 4px 12px rgba(5, 150, 105, 0.2)' : 'none'
+            cursor: 'pointer', boxShadow: activeTab === 'eps' ? '0 4px 12px rgba(5, 150, 105, 0.2)' : 'none',
+            transition: 'all 0.2s ease'
           }}
         >
           <Compass size={16} /> Mode Terrain EPS (GPS)
-        </button>
-
-        <button
-          onClick={() => setActiveTab('cahier')}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '10px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: 800,
-            border: activeTab === 'cahier' ? 'none' : '1px solid #cbd5e1',
-            background: activeTab === 'cahier' ? '#7c3aed' : '#ffffff',
-            color: activeTab === 'cahier' ? '#ffffff' : '#475569',
-            cursor: 'pointer', boxShadow: activeTab === 'cahier' ? '0 4px 12px rgba(124, 58, 237, 0.2)' : 'none'
-          }}
-        >
-          <BookOpen size={16} /> 2. Saisir Cahier de Texte
         </button>
 
         <button
@@ -355,7 +637,8 @@ export default function ProfDashboardEmargement() {
             border: activeTab === 'rattrapage' ? 'none' : '1px solid #cbd5e1',
             background: activeTab === 'rattrapage' ? '#d97706' : '#ffffff',
             color: activeTab === 'rattrapage' ? '#ffffff' : '#475569',
-            cursor: 'pointer', boxShadow: activeTab === 'rattrapage' ? '0 4px 12px rgba(217, 119, 6, 0.2)' : 'none'
+            cursor: 'pointer', boxShadow: activeTab === 'rattrapage' ? '0 4px 12px rgba(217, 119, 6, 0.2)' : 'none',
+            transition: 'all 0.2s ease'
           }}
         >
           <PlusCircle size={16} /> Demande de Rattrapage
@@ -375,260 +658,563 @@ export default function ProfDashboardEmargement() {
         </div>
       )}
 
-      {/* 4. Active Tab Content Cards */}
-      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '28px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', maxWidth: '680px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', alignItems: 'start' }}>
         
-        {/* Tab 1: QR Code Scanner */}
-        {activeTab === 'scanne' && (
-          <form onSubmit={handleScanQrSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-            <div>
-              <h3 style={{ margin: '0 0 6px', fontSize: '16px', fontWeight: 800, color: '#131e6c' }}>
-                Émargement Présence par QR Code (20s)
-              </h3>
-              <p style={{ margin: 0, fontSize: '12.5px', color: '#64748b' }}>
-                Pointez votre caméra vers l'écran du surveillant ou collez le token TOTP 20s généré.
-              </p>
+        {/* Left / Main Card: Active Tab Interface */}
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+          
+          {/* SÉLECTION DU COURS / CLASSE DYNAMIQUE */}
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <span style={{ fontSize: '12px', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Séance d'Enseignement
+              </span>
+              {autoDetectedCourse && (
+                <span style={{ fontSize: '11px', fontWeight: 700, background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Sparkles size={12} /> Cours actuel détecté
+                </span>
+              )}
             </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
-                Token Scanné / Données du QR Code :
-              </label>
-              <textarea
-                rows={3}
-                value={qrTokenInput}
-                onChange={(e) => setQrTokenInput(e.target.value)}
-                placeholder="Ex : eyJldGFiSWQiOiJkZWZhdWx0IiwidGltZSI6ODkzMTk0MjUsImhhc2giOiJlM2IwYzQ0MiJ9..."
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '10px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '12px',
-                  fontFamily: 'monospace',
-                  background: '#f8fafc',
-                  color: '#0f172a',
-                  outline: 'none'
-                }}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                padding: '12px',
-                background: '#131e6c',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '10px',
-                fontSize: '13px',
-                fontWeight: 800,
-                cursor: 'pointer',
-                opacity: loading ? 0.6 : 1
-              }}
-            >
-              {loading ? 'Validation en cours...' : 'Valider l\'Émargement Physique'}
-            </button>
-          </form>
-        )}
-
-        {/* Tab 2: EPS Outdoor Mode */}
-        {activeTab === 'eps' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-            <div>
-              <h3 style={{ margin: '0 0 6px', fontSize: '16px', fontWeight: 800, color: '#059669', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Compass size={20} /> Mode Terrain EPS (Stade / Géofencing GPS)
-              </h3>
-              <p style={{ margin: 0, fontSize: '12.5px', color: '#64748b' }}>
-                Émargement automatique pour les professeurs d'Éducation Physique en extérieur.
-              </p>
-            </div>
-
-            <p style={{ fontSize: '12.5px', color: '#475569', lineHeight: 1.5, background: '#f0fdf4', padding: '14px', borderRadius: '10px', border: '1px solid #bbf7d0' }}>
-              Ce mode utilise les coordonnées GPS de votre smartphone pour valider votre présence physique sur le stade du lycée sans passer par le bureau du surveillant.
-            </p>
-
-            {gpsStatus && (
-              <div style={{ fontSize: '12px', fontWeight: 700, color: '#166534', background: '#dcfce7', padding: '10px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <MapPin size={16} /> {gpsStatus}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#64748b', marginBottom: '4px' }}>
+                  Classe & Matière :
+                </label>
+                <select
+                  value={selectedClassId}
+                  onChange={handleClassChange}
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '12.5px',
+                    fontWeight: 600,
+                    color: '#0f172a',
+                    background: '#ffffff'
+                  }}
+                >
+                  {classesList.length > 0 ? (
+                    classesList.map((c, idx) => (
+                      <option key={c.id || c.classe_id || idx} value={c.id || c.classe_id}>
+                        {c.nom || c.classe_nom || 'Classe'} — {c.matiere_nom || c.matiere || selectedMatiereNom || 'Cours'}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="default">Classe par défaut (Générale)</option>
+                  )}
+                </select>
               </div>
-            )}
 
-            <button
-              onClick={handleEpsGpsEmargement}
-              disabled={loading}
-              style={{
-                padding: '12px',
-                background: '#059669',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '10px',
-                fontSize: '13px',
-                fontWeight: 800,
-                cursor: 'pointer',
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#64748b', marginBottom: '4px' }}>Début :</label>
+                  <input
+                    type="time"
+                    value={heureDebut}
+                    onChange={(e) => setHeureDebut(e.target.value)}
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12.5px', fontWeight: 600 }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#64748b', marginBottom: '4px' }}>Fin :</label>
+                  <input
+                    type="time"
+                    value={heureFin}
+                    onChange={(e) => setHeureFin(e.target.value)}
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12.5px', fontWeight: 600 }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* TAB 1: SCANNER QR CODE AVEC ACCÈS CAMÉRA VIDÉO */}
+          {activeTab === 'scanne' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              <div>
+                <h3 style={{ margin: '0 0 4px', fontSize: '16px', fontWeight: 800, color: '#131e6c', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Camera size={20} color="#131e6c" /> Scan Direct Caméra (QR 20s)
+                </h3>
+                <p style={{ margin: 0, fontSize: '12.5px', color: '#64748b' }}>
+                  Activez votre caméra et visez l'écran du surveillant ou le moniteur d'affichage pour valider instantanément votre présence.
+                </p>
+              </div>
+
+              {/* CAMERA VIEWFINDER CONTAINER */}
+              <div style={{
+                position: 'relative',
+                width: '100%',
+                minHeight: isCameraActive ? '320px' : '220px',
+                background: '#090d16',
+                borderRadius: '16px',
+                overflow: 'hidden',
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '8px',
-                opacity: loading ? 0.6 : 1
-              }}
+                border: isCameraActive ? '2px solid #38bdf8' : '1px dashed #cbd5e1',
+                boxShadow: isCameraActive ? '0 10px 25px -5px rgba(56, 189, 248, 0.3)' : 'none'
+              }}>
+                {/* Real Video Reader Viewport */}
+                <div 
+                  id="ls-camera-reader-viewport" 
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    display: isCameraActive ? 'block' : 'none' 
+                  }} 
+                />
+
+                {/* State: Camera Inactive Overlay */}
+                {!isCameraActive && !isCameraStarting && (
+                  <div style={{ textAlign: 'center', padding: '24px 20px', color: '#94a3b8' }}>
+                    <div style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '50%',
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto 12px'
+                    }}>
+                      <Camera size={32} color="#38bdf8" />
+                    </div>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#f8fafc', marginBottom: '6px' }}>
+                      Caméra en veille
+                    </div>
+                    <p style={{ fontSize: '12px', color: '#94a3b8', maxWidth: '280px', margin: '0 auto 16px' }}>
+                      Pointez votre smartphone ou webcam vers le QR Code renouvelé toutes les 20 secondes.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => startCamera()}
+                      style={{
+                        padding: '12px 24px',
+                        background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '12px',
+                        fontSize: '13px',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 14px rgba(37, 99, 235, 0.4)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}
+                    >
+                      <Camera size={16} /> Démarrer la Caméra
+                    </button>
+                  </div>
+                )}
+
+                {/* State: Starting / Loading */}
+                {isCameraStarting && (
+                  <div style={{ textAlign: 'center', padding: '30px', color: '#ffffff' }}>
+                    <RefreshCw className="animate-spin" size={36} color="#38bdf8" style={{ margin: '0 auto 12px' }} />
+                    <div style={{ fontSize: '13px', fontWeight: 700 }}>Initialisation de la caméra...</div>
+                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>Veuillez autoriser l'accès si demandé.</div>
+                  </div>
+                )}
+
+                {/* Laser Overlay Animation when Active */}
+                {isCameraActive && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '16px',
+                    left: '16px',
+                    right: '16px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    zIndex: 10,
+                    pointerEvents: 'auto'
+                  }}>
+                    <span style={{
+                      background: 'rgba(0, 0, 0, 0.65)',
+                      backdropFilter: 'blur(8px)',
+                      color: '#22c55e',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      padding: '4px 10px',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}>
+                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e' }} />
+                      Caméra Active
+                    </span>
+
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {availableCameras.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={switchCamera}
+                          title="Changer de caméra (Avant / Arrière)"
+                          style={{
+                            background: 'rgba(0, 0, 0, 0.65)',
+                            backdropFilter: 'blur(8px)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            color: '#ffffff',
+                            padding: '6px 10px',
+                            borderRadius: '8px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          <FlipHorizontal size={14} /> Retourner
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={stopCamera}
+                        title="Éteindre la caméra"
+                        style={{
+                          background: 'rgba(239, 68, 68, 0.85)',
+                          border: 'none',
+                          color: '#ffffff',
+                          padding: '6px 10px',
+                          borderRadius: '8px',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        <CameraOff size={14} /> Arrêter
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Camera Error Message */}
+              {cameraError && (
+                <div style={{
+                  background: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  color: '#991b1b',
+                  padding: '12px 14px',
+                  borderRadius: '10px',
+                  fontSize: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <AlertCircle size={16} flexShrink={0} />
+                  <span>{cameraError}</span>
+                </div>
+              )}
+
+              {/* Scanned Token Field / Fallback */}
+              <form onSubmit={handleScanQrSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155' }}>
+                      Token Scanné :
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowManualInput(!showManualInput)}
+                      style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: '11.5px', fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      {showManualInput ? 'Masquer saisie manuelle' : 'Saisir manuellement'}
+                    </button>
+                  </div>
+
+                  {(showManualInput || qrTokenInput) && (
+                    <input
+                      type="text"
+                      value={qrTokenInput}
+                      onChange={(e) => setQrTokenInput(e.target.value)}
+                      placeholder="Collez le token si la caméra est indisponible..."
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        borderRadius: '8px',
+                        border: qrTokenInput ? '2px solid #22c55e' : '1px solid #cbd5e1',
+                        fontSize: '12px',
+                        fontFamily: 'monospace',
+                        background: qrTokenInput ? '#f0fdf4' : '#f8fafc',
+                        color: '#0f172a'
+                      }}
+                    />
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading || !qrTokenInput}
+                  style={{
+                    padding: '13px',
+                    background: qrTokenInput ? 'linear-gradient(135deg, #131e6c 0%, #1d2c94 100%)' : '#cbd5e1',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    fontWeight: 800,
+                    cursor: qrTokenInput ? 'pointer' : 'not-allowed',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    boxShadow: qrTokenInput ? '0 4px 12px rgba(19, 30, 108, 0.25)' : 'none',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <CheckCircle size={16} />
+                  {loading ? 'Validation en cours...' : qrTokenInput ? 'Valider l\'Émargement Physique' : 'Scannez le QR Code pour valider'}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* TAB 2: MODE TERRAIN EPS (GPS) */}
+          {activeTab === 'eps' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <h3 style={{ margin: '0 0 4px', fontSize: '16px', fontWeight: 800, color: '#059669', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Compass size={20} /> Mode Terrain EPS (Stade & Géofencing GPS)
+                </h3>
+                <p style={{ margin: 0, fontSize: '12.5px', color: '#64748b' }}>
+                  Émargement automatique par coordonnées satellites pour les enseignants d'Éducation Physique en extérieur.
+                </p>
+              </div>
+
+              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '14px', borderRadius: '12px', fontSize: '12.5px', color: '#166534', lineHeight: 1.5 }}>
+                📍 Ce mode vérifie que votre appareil se trouve dans le périmètre du terrain d'EPS (stade / plateau sportif du lycée) dans un rayon de moins de 100 mètres.
+              </div>
+
+              {gpsStatus && (
+                <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#166534', background: '#dcfce7', padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <MapPin size={16} /> {gpsStatus}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={handleEpsGpsEmargement}
+                disabled={loading}
+                style={{
+                  padding: '13px',
+                  background: '#059669',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '13px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 12px rgba(5, 150, 105, 0.2)'
+                }}
+              >
+                <MapPin size={16} />
+                {loading ? 'Géolocalisation satellite en cours...' : 'Valider ma Présence sur le Terrain EPS'}
+              </button>
+            </div>
+          )}
+
+          {/* TAB: RATTRAPAGE */}
+          {activeTab === 'rattrapage' && (
+            <form onSubmit={handleRattrapageSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <h3 style={{ margin: '0 0 4px', fontSize: '16px', fontWeight: 800, color: '#d97706', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <PlusCircle size={20} /> Demande de Cours de Rattrapage
+                </h3>
+                <p style={{ margin: 0, fontSize: '12.5px', color: '#64748b' }}>
+                  Proposez un créneau au Censeur pour remplacer une séance manquée.
+                </p>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                  Classe Concernée :
+                </label>
+                <select
+                  value={rattrapageClassId || selectedClassId}
+                  onChange={(e) => setRattrapageClassId(e.target.value)}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12.5px' }}
+                >
+                  {classesList.map((c, idx) => (
+                    <option key={c.id || c.classe_id || idx} value={c.id || c.classe_id}>
+                      {c.nom || c.classe_nom} ({c.matiere_nom || c.matiere || 'Matière'})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                  Date Proposée :
+                </label>
+                <input
+                  type="date"
+                  value={rattrapageDate}
+                  onChange={(e) => setRattrapageDate(e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>Heure Début :</label>
+                  <input
+                    type="time"
+                    value={rattrapageHeureDeb}
+                    onChange={(e) => setRattrapageHeureDeb(e.target.value)}
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>Heure Fin :</label>
+                  <input
+                    type="time"
+                    value={rattrapageHeureFin}
+                    onChange={(e) => setRattrapageHeureFin(e.target.value)}
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                  Motif du rattrapage :
+                </label>
+                <input
+                  type="text"
+                  value={rattrapageMotif}
+                  onChange={(e) => setRattrapageMotif(e.target.value)}
+                  placeholder="Ex : Rattrapage du cours manqué le jeudi pour cause de mission pédagogique"
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  padding: '12px',
+                  background: '#d97706',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '13px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(217, 119, 6, 0.2)'
+                }}
+              >
+                {loading ? 'Transmission...' : 'Soumettre au Censeur'}
+              </button>
+            </form>
+          )}
+
+        </div>
+
+        {/* Right Card: Historique Récent des Séances */}
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <History size={18} color="#2563eb" /> Historique Récent
+            </h3>
+            <button
+              onClick={fetchMyStats}
+              title="Rafraîchir"
+              style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px' }}
             >
-              <MapPin size={16} />
-              {loading ? 'Vérification GPS...' : 'Émerger mon Cours EPS (Position Stade)'}
+              <RefreshCw size={14} />
             </button>
           </div>
-        )}
 
-        {/* Tab 3: Cahier de Texte */}
-        {activeTab === 'cahier' && (
-          <form onSubmit={handleCahierTexteSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <h3 style={{ margin: '0 0 6px', fontSize: '16px', fontWeight: 800, color: '#7c3aed' }}>
-                Saisie du Cahier de Texte (Validation 100%)
-              </h3>
-              <p style={{ margin: 0, fontSize: '12.5px', color: '#64748b' }}>
-                Renseignez le résumé de la leçon pour valider définitivement vos heures d'enseignement.
-              </p>
+          {myStats?.recentSeances && myStats.recentSeances.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {myStats.recentSeances.slice(0, 6).map((seance, index) => {
+                const isComplete = seance.statut === 'VALIDE_COMPLET';
+                return (
+                  <div
+                    key={seance.id || index}
+                    style={{
+                      border: '1px solid #f1f5f9',
+                      background: '#f8fafc',
+                      borderRadius: '12px',
+                      padding: '12px 14px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: '12px'
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: 800, color: '#1e293b' }}>
+                        {seance.classe_nom || 'Classe'} • {seance.matiere_nom || seance.matiere_code || 'Matière'}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                        <span>{new Date(seance.date_seance).toLocaleDateString('fr-FR')}</span>
+                        <span>•</span>
+                        <span>{seance.heure_debut?.substring(0, 5)} - {seance.heure_fin?.substring(0, 5)}</span>
+                      </div>
+                    </div>
+
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{
+                        fontSize: '10.5px',
+                        fontWeight: 800,
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        background: isComplete ? '#dcfce7' : '#fef3c7',
+                        color: isComplete ? '#15803d' : '#b45309',
+                        display: 'inline-block'
+                      }}>
+                        {isComplete ? '100% Validé' : 'Cahier requis'}
+                      </span>
+                      {!isComplete && onNavigateTab && (
+                        <div style={{ marginTop: '4px' }}>
+                          <button
+                            type="button"
+                            onClick={() => onNavigateTab('cahier-texte')}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: '#7c3aed',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              padding: 0
+                            }}
+                          >
+                            Cahier de texte →
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
-                Titre de la Leçon / Chapitre :
-              </label>
-              <input
-                type="text"
-                value={cahierTitre}
-                onChange={(e) => setCahierTitre(e.target.value)}
-                placeholder="Ex : Chapitre 4 - Intégration et Primitives"
-                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
-              />
+          ) : (
+            <div style={{ textAlign: 'center', padding: '36px 16px', color: '#94a3b8' }}>
+              <Clock size={32} style={{ margin: '0 auto 8px', opacity: 0.5 }} />
+              <p style={{ fontSize: '12px', margin: 0 }}>Aucun émargement récent enregistré.</p>
             </div>
+          )}
+        </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
-                Résumé du Cours Fait en Classe :
-              </label>
-              <textarea
-                rows={4}
-                value={cahierContenu}
-                onChange={(e) => setCahierContenu(e.target.value)}
-                placeholder="Résumé des notions abordées et exercices corrigés..."
-                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
-                Devoirs pour le prochain cours :
-              </label>
-              <input
-                type="text"
-                value={cahierDevoirs}
-                onChange={(e) => setCahierDevoirs(e.target.value)}
-                placeholder="Ex : Exercice 12 page 148 pour Mardi"
-                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                padding: '12px',
-                background: '#7c3aed',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '10px',
-                fontSize: '13px',
-                fontWeight: 800,
-                cursor: 'pointer',
-                opacity: loading ? 0.6 : 1
-              }}
-            >
-              {loading ? 'Enregistrement...' : 'Valider le Cahier de Texte'}
-            </button>
-          </form>
-        )}
-
-        {/* Tab 4: Rattrapage */}
-        {activeTab === 'rattrapage' && (
-          <form onSubmit={handleRattrapageSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <h3 style={{ margin: '0 0 6px', fontSize: '16px', fontWeight: 800, color: '#d97706' }}>
-                Programmation d'un Cours de Rattrapage
-              </h3>
-              <p style={{ margin: 0, fontSize: '12.5px', color: '#64748b' }}>
-                Soumettez un créneau de rattrapage au Censeur pour régulariser votre compteur d'heures.
-              </p>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
-                Date Souhaitée :
-              </label>
-              <input
-                type="date"
-                value={rattrapageDate}
-                onChange={(e) => setRattrapageDate(e.target.value)}
-                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Heure Début :</label>
-                <input
-                  type="time"
-                  value={rattrapageHeureDeb}
-                  onChange={(e) => setRattrapageHeureDeb(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
-                />
-              </div>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Heure Fin :</label>
-                <input
-                  type="time"
-                  value={rattrapageHeureFin}
-                  onChange={(e) => setRattrapageHeureFin(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
-                Motif / Cours à remplacer :
-              </label>
-              <input
-                type="text"
-                value={rattrapageMotif}
-                onChange={(e) => setRattrapageMotif(e.target.value)}
-                placeholder="Ex : Rattrapage de la séance manquée du 05 Mai"
-                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                padding: '12px',
-                background: '#d97706',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '10px',
-                fontSize: '13px',
-                fontWeight: 800,
-                cursor: 'pointer',
-                opacity: loading ? 0.6 : 1
-              }}
-            >
-              {loading ? 'Transmission...' : 'Soumettre la Demande au Censeur'}
-            </button>
-          </form>
-        )}
       </div>
+
     </div>
   );
 }

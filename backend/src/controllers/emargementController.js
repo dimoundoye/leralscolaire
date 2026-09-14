@@ -24,21 +24,32 @@ const EmargementController = {
       const profId = req.user.id;
       const { token, etablissementId, classeId, matiereCode, matiereNom, heureDebut, heureFin, latitude, longitude } = req.body;
 
-      if (!token || !etablissementId) {
-        return res.status(400).json({ success: false, error: 'Données d\'émargement incomplètes' });
+      if (!token) {
+        return res.status(400).json({ success: false, error: 'Token QR Code manquant' });
       }
 
-      const verification = EmargementModel.verifyQrToken(etablissementId, token);
+      // Déduire automatiquement l'établissement depuis le token si non fourni ou 'default'
+      let targetEtabId = etablissementId || 'default';
+      try {
+        const decoded = JSON.parse(Buffer.from(token, 'base64').toString('utf8'));
+        if (decoded && decoded.etabId) {
+          targetEtabId = decoded.etabId;
+        }
+      } catch (e) {
+        // En cas de token brut
+      }
+
+      const verification = EmargementModel.verifyQrToken(targetEtabId, token);
       if (!verification.valid) {
         return res.status(400).json({ success: false, error: verification.reason });
       }
 
       const seance = await EmargementModel.findOrCreateSeance(
-        profId, etablissementId, classeId, matiereCode, matiereNom, heureDebut || '08:00', heureFin || '10:00', 'REGULIER'
+        profId, targetEtabId, classeId || 'classe-auto', matiereCode || 'GEN', matiereNom || 'Cours Général', heureDebut || '08:00', heureFin || '10:00', 'REGULIER'
       );
 
       const emargement = await EmargementModel.createEmargement(
-        seance.id, profId, etablissementId, 'QR_SCAN_20S', latitude || null, longitude || null, 15, token
+        seance.id, profId, targetEtabId, 'QR_SCAN_20S', latitude || null, longitude || null, 15, token
       );
 
       return res.json({
@@ -63,7 +74,11 @@ const EmargementController = {
         return res.status(400).json({ success: false, error: 'Coordonnées GPS et Établissement requis pour le Mode EPS' });
       }
 
-      const { rows: etab } = await db.query('SELECT nom_etablissement, latitude, longitude FROM etablissements WHERE id = $1', [etablissementId]);
+      let nomEtab = 'Établissement';
+      try {
+        const { rows: etab } = await db.query('SELECT nom FROM etablissements WHERE id::text = $1::text', [etablissementId]);
+        if (etab[0]?.nom) nomEtab = etab[0].nom;
+      } catch (e) {}
       const distanceMetres = 45;
 
       const seance = await EmargementModel.findOrCreateSeance(
@@ -240,6 +255,82 @@ const EmargementController = {
       return res.json({ success: true, professeurs: profsWithScore });
     } catch (err) {
       console.error('Erreur searchProfesseursOfficeBac:', err);
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  },
+
+  // 10. Obtenir les statistiques et l'historique d'émargement de l'enseignant connecté
+  async getMyStats(req, res) {
+    try {
+      const profId = req.user.id;
+
+      // 1. Calcul du Score 1000
+      const scoreData = await EmargementModel.calculateProfScore1000(profId);
+
+      // 2. Statistiques des séances
+      const { rows: statsRows } = await db.query(`
+        SELECT 
+          COUNT(*) as total_seances,
+          COUNT(*) filter (where statut IN ('EMARGE_PRESENCE', 'VALIDE_COMPLET')) as seances_effectuees,
+          COUNT(*) filter (where statut = 'VALIDE_COMPLET') as cahiers_complets,
+          COUNT(*) filter (where date_seance = CURRENT_DATE) as seances_aujourdhui
+        FROM seances_cours 
+        WHERE professeur_id = $1
+      `, [profId]);
+
+      const stat = statsRows[0] || {};
+      const totalSeances = parseInt(stat.total_seances || 0, 10);
+      const seancesEffectuees = parseInt(stat.seances_effectuees || 0, 10);
+      const cahiersComplets = parseInt(stat.cahiers_complets || 0, 10);
+
+      // Calcul des heures (2h par séance en moyenne)
+      const quotaHeures = totalSeances > 0 ? (totalSeances * 2) : 0;
+      const heuresEffectuees = seancesEffectuees * 2;
+      const tauxEmargement = totalSeances > 0 ? Math.round((seancesEffectuees / totalSeances) * 100) : null;
+      const tauxCahier = seancesEffectuees > 0 ? Math.round((cahiersComplets / seancesEffectuees) * 100) : null;
+
+      // 3. Dernières séances & émargements
+      const { rows: recentSeances } = await db.query(`
+        SELECT s.*, e.mode_emargement, e.horodatage_scan, e.statut as statut_emargement,
+               c.nom as classe_nom, c.niveau as classe_niveau, et.nom as nom_etablissement
+        FROM seances_cours s
+        LEFT JOIN emargements e ON s.id = e.seance_id
+        LEFT JOIN classes c ON s.classe_id = c.id
+        LEFT JOIN etablissements et ON s.etablissement_id = et.id
+        WHERE s.professeur_id = $1
+        ORDER BY s.date_seance DESC, s.heure_debut DESC
+        LIMIT 10
+      `, [profId]);
+
+      // 4. Séances du jour
+      const { rows: todaySeances } = await db.query(`
+        SELECT s.*, c.nom as classe_nom, et.nom as nom_etablissement
+        FROM seances_cours s
+        LEFT JOIN classes c ON s.classe_id = c.id
+        LEFT JOIN etablissements et ON s.etablissement_id = et.id
+        WHERE s.professeur_id = $1 AND s.date_seance = CURRENT_DATE
+        ORDER BY s.heure_debut ASC
+      `, [profId]);
+
+      return res.json({
+        success: true,
+        score1000: scoreData,
+        metrics: {
+          heuresEffectuees,
+          heuresTotal: quotaHeures,
+          tauxEmargement,
+          tauxCahier,
+          noteEleves: scoreData.breakdown?.avgGlobalScore ?? null,
+          totalVotes: scoreData.breakdown?.totalVotes ?? 0,
+          totalSeances,
+          seancesEffectuees,
+          cahiersComplets
+        },
+        recentSeances,
+        todaySeances
+      });
+    } catch (err) {
+      console.error('Erreur getMyStats:', err);
       return res.status(500).json({ success: false, error: err.message });
     }
   }

@@ -3,8 +3,10 @@ import ReactDOM from 'react-dom';
 import {
   LayoutDashboard, Building, Users, Mail, Calendar, BookOpenCheck,
   BookOpen, FileText, Clock, MessageSquare, Settings, LogOut, X,
-  ShieldCheck, BookMarked, Scale, Award, ClipboardList, ChevronLeft, ChevronRight
+  ShieldCheck, BookMarked, Scale, Award, ClipboardList, ChevronLeft, ChevronRight,
+  QrCode
 } from 'lucide-react';
+
 
 const TeacherSidebar = ({
   profile,
@@ -96,14 +98,17 @@ const TeacherSidebar = ({
             <nav className="td-nav" style={{ flex: 1 }}>
               {[
                 { tab: 'overview', path: 'overview', icon: <LayoutDashboard size={18} />, label: 'Aperçu' },
+                { tab: 'emargement', path: 'emargement', icon: <QrCode size={18} />, label: 'Émargement (QR Code)' },
+                { tab: 'attendance', path: 'attendance', icon: <Clock size={18} />, label: "Faire l'Appel" },
                 { tab: 'partner-schools', path: 'partner-schools', icon: <Building size={18} />, label: 'Établissements Partenaires' },
                 { tab: 'attached-classes', path: 'attached-classes', icon: <Users size={18} />, label: 'Classes Rattachées' },
                 { tab: 'invitations', path: 'invitations', icon: <Mail size={18} />, label: `Invitations${invitations?.length > 0 ? ` (${invitations.length})` : ''}` },
                 { tab: 'schedule', path: 'schedule', icon: <Calendar size={18} />, label: 'Emploi du Temps' },
                 { tab: 'grades', path: 'grades', icon: <BookOpenCheck size={18} />, label: 'Saisie des Notes' },
+                { tab: 'cahier-texte', path: 'cahier-texte', icon: <BookMarked size={18} />, label: 'Cahier de Texte' },
                 { tab: 'pedagogy', path: 'pedagogy', icon: <BookOpen size={18} />, label: 'Suivi Pédagogique' },
                 { tab: 'planning', path: 'planning', icon: <FileText size={18} />, label: 'Planification & Devoirs' },
-                { tab: 'attendance', path: 'attendance', icon: <Clock size={18} />, label: "Faire l'Appel" },
+                { tab: 'discipline', path: 'discipline', icon: <Scale size={18} />, label: 'Remarques Élève' },
                 { tab: 'messages', path: 'messages', icon: <MessageSquare size={18} />, label: 'Messagerie & Alertes' },
                 { tab: 'profile', path: 'profile', icon: <Settings size={18} />, label: 'Mon Profil Enseignant' },
               ].map(({ tab, path, icon, label }) => (
@@ -210,14 +215,16 @@ const TeacherSidebar = ({
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%', alignItems: isCollapsed ? 'center' : 'stretch' }}>
               {[
                 { tab: 'overview',        path: 'overview',        icon: <LayoutDashboard size={20} />, label: 'Aperçu' },
+                { tab: 'emargement',       path: 'emargement',       icon: <QrCode size={20} />,          label: 'Émargement' },
+                { tab: 'attendance',      path: 'attendance',      icon: <Clock size={20} />,           label: "Faire l'Appel" },
                 { tab: 'partner-schools', path: 'partner-schools', icon: <Building size={20} />,        label: 'Établissements' },
                 { tab: 'attached-classes',path: 'attached-classes',icon: <Users size={20} />,           label: 'Classes Rattachées' },
                 { tab: 'invitations',     path: 'invitations',     icon: <Mail size={20} />,            label: 'Invitations', badge: invitations?.length },
                 { tab: 'schedule',        path: 'schedule',        icon: <Calendar size={20} />,        label: 'Emploi du Temps' },
                 { tab: 'grades',          path: 'grades',          icon: <BookOpenCheck size={20} />,   label: 'Saisie des Notes' },
+                { tab: 'cahier-texte',    path: 'cahier-texte',    icon: <BookMarked size={20} />,      label: 'Cahier de Texte' },
                 { tab: 'pedagogy',        path: 'pedagogy',        icon: <BookOpen size={20} />,        label: 'Suivi Pédagogique' },
                 { tab: 'planning',        path: 'planning',        icon: <ClipboardList size={20} />,   label: 'Planification & Devoirs' },
-                { tab: 'attendance',      path: 'attendance',      icon: <Clock size={20} />,           label: "Faire l'Appel" },
                 { tab: 'discipline',      path: 'discipline',      icon: <Scale size={20} />,           label: 'Remarques Élève' },
                 { tab: 'messages',        path: 'messages',        icon: <MessageSquare size={20} />,   label: 'Messagerie & Alertes' },
                 { tab: 'profile',         path: 'profile',         icon: <Settings size={20} />,        label: 'Mon Profil' },

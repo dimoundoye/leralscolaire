@@ -26,4 +26,7 @@ router.post('/evaluation-eleve', authenticateToken, EmargementController.submitS
 router.get('/office/search', authenticateToken, EmargementController.searchProfesseursOfficeBac);
 router.get('/office/carte-identite/:profId', authenticateToken, EmargementController.getProfCarteIdentiteOfficeBac);
 
+// 8. Statistiques et séances du professeur connecté
+router.get('/my-stats', authenticateToken, EmargementController.getMyStats);
+
 module.exports = router;

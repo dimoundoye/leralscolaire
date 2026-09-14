@@ -13,6 +13,7 @@
     "dexie": "^4.4.5",
     "framer-motion": "^12.38.0",
     "html2pdf.js": "^0.14.0",
+    "html5-qrcode": "^2.3.8",
     "lucide-react": "^1.14.0",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.5",

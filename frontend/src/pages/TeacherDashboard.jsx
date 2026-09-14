@@ -1238,7 +1238,14 @@ const TeacherDashboard = () => {
           )}
 
           {!loading && activeTab === 'discipline' && <TeacherDisciplineView />}
-          {!loading && activeTab === 'emargement' && <ProfDashboardEmargement />}
+          {!loading && activeTab === 'emargement' && (
+            <ProfDashboardEmargement
+              classes={classes}
+              schedule={schedule}
+              profile={profile}
+              onNavigateTab={(targetTab) => navigate(`/professeur/dashboard/${targetTab}`)}
+            />
+          )}
           </div>{/* .td-main-content */}
         </div>{/* .td-container */}
       </div>{/* .td-main-area */}
