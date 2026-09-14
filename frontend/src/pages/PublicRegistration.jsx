@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { School, User, Calendar, MapPin, Phone, Mail, Globe, ShieldAlert, Award, FileText, CheckCircle2, AlertCircle, Camera } from 'lucide-react';
+import { School, User, Calendar, MapPin, Phone, Mail, Globe, ShieldAlert, Award, FileText, CheckCircle2, AlertCircle, Camera, Home, ArrowRight, X } from 'lucide-react';
 import './PublicRegistration.css';
 
 const PublicRegistration = () => {
@@ -11,6 +11,7 @@ const PublicRegistration = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isTransfer, setIsTransfer] = useState(false);
 
   // Photo state
@@ -95,6 +96,7 @@ const PublicRegistration = () => {
       }
 
       setSuccess(true);
+      setShowSuccessModal(true);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -173,7 +175,16 @@ const PublicRegistration = () => {
                 )}
               </ul>
             </div>
-            <button className="finish-btn" onClick={() => navigate('/auth')}>Aller au portail de connexion</button>
+            <div className="success-actions-row">
+              <button className="home-btn" onClick={() => navigate('/')}>
+                <Home size={18} />
+                Revenir à la page d'accueil
+              </button>
+              <button className="finish-btn" onClick={() => navigate('/auth')}>
+                Aller au portail de connexion
+                <ArrowRight size={18} />
+              </button>
+            </div>
           </div>
         ) : (
           <div className="form-card animate-fade-in">
@@ -445,6 +456,79 @@ const PublicRegistration = () => {
         )}
 
       </div>
+
+      {/* POPUP CONFIRMATION D'INSCRIPTION */}
+      {showSuccessModal && (
+        <div className="pr-modal-overlay" onClick={() => setShowSuccessModal(false)}>
+          <div className="pr-modal-card" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="pr-modal-close"
+              onClick={() => setShowSuccessModal(false)}
+              title="Fermer"
+              aria-label="Fermer"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="pr-modal-icon-badge">
+              <CheckCircle2 size={52} />
+            </div>
+
+            <h2 className="pr-modal-title">Demande transmise avec succès !</h2>
+
+            <p className="pr-modal-description">
+              La pré-inscription de <strong>{formData.prenom} {formData.nom}</strong> a bien été enregistrée et transmise à l'administration de l'établissement scolaire.
+            </p>
+
+            <div className="pr-modal-summary">
+              <div className="pr-summary-item">
+                <span className="label">Établissement :</span>
+                <span className="value">{classInfo?.etablissement_nom}</span>
+              </div>
+              <div className="pr-summary-item">
+                <span className="label">Classe & Niveau :</span>
+                <span className="value">{classInfo?.classe_nom} ({classInfo?.niveau})</span>
+              </div>
+              <div className="pr-summary-item">
+                <span className="label">Statut du dossier :</span>
+                <span className="badge-pending">En attente de validation</span>
+              </div>
+              {formData.email && (
+                <div className="pr-summary-item">
+                  <span className="label">Email de suivi :</span>
+                  <span className="value">{formData.email}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="pr-modal-note">
+              <p>
+                L'administration examinera les informations fournies. Dès confirmation, vous recevrez vos identifiants officiels d'accès au portail.
+              </p>
+            </div>
+
+            <div className="pr-modal-buttons">
+              <button
+                type="button"
+                className="pr-btn-home"
+                onClick={() => navigate('/')}
+              >
+                <Home size={18} />
+                Revenir à la page d'accueil
+              </button>
+              <button
+                type="button"
+                className="pr-btn-auth"
+                onClick={() => navigate('/auth')}
+              >
+                Aller au portail de connexion
+                <ArrowRight size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
