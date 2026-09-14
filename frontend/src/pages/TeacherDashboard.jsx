@@ -144,8 +144,17 @@ const TeacherDashboard = () => {
     }
   }, [availableAcademicYears, profAnneeFilter]);
 
-  const activeClasses = classes.filter(c => c.annee_scolaire === profAnneeFilter || !c.annee_scolaire);
-  const activeSchedule = schedule.filter(s => s.annee_scolaire === profAnneeFilter || !s.annee_scolaire);
+  const activeClasses = React.useMemo(() => {
+    if (!classes || classes.length === 0) return [];
+    const filtered = classes.filter(c => c.annee_scolaire === profAnneeFilter || !c.annee_scolaire);
+    return filtered.length > 0 ? filtered : classes;
+  }, [classes, profAnneeFilter]);
+
+  const activeSchedule = React.useMemo(() => {
+    if (!schedule || schedule.length === 0) return [];
+    const filtered = schedule.filter(s => s.annee_scolaire === profAnneeFilter || !s.annee_scolaire);
+    return filtered.length > 0 ? filtered : schedule;
+  }, [schedule, profAnneeFilter]);
 
   // Attendance Tab State — SEPARATE from grades to avoid cross-tab conflicts
   const [attClasse, setAttClasse] = useState('');
@@ -155,6 +164,22 @@ const TeacherDashboard = () => {
   const [attendanceRoster, setAttendanceRoster] = useState({}); // eleve_id -> { type_presence: 'PRESENT', duree_retard: '', motif: '' }
   const [attendanceStudents, setAttendanceStudents] = useState([]);
   const [attLoading, setAttLoading] = useState(false);
+
+  // Auto-sélection de la première classe et matière si non définies
+  useEffect(() => {
+    if (activeClasses.length > 0 && !attClasse) {
+      setAttClasse(activeClasses[0].classe_id || activeClasses[0].id || '');
+    }
+  }, [activeClasses, attClasse]);
+
+  useEffect(() => {
+    if (attClasse && !attMatiere) {
+      const classMatieres = activeClasses.filter(c => (c.classe_id || c.id) === attClasse);
+      if (classMatieres.length > 0) {
+        setAttMatiere(classMatieres[0].matiere_id || '');
+      }
+    }
+  }, [attClasse, attMatiere, activeClasses]);
 
   const getFrenchDayName = (dateStr) => {
     if (!dateStr) return '';
@@ -348,13 +373,13 @@ const TeacherDashboard = () => {
         }
 
         // Fetch Profile
-        const profRes = await fetch('/api/professeurs-portal/profile', { headers: getHeaders() });
-        if (profRes.status === 401) {
+        const profRes = await offlineFetch('/api/professeurs-portal/profile', { headers: getHeaders() });
+        if (profRes.status === 401 && navigator.onLine) {
           navigate('/auth');
           return;
         }
-        const profData = await profRes.json();
         if (profRes.ok) {
+          const profData = await profRes.json();
           setProfile(profData);
           setEditProfileData({
             nom: profData.nom || '',
@@ -366,34 +391,48 @@ const TeacherDashboard = () => {
         }
 
         // Fetch Summary
-        const sumRes = await fetch('/api/professeurs-portal/summary', { headers: getHeaders() });
-        const sumData = await sumRes.json();
-        if (sumRes.ok) setSummary(sumData);
+        const sumRes = await offlineFetch('/api/professeurs-portal/summary', { headers: getHeaders() });
+        if (sumRes.ok) {
+          const sumData = await sumRes.json();
+          setSummary(sumData);
+        }
 
         // Fetch Consolidated Dashboard Details
-        const detRes = await fetch('/api/professeurs-portal/dashboard-details', { headers: getHeaders() });
-        const detData = await detRes.json();
-        if (detRes.ok) setDashboardDetails(detData);
+        const detRes = await offlineFetch('/api/professeurs-portal/dashboard-details', { headers: getHeaders() });
+        if (detRes.ok) {
+          const detData = await detRes.json();
+          setDashboardDetails(detData);
+        }
 
         // Fetch Invitations
-        const invRes = await fetch('/api/professeurs-portal/invitations', { headers: getHeaders() });
-        const invData = await invRes.json();
-        if (invRes.ok) setInvitations(invData);
-
-        // Fetch Affiliations
-        const affRes = await fetch('/api/professeurs-portal/summary', { headers: getHeaders() }); // reusing dashboard details
+        const invRes = await offlineFetch('/api/professeurs-portal/invitations', { headers: getHeaders() });
+        if (invRes.ok) {
+          const invData = await invRes.json();
+          setInvitations(invData);
+        }
         
-        // Fetch active affiliations list
-        const activeAffRes = await fetch('/api/professeurs-portal/profile', { headers: getHeaders() });
-        
-        // Load classes and schedules
-        const classesRes = await fetch('/api/professeurs-portal/classes', { headers: getHeaders() });
-        const classesData = await classesRes.json();
-        if (classesRes.ok) setClasses(classesData);
+        // Load classes and schedules (avec support Offline & cache IndexedDB)
+        const classesRes = await offlineFetch('/api/professeurs-portal/classes', { headers: getHeaders() });
+        if (classesRes.ok) {
+          const classesData = await classesRes.json();
+          const validClasses = Array.isArray(classesData) ? classesData : [];
+          setClasses(validClasses);
 
-        const scheduleRes = await fetch('/api/professeurs-portal/schedule', { headers: getHeaders() });
-        const scheduleData = await scheduleRes.json();
-        if (scheduleRes.ok) setSchedule(scheduleData);
+          // Préchargement automatique des élèves de toutes les classes pour garantir le mode hors-ligne
+          if (validClasses.length > 0) {
+            const uniqueClassIds = Array.from(new Set(validClasses.map(c => c.classe_id || c.id).filter(Boolean)));
+            uniqueClassIds.forEach(cId => {
+              offlineFetch(`/api/professeurs-portal/classes/${cId}/students`, { headers: getHeaders() })
+                .catch(err => console.warn(`Pré-cache élèves hors-ligne classe ${cId}:`, err));
+            });
+          }
+        }
+
+        const scheduleRes = await offlineFetch('/api/professeurs-portal/schedule', { headers: getHeaders() });
+        if (scheduleRes.ok) {
+          const scheduleData = await scheduleRes.json();
+          setSchedule(Array.isArray(scheduleData) ? scheduleData : []);
+        }
 
         if (activeTab === 'messages') {
           await fetchChatChannels();
@@ -403,8 +442,7 @@ const TeacherDashboard = () => {
         }
         await fetchNotifications();
       } catch (err) {
-        console.error(err);
-        showNotification('Erreur de chargement des données.', 'error');
+        console.error('Erreur chargement données professeur:', err);
       } finally {
         setLoading(false);
       }
@@ -745,7 +783,7 @@ const TeacherDashboard = () => {
     if (!selectedClasse || !selectedMatiere) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/professeurs-portal/grades/${selectedClasse}/${selectedMatiere}?periode=${selectedPeriode}`, {
+      const res = await offlineFetch(`/api/professeurs-portal/grades/${selectedClasse}/${selectedMatiere}?periode=${selectedPeriode}`, {
         headers: getHeaders()
       });
       const data = await res.json();
@@ -754,31 +792,33 @@ const TeacherDashboard = () => {
         // Prepare draft values — pre-fill with existing grades from DB (including those entered by school admin)
         const drafts = {};
         const originals = {};
-        data.students.forEach(stud => {
-          const g = data.grades.find(gr => gr.eleve_id === stud.id && gr.type_note === selectedTypeNote);
-          const noteVal = g ? g.note : '';
-          // Use baremesOverride if provided (avoids stale closure), otherwise use current baremes state
-          const autoApprec = noteVal !== '' ? getAppreciationFromBaremes(noteVal, baremesOverride) : '';
-          drafts[stud.id] = {
-            note: noteVal,
-            appreciation: g ? (g.appreciation || autoApprec) : ''
-          };
-          if (g) {
-            originals[g.id] = g.note;
-          }
-        });
+        if (Array.isArray(data.students)) {
+          data.students.forEach(stud => {
+            const g = (data.grades || []).find(gr => gr.eleve_id === stud.id && gr.type_note === selectedTypeNote);
+            const noteVal = g ? g.note : '';
+            // Use baremesOverride if provided (avoids stale closure), otherwise use current baremes state
+            const autoApprec = noteVal !== '' ? getAppreciationFromBaremes(noteVal, baremesOverride) : '';
+            drafts[stud.id] = {
+              note: noteVal,
+              appreciation: g ? (g.appreciation || autoApprec) : ''
+            };
+            if (g) {
+              originals[g.id] = g.note;
+            }
+          });
+        }
         setDraftGrades(drafts);
         setOriginalGrades(originals);
       }
 
       // Also load audit log for this class to check if there are pending/rejected modifications
       try {
-        const auditRes = await fetch(`/api/etablissement/audit?classe_id=${selectedClasse}`, {
+        const auditRes = await offlineFetch(`/api/etablissement/audit?classe_id=${selectedClasse}`, {
           headers: getHeaders()
         });
         if (auditRes.ok) {
           const auditData = await auditRes.json();
-          setAuditLog(auditData);
+          setAuditLog(Array.isArray(auditData) ? auditData : []);
         }
       } catch (e) {
         console.error('Failed to load audit logs:', e);
@@ -798,7 +838,7 @@ const TeacherDashboard = () => {
     const found = classes.find(cl => cl.classe_id === selectedClasse);
     if (!found || !found.etablissement_id) return;
     setSelectedEtabId(found.etablissement_id);
-    fetch(
+    offlineFetch(
       `/api/professeurs-portal/baremes/${found.etablissement_id}`,
       { headers: getHeaders() }
     )
@@ -901,11 +941,11 @@ const TeacherDashboard = () => {
       if (!attClasse) return;
       setAttLoading(true);
       try {
-        const res = await fetch(`/api/professeurs-portal/classes/${attClasse}/students`, {
+        const res = await offlineFetch(`/api/professeurs-portal/classes/${attClasse}/students`, {
           headers: getHeaders()
         });
         const data = await res.json();
-        if (res.ok) {
+        if (res.ok && Array.isArray(data)) {
           setAttendanceStudents(data);
           const roster = {};
           data.forEach(stud => {

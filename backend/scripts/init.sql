@@ -148,4 +148,20 @@ CREATE TABLE IF NOT EXISTS bulletins_telechargements (
     UNIQUE (eleve_id, classe_id, semestre, annee_scolaire)
 );
 
+-- 12. Table des Messages et Notifications
+CREATE TABLE IF NOT EXISTS messages (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    expediteur_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    destinataire_type VARCHAR(50) CHECK (destinataire_type IN ('CLASSE', 'ELEVE', 'OFFICE_BAC', 'PROFESSEUR', 'ADMIN_ETABLISSEMENT', 'ALL_PROFESSEURS')),
+    destinataire_id UUID,
+    sujet VARCHAR(255),
+    contenu TEXT NOT NULL,
+    date_envoi TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    lu BOOLEAN DEFAULT FALSE,
+    etablissement_id UUID REFERENCES etablissements(id) ON DELETE CASCADE,
+    fichier_url TEXT,
+    fichier_nom VARCHAR(255)
+);
+
+
 

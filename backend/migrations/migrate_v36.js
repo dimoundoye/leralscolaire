@@ -87,6 +87,33 @@ async function migrate() {
     `);
     console.log('  ✓ Tables bulletins_autorises et bulletins_telechargements créées/vérifiées');
 
+    // 5. Table messages et colonnes pièces jointes (fichier_url, fichier_nom)
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS messages (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        expediteur_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        destinataire_type VARCHAR(50),
+        destinataire_id UUID,
+        sujet VARCHAR(255),
+        contenu TEXT NOT NULL,
+        date_envoi TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        lu BOOLEAN DEFAULT FALSE,
+        etablissement_id UUID REFERENCES etablissements(id) ON DELETE CASCADE,
+        fichier_url TEXT,
+        fichier_nom VARCHAR(255)
+      );
+
+      ALTER TABLE messages ADD COLUMN IF NOT EXISTS etablissement_id UUID REFERENCES etablissements(id) ON DELETE CASCADE;
+      ALTER TABLE messages ADD COLUMN IF NOT EXISTS fichier_url TEXT;
+      ALTER TABLE messages ADD COLUMN IF NOT EXISTS fichier_nom VARCHAR(255);
+      ALTER TABLE messages DROP CONSTRAINT IF EXISTS messages_destinataire_type_check;
+      ALTER TABLE messages ADD CONSTRAINT messages_destinataire_type_check 
+        CHECK (destinataire_type IN ('CLASSE', 'ELEVE', 'OFFICE_BAC', 'PROFESSEUR', 'ADMIN_ETABLISSEMENT', 'ALL_PROFESSEURS'));
+
+      ALTER TABLE professeurs_etablissements ADD COLUMN IF NOT EXISTS droit_envoi_message BOOLEAN DEFAULT FALSE;
+    `);
+    console.log('  ✓ Table messages et colonnes fichier_url / fichier_nom créées/vérifiées');
+
     console.log('✅ Migration v36 exécutée avec succès !');
   } catch (err) {
     console.error('❌ Erreur migration v36:', err);

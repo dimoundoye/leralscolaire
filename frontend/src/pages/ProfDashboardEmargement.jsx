@@ -51,7 +51,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
     try {
       setStatsLoading(true);
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/emargement/my-stats', {
+      const res = await offlineFetch('/api/emargement/my-stats', {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -72,17 +72,17 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
     const headers = { Authorization: `Bearer ${token}` };
     try {
       if (classesList.length === 0) {
-        const res = await fetch('/api/professeurs-portal/classes', { headers });
+        const res = await offlineFetch('/api/professeurs-portal/classes', { headers });
         if (res.ok) {
           const data = await res.json();
-          setClassesList(data || []);
+          setClassesList(Array.isArray(data) ? data : []);
         }
       }
       if (scheduleList.length === 0) {
-        const sRes = await fetch('/api/professeurs-portal/schedule', { headers });
+        const sRes = await offlineFetch('/api/professeurs-portal/schedule', { headers });
         if (sRes.ok) {
           const sData = await sRes.json();
-          setScheduleList(sData || []);
+          setScheduleList(Array.isArray(sData) ? sData : []);
         }
       }
     } catch (e) {
@@ -185,67 +185,98 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
     setIsCameraStarting(true);
     setMessage(null);
 
+    // Vérification du contexte sécurisé (HTTPS ou localhost)
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!window.isSecureContext && !isLocalhost) {
+      setCameraError(
+        "L'accès direct au flux vidéo de la caméra nécessite une connexion sécurisée (HTTPS). En HTTP, les navigateurs bloquent la caméra en direct. Vous pouvez utiliser le bouton « Prendre une Photo du QR » ou saisir le code ci-dessous."
+      );
+      setIsCameraStarting(false);
+      return;
+    }
+
+    if (!navigator?.mediaDevices?.getUserMedia && typeof Html5Qrcode === 'undefined') {
+      setCameraError("Votre navigateur ne supporte pas l'accès caméra. Veuillez utiliser la capture photo ou la saisie manuelle.");
+      setIsCameraStarting(false);
+      return;
+    }
+
+    // Arrêt préalable d'une instance existante
+    if (scannerRef.current) {
+      try {
+        if (scannerRef.current.isScanning) {
+          await scannerRef.current.stop();
+        }
+        scannerRef.current.clear();
+      } catch (e) {
+        console.warn('Nettoyage scanner précédent:', e);
+      }
+      scannerRef.current = null;
+    }
+
     try {
-      const devices = await Html5Qrcode.getCameras();
-      if (!devices || devices.length === 0) {
-        setCameraError("Aucune caméra physique détectée sur votre appareil.");
-        setIsCameraStarting(false);
-        return;
-      }
-      setAvailableCameras(devices);
-
-      let targetCamId = overrideCamId || selectedCameraId;
-      if (!targetCamId) {
-        const backCam = devices.find(d => /back|rear|environnement|arrière/i.test(d.label));
-        targetCamId = backCam ? backCam.id : devices[0].id;
-        setSelectedCameraId(targetCamId);
-      }
-
-      // Cleanup existing instance if any
-      if (scannerRef.current) {
-        try {
-          if (scannerRef.current.isScanning) await scannerRef.current.stop();
-          scannerRef.current.clear();
-        } catch (e) {}
-      }
-
       const html5Qr = new Html5Qrcode('ls-camera-reader-viewport');
       scannerRef.current = html5Qr;
 
-      await html5Qr.start(
-        targetCamId,
-        {
-          fps: 12,
-          qrbox: (viewWidth, viewHeight) => {
-            const minSide = Math.min(viewWidth, viewHeight);
-            const edge = Math.max(190, Math.min(minSide * 0.75, 270));
-            return { width: edge, height: edge };
-          },
-          aspectRatio: 1.0
+      const qrConfig = {
+        fps: 15,
+        qrbox: (viewWidth, viewHeight) => {
+          const minSide = Math.min(viewWidth, viewHeight);
+          const edge = Math.max(180, Math.min(minSide * 0.75, 280));
+          return { width: edge, height: edge };
         },
-        (decodedText) => {
-          // Success callback
-          playScanBeep();
-          if (navigator.vibrate) {
-            try { navigator.vibrate([100, 50, 100]); } catch (e) {}
-          }
-          setQrTokenInput(decodedText);
-          stopCamera();
-          setMessage("✅ QR Code détecté et numérisé avec succès ! Cliquez sur 'Valider l'Émargement'.");
-        },
-        () => {
-          // Scanning frames in progress...
+        aspectRatio: 1.0,
+        experimentalFeatures: {
+          useBarCodeDetectorIfSupported: true
         }
-      );
+      };
+
+      const onScanSuccess = (decodedText) => {
+        playScanBeep();
+        if (navigator.vibrate) {
+          try { navigator.vibrate([100, 50, 100]); } catch (e) {}
+        }
+        setQrTokenInput(decodedText);
+        stopCamera();
+        setMessage("✅ QR Code détecté et numérisé avec succès ! Cliquez sur « Valider l'Émargement » ci-dessous.");
+      };
+
+      // Si un ID de caméra spécifique est sélectionné
+      if (overrideCamId) {
+        await html5Qr.start(overrideCamId, qrConfig, onScanSuccess, () => {});
+      } else {
+        // Tenter d'abord la caméra arrière (smartphone)
+        try {
+          await html5Qr.start({ facingMode: "environment" }, qrConfig, onScanSuccess, () => {});
+        } catch (envErr) {
+          console.warn("Caméra environnement indisponible, tentative caméra utilisateur/PC...", envErr);
+          // Si échec (ex: webcam de PC portable), basculer sur la caméra utilisateur
+          await html5Qr.start({ facingMode: "user" }, qrConfig, onScanSuccess, () => {});
+        }
+      }
 
       setIsCameraActive(true);
+
+      // Une fois la permission accordée et le flux démarré, lister les caméras disponibles
+      try {
+        const devices = await Html5Qrcode.getCameras();
+        if (devices && devices.length > 0) {
+          setAvailableCameras(devices);
+          if (!selectedCameraId) {
+            setSelectedCameraId(devices[0].id);
+          }
+        }
+      } catch (devErr) {
+        console.warn("Énumération caméras après start:", devErr);
+      }
+
     } catch (err) {
       console.error('Erreur démarrage caméra:', err);
       const isDenied = err?.name === 'NotAllowedError' || String(err).toLowerCase().includes('permission');
       setCameraError(
         isDenied 
-          ? "Accès à la caméra refusé. Veuillez autoriser la caméra dans votre navigateur (icône cadenas)." 
-          : "Impossible d'accéder au flux vidéo (" + (err.message || err) + "). Vous pouvez coller le token manuellement ci-dessous."
+          ? "Accès à la caméra refusé. Veuillez autoriser la caméra dans votre navigateur (icône cadenas dans la barre d'adresse)." 
+          : "Impossible d'accéder au flux caméra (" + (err.message || err) + "). Vous pouvez utiliser « Prendre une Photo du QR » ou coller le code ci-dessous."
       );
       setIsCameraActive(false);
     } finally {
@@ -279,6 +310,34 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
     setTimeout(() => {
       startCamera(nextCam.id);
     }, 250);
+  };
+
+  // Scan instantané via photo ou capture d'image (Fonctionne à 100% sur mobile même en HTTP)
+  const handleFileScan = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCameraError(null);
+    setMessage("Analyse du QR Code sur l'image en cours...");
+
+    try {
+      if (isCameraActive) {
+        await stopCamera();
+      }
+
+      const html5Qr = new Html5Qrcode('ls-camera-reader-viewport');
+      const decodedText = await html5Qr.scanFile(file, false);
+      playScanBeep();
+      if (navigator.vibrate) {
+        try { navigator.vibrate([100, 50, 100]); } catch (err) {}
+      }
+      setQrTokenInput(decodedText);
+      setMessage("✅ QR Code scanné depuis la photo avec succès ! Cliquez sur « Valider l'Émargement » ci-dessous.");
+    } catch (err) {
+      console.error('Erreur scan photo QR:', err);
+      setCameraError("Aucun QR Code valide détecté sur cette photo. Assurez-vous que l'image est nette et bien cadrée, ou saisissez le token directement.");
+    } finally {
+      e.target.value = '';
+    }
   };
 
   // Cleanup camera on unmount or tab change
@@ -746,7 +805,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
               <div style={{
                 position: 'relative',
                 width: '100%',
-                minHeight: isCameraActive ? '320px' : '220px',
+                minHeight: (isCameraActive || isCameraStarting) ? '340px' : '230px',
                 background: '#090d16',
                 borderRadius: '16px',
                 overflow: 'hidden',
@@ -757,19 +816,21 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
                 border: isCameraActive ? '2px solid #38bdf8' : '1px dashed #cbd5e1',
                 boxShadow: isCameraActive ? '0 10px 25px -5px rgba(56, 189, 248, 0.3)' : 'none'
               }}>
-                {/* Real Video Reader Viewport */}
+                {/* Real Video Reader Viewport - MUST have physical dimensions in DOM so Html5Qrcode can attach */}
                 <div 
                   id="ls-camera-reader-viewport" 
                   style={{ 
                     width: '100%', 
-                    height: '100%', 
-                    display: isCameraActive ? 'block' : 'none' 
+                    minHeight: (isCameraActive || isCameraStarting) ? '340px' : '1px',
+                    display: (isCameraActive || isCameraStarting) ? 'block' : 'none',
+                    borderRadius: '16px',
+                    overflow: 'hidden'
                   }} 
                 />
 
                 {/* State: Camera Inactive Overlay */}
                 {!isCameraActive && !isCameraStarting && (
-                  <div style={{ textAlign: 'center', padding: '24px 20px', color: '#94a3b8' }}>
+                  <div style={{ textAlign: 'center', padding: '24px 20px', color: '#94a3b8', zIndex: 5 }}>
                     <div style={{
                       width: '64px',
                       height: '64px',
@@ -785,38 +846,81 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
                     <div style={{ fontSize: '14px', fontWeight: 700, color: '#f8fafc', marginBottom: '6px' }}>
                       Caméra en veille
                     </div>
-                    <p style={{ fontSize: '12px', color: '#94a3b8', maxWidth: '280px', margin: '0 auto 16px' }}>
-                      Pointez votre smartphone ou webcam vers le QR Code renouvelé toutes les 20 secondes.
+                    <p style={{ fontSize: '12px', color: '#94a3b8', maxWidth: '300px', margin: '0 auto 16px' }}>
+                      Pointez votre caméra vers le QR Code affiché sur l'écran (renouvelé toutes les 20 secondes).
                     </p>
-                    <button
-                      type="button"
-                      onClick={() => startCamera()}
-                      style={{
-                        padding: '12px 24px',
-                        background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                        color: '#ffffff',
-                        border: 'none',
-                        borderRadius: '12px',
-                        fontSize: '13px',
-                        fontWeight: 800,
-                        cursor: 'pointer',
-                        boxShadow: '0 4px 14px rgba(37, 99, 235, 0.4)',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                      }}
-                    >
-                      <Camera size={16} /> Démarrer la Caméra
-                    </button>
+                    
+                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        onClick={() => startCamera()}
+                        style={{
+                          padding: '12px 20px',
+                          background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '12px',
+                          fontSize: '13px',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          boxShadow: '0 4px 14px rgba(37, 99, 235, 0.4)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}
+                      >
+                        <Camera size={16} /> Activer la Caméra en Direct
+                      </button>
+
+                      <input 
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        id="qr-photo-input"
+                        style={{ display: 'none' }}
+                        onChange={handleFileScan}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => document.getElementById('qr-photo-input')?.click()}
+                        style={{
+                          padding: '12px 18px',
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          color: '#f8fafc',
+                          border: '1px solid rgba(255, 255, 255, 0.25)',
+                          borderRadius: '12px',
+                          fontSize: '13px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}
+                      >
+                        <Camera size={16} color="#38bdf8" /> Scanner via Photo / Image
+                      </button>
+                    </div>
                   </div>
                 )}
 
                 {/* State: Starting / Loading */}
                 {isCameraStarting && (
-                  <div style={{ textAlign: 'center', padding: '30px', color: '#ffffff' }}>
+                  <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'rgba(9, 13, 22, 0.95)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                    padding: '30px',
+                    color: '#ffffff',
+                    zIndex: 15
+                  }}>
                     <RefreshCw className="animate-spin" size={36} color="#38bdf8" style={{ margin: '0 auto 12px' }} />
                     <div style={{ fontSize: '13px', fontWeight: 700 }}>Initialisation de la caméra...</div>
-                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>Veuillez autoriser l'accès si demandé.</div>
+                    <div style={{ fontSize: '11.5px', color: '#94a3b8', marginTop: '6px' }}>Veuillez autoriser l'accès caméra si votre navigateur le demande.</div>
                   </div>
                 )}
 

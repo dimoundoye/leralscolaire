@@ -217,6 +217,29 @@ db.pool.connect(async (err, client, release) => {
       ALTER TABLE eleves ADD COLUMN IF NOT EXISTS sexe VARCHAR(10) DEFAULT 'M';
       ALTER TABLE eleves ADD COLUMN IF NOT EXISTS email VARCHAR(255);
       ALTER TABLE etablissements ADD COLUMN IF NOT EXISTS nom_directeur VARCHAR(255);
+
+      -- Messagerie et pièces jointes
+      CREATE TABLE IF NOT EXISTS messages (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        expediteur_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        destinataire_type VARCHAR(50),
+        destinataire_id UUID,
+        sujet VARCHAR(255),
+        contenu TEXT NOT NULL,
+        date_envoi TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        lu BOOLEAN DEFAULT FALSE,
+        etablissement_id UUID REFERENCES etablissements(id) ON DELETE CASCADE,
+        fichier_url TEXT,
+        fichier_nom VARCHAR(255)
+      );
+      ALTER TABLE messages ADD COLUMN IF NOT EXISTS etablissement_id UUID REFERENCES etablissements(id) ON DELETE CASCADE;
+      ALTER TABLE messages ADD COLUMN IF NOT EXISTS fichier_url TEXT;
+      ALTER TABLE messages ADD COLUMN IF NOT EXISTS fichier_nom VARCHAR(255);
+      ALTER TABLE messages DROP CONSTRAINT IF EXISTS messages_destinataire_type_check;
+      ALTER TABLE messages ADD CONSTRAINT messages_destinataire_type_check 
+        CHECK (destinataire_type IN ('CLASSE', 'ELEVE', 'OFFICE_BAC', 'PROFESSEUR', 'ADMIN_ETABLISSEMENT', 'ALL_PROFESSEURS'));
+
+      ALTER TABLE professeurs_etablissements ADD COLUMN IF NOT EXISTS droit_envoi_message BOOLEAN DEFAULT FALSE;
     `);
   } catch (schemaErr) {
     console.warn('⚠️ Auto-vérification schéma :', schemaErr.message);

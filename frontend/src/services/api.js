@@ -18,6 +18,18 @@ const getUploadHeaders = () => {
   };
 };
 
+const normalizeCacheKey = (url) => {
+  try {
+    if (typeof window !== 'undefined' && (url.startsWith('http://') || url.startsWith('https://'))) {
+      const u = new URL(url);
+      return u.pathname + u.search;
+    }
+    return url;
+  } catch {
+    return url;
+  }
+};
+
 /**
  * offlineFetch: Client HTTP universel pour LeralScolaire
  * - Si GET et hors-ligne : lit dans le cache IndexedDB
@@ -28,19 +40,25 @@ const getUploadHeaders = () => {
 export async function offlineFetch(url, options = {}, label = 'Action') {
   const method = (options.method || 'GET').toUpperCase();
   const isRead = method === 'GET';
+  const cacheKey = normalizeCacheKey(url);
 
   // --- REQUÊTE DE LECTURE (GET) ---
   if (isRead) {
     // Si déconnecté, on vérifie d'abord le cache local
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
-      const cached = await syncEngine.getCache(url);
-      if (cached) {
-        console.info(`[Offline-First] Récupération depuis le cache local: ${url}`);
+      const cached = await syncEngine.getCache(cacheKey);
+      if (cached !== null && cached !== undefined) {
+        console.info(`[Offline-First] Récupération depuis le cache local: ${cacheKey}`);
         return new Response(JSON.stringify(cached), {
           status: 200,
           headers: { 'Content-Type': 'application/json' }
         });
       }
+      // Si aucune donnée dans le cache hors-ligne, renvoyer un tableau vide pour éviter un crash
+      return new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     try {
@@ -48,21 +66,25 @@ export async function offlineFetch(url, options = {}, label = 'Action') {
       if (res.ok) {
         const cloned = res.clone();
         cloned.json().then((data) => {
-          syncEngine.setCache(url, data);
+          syncEngine.setCache(cacheKey, data);
         }).catch(() => {});
       }
       return res;
     } catch (err) {
       // Erreur réseau (ex: serveur éteint ou réseau coupé en cours de route)
-      const cached = await syncEngine.getCache(url);
-      if (cached) {
-        console.warn(`[Offline-First] Erreur réseau, bascule sur le cache local: ${url}`);
+      const cached = await syncEngine.getCache(cacheKey);
+      if (cached !== null && cached !== undefined) {
+        console.warn(`[Offline-First] Erreur réseau, bascule sur le cache local: ${cacheKey}`);
         return new Response(JSON.stringify(cached), {
           status: 200,
           headers: { 'Content-Type': 'application/json' }
         });
       }
-      throw err;
+      // Renvoyer une réponse vide gracieuse en cas de coupure sans cache
+      return new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
   }
 
