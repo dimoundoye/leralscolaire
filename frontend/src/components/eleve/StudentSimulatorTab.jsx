@@ -65,22 +65,20 @@ const StudentSimulatorTab = ({
 
   return (
     <div className="tab-pane">
-      
-      {/* Top Hero Banner */}
-      <div className="simulator-hero-banner card-box">
-        <div className="simulator-hero-left">
-          <div className="sim-hero-title-row">
-            <h2>Simulateur de Moyenne Périodique</h2>
-            <span className="sim-badge-tag"><Percent size={14} /> Calcul Prévisionnel</span>
-          </div>
-          <p className="sim-hero-sub">
-            Ajustez vos notes prévisionnelles par matière et visualisez en temps réel leur impact sur votre moyenne générale et votre statut de passage.
+      {/* Sleek Top Actions Bar */}
+      <div className="sim-toolbar-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--text-slate-800)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Percent size={20} style={{ color: 'var(--primary-blue)' }} /> Simulateur de Moyenne Périodique
+          </h2>
+          <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: 'var(--text-slate-500)' }}>
+            Ajustez vos notes prévisionnelles par matière et visualisez l'impact sur votre moyenne générale.
           </p>
         </div>
 
-        <div className="simulator-hero-actions">
+        <div className="simulator-hero-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {hasNotes && (
-            <div className="sim-selector-box">
+            <div className="sim-selector-box" style={{ margin: 0 }}>
               <label><Calendar size={13} /> Période :</label>
               <select 
                 value={selectedSimPeriod} 

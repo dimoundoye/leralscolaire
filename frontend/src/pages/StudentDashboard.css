@@ -514,6 +514,14 @@
 .heatmap-container {
   overflow-x: auto;
   padding-bottom: 8px;
+  padding-top: 36px;
+  margin-top: -24px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.heatmap-container::-webkit-scrollbar {
+  display: none;
 }
 
 .heatmap-grid-layout {
@@ -606,20 +614,35 @@
   background-color: #0f172a;
   color: #fff;
   text-align: center;
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 6px 10px;
   position: absolute;
   z-index: 100;
-  bottom: 140%;
+  bottom: 125%;
   left: 50%;
   transform: translateX(-50%);
   opacity: 0;
   transition: opacity 0.15s;
-  font-size: 10px;
+  font-size: 11px;
   white-space: nowrap;
   pointer-events: none;
-  box-shadow: var(--shadow-md);
-  line-height: 1.3;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cell-tooltip .tooltip-date {
+  font-size: 10px;
+  color: #94a3b8;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  padding-bottom: 2px;
+  margin-bottom: 2px;
+}
+
+.cell-tooltip .tooltip-status {
+  font-weight: 500;
 }
 
 .heatmap-cell:hover .cell-tooltip {
@@ -2064,6 +2087,11 @@
     box-shadow: none !important;
     padding: 0 !important;
   }
+  .printable-cv .no-print,
+  .no-print {
+    display: none !important;
+    visibility: hidden !important;
+  }
 }
 
 /* Timetable & Exams - Full Width Redesign */
@@ -3387,6 +3415,129 @@
   padding: 10px 18px !important;
 }
 
+.msg-mobile-back-btn {
+  display: none;
+  background: var(--bg-slate-100, #f1f5f9);
+  border: 1px solid var(--border-slate-200, #cbd5e1);
+  color: var(--primary-blue, #131e6c);
+  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+.msg-mobile-back-btn:hover {
+  background: var(--border-slate-200);
+}
+
+@media (max-width: 768px) {
+  .messages-layout-full {
+    display: flex !important;
+    flex-direction: column !important;
+    height: calc(100dvh - 130px) !important;
+    min-height: 460px !important;
+    max-height: 82vh !important;
+    border-radius: var(--radius-lg) !important;
+  }
+
+  .msg-channels-sidebar {
+    width: 100% !important;
+    height: 100% !important;
+    border-right: none !important;
+  }
+
+  .msg-channels-sidebar.mobile-hide {
+    display: none !important;
+  }
+
+  .msg-chat-panel {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .msg-chat-panel.mobile-hide {
+    display: none !important;
+  }
+
+  .msg-mobile-back-btn {
+    display: flex !important;
+  }
+
+  .chat-panel-header {
+    padding: 10px 14px !important;
+    gap: 8px !important;
+  }
+
+  .chat-target-info {
+    gap: 8px !important;
+  }
+
+  .target-avatar {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 8px !important;
+  }
+
+  .chat-target-info h4 {
+    font-size: 13.5px !important;
+  }
+
+  .chat-target-info span {
+    font-size: 10.5px !important;
+  }
+
+  .target-badge-pill {
+    font-size: 10px !important;
+    padding: 3px 8px !important;
+    white-space: nowrap !important;
+  }
+
+  .chat-messages-body {
+    padding: 12px 14px !important;
+    gap: 10px !important;
+  }
+
+  .chat-input-footer {
+    padding: 10px 12px !important;
+    gap: 8px !important;
+  }
+
+  .chat-input-footer input {
+    padding: 9px 12px !important;
+    font-size: 13px !important;
+    min-width: 0 !important;
+  }
+
+  .chat-send-btn {
+    padding: 9px 14px !important;
+    font-size: 13px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .file-upload-btn {
+    padding: 8px 10px !important;
+    flex-shrink: 0 !important;
+  }
+}
+
+@media (max-width: 440px) {
+  .chat-send-btn span {
+    display: none;
+  }
+
+  .chat-send-btn {
+    padding: 9px 12px !important;
+  }
+
+  .target-badge-pill {
+    display: none !important;
+  }
+}
+
 /* Messages & AI Layout */
 .messages-ai-layout {
   display: grid;
@@ -3893,46 +4044,14 @@
     padding: 12px !important;
   }
 
-  /* Bottom nav mobile */
+  /* Bottom nav mobile désactivé */
   .sd-mobile-nav {
-    display: flex !important;
-    position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    background: white !important;
-    border-top: 1px solid var(--border-slate-200) !important;
-    padding: 6px 10px !important;
-    padding-bottom: max(6px, env(safe-area-inset-bottom)) !important;
-    justify-content: space-around !important;
-    z-index: 100 !important;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05) !important;
+    display: none !important;
   }
 
-  .sd-mobile-nav button {
-    background: none !important;
-    border: none !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    gap: 3px !important;
-    font-size: 9px !important;
-    color: var(--text-slate-500) !important;
-    cursor: pointer !important;
-    padding: 3px 4px !important;
-  }
-
-  .sd-mobile-nav button.active {
-    color: var(--primary-green) !important;
-  }
-
-  .sd-mobile-nav button.active span {
-    font-weight: 700 !important;
-  }
-
-  /* Espace bas pour la barre nav */
+  /* Espace bas sans barre nav */
   .sd-main-content {
-    padding-bottom: 70px !important;
+    padding-bottom: 24px !important;
   }
 }
 
@@ -4091,9 +4210,47 @@
   align-items: center;
   gap: 12px;
   background: var(--bg-slate-50);
-  padding: 16px;
+  padding: 14px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-slate-200);
+  overflow: hidden;
+}
+
+.drawer-avatar-wrap {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  max-width: 48px;
+  min-height: 48px;
+  max-height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-slate-200);
+  border: 2px solid var(--border-slate-200);
+}
+
+.drawer-avatar-wrap img,
+.drawer-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.drawer-avatar-wrap .avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #131e6c 0%, #2563eb 100%);
 }
 
 .drawer-student-info {

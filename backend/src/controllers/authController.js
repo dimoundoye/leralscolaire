@@ -69,54 +69,46 @@ const authController = {
    */
   async login(req, res, next) {
     const { identifier, password } = req.body;
+    const AUTH_ERROR = 'Mot de passe ou identifiant incorrect';
 
     if (!identifier || !password) {
-      return response.error(res, 'Identifiant et mot de passe requis.', 400);
+      return response.error(res, AUTH_ERROR, 400);
     }
 
-    const cleanId = String(identifier).trim();
-
     try {
-      // 0. Vérifier si l'utilisateur tente de se connecter avec une adresse email
-      if (cleanId.includes('@')) {
-        // Seul le compte OFFICE_BAC ou les comptes institutionnels spécifiques peuvent tenter une connexion email
-        const checkOffice = await db.query(
-          "SELECT * FROM users WHERE LOWER(email) = LOWER($1) AND role = 'OFFICE_BAC'",
-          [cleanId]
-        );
-        if (checkOffice.rows.length === 0) {
-          return response.error(
-            res, 
-            "La connexion par adresse email est désactivée. Veuillez utiliser votre Identifiant Unique (IUP) : Code Établissement (ETAB-...), IUP Enseignant (ENS-...) ou IUP Élève (SN-...)", 
-            400
-          );
-        }
-      }
-
+      const cleanId = String(identifier).trim();
       let user;
 
-      // 1. Vérifier si l'identifiant est un compte temporaire de Président de Jury (PRESIDENT.JURY...)
+      // 1. Vérifier en priorité absolue si l'identifiant est un compte temporaire de Président de Jury (ex: PRESIDENT.JURY...)
       const juryTempRes = await db.query(
-        "SELECT * FROM jurys_bac WHERE LOWER(identifiant_temporaire) = LOWER($1) AND statut = 'ACTIF'",
+        "SELECT * FROM jurys_bac WHERE LOWER(identifiant_temporaire) = LOWER($1)",
         [cleanId]
       );
 
       if (juryTempRes.rows.length > 0) {
         const juryRow = juryTempRes.rows[0];
 
-        // Contrôle strict de la date d'expiration
-        if (juryRow.date_expiration_acces && new Date() > new Date(juryRow.date_expiration_acces)) {
-          const dateExpFormatted = new Date(juryRow.date_expiration_acces).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-          return response.error(res, `Vos accès temporaires de Président du ${juryRow.numero_jury} ont expiré le ${dateExpFormatted}. Votre mission pour ce jury est clôturée.`, 403);
+        // Contrôle du statut du jury
+        if (juryRow.statut && juryRow.statut !== 'ACTIF') {
+          return response.error(res, AUTH_ERROR, 403);
         }
 
-        // Vérification du mot de passe temporaire
-        const matchTempPass = juryRow.password_hash 
-          ? await bcrypt.compare(password, juryRow.password_hash)
-          : password === juryRow.mot_de_passe_temporaire;
+        // Contrôle strict de la date d'expiration
+        if (juryRow.date_expiration_acces && new Date() > new Date(juryRow.date_expiration_acces)) {
+          return response.error(res, AUTH_ERROR, 403);
+        }
+
+        // Vérification du mot de passe temporaire (bcrypt ou direct)
+        let matchTempPass = false;
+        if (juryRow.password_hash) {
+          matchTempPass = await bcrypt.compare(password, juryRow.password_hash);
+        }
+        if (!matchTempPass && juryRow.mot_de_passe_temporaire) {
+          matchTempPass = (password.trim() === juryRow.mot_de_passe_temporaire.trim());
+        }
 
         if (!matchTempPass) {
-          return response.error(res, 'Mot de passe temporaire de président de jury incorrect.', 400);
+          return response.error(res, AUTH_ERROR, 400);
         }
 
         let profUserId = juryRow.president_prof_id;
@@ -145,7 +137,19 @@ const authController = {
         });
       }
 
-      // 2. Recherche utilisateur par IUP (identifiant_national / code_etablissement)
+      // 2. Vérifier si l'utilisateur tente de se connecter avec une adresse email
+      if (cleanId.includes('@')) {
+        // Seul le compte OFFICE_BAC ou les comptes institutionnels spécifiques peuvent tenter une connexion email
+        const checkOffice = await db.query(
+          "SELECT * FROM users WHERE LOWER(email) = LOWER($1) AND role = 'OFFICE_BAC'",
+          [cleanId]
+        );
+        if (checkOffice.rows.length === 0) {
+          return response.error(res, AUTH_ERROR, 400);
+        }
+      }
+
+      // 3. Recherche utilisateur par IUP (identifiant_national / code_etablissement)
       // a. Recherche directe dans la table users par identifiant_national
       const userRes = await db.query(
         'SELECT * FROM users WHERE LOWER(identifiant_national) = LOWER($1)',
@@ -182,13 +186,13 @@ const authController = {
       }
 
       if (!user) {
-        return response.error(res, 'Identifiant Unique (IUP) incorrect.', 400);
+        return response.error(res, AUTH_ERROR, 400);
       }
 
-      // 3. Vérification du mot de passe
+      // 4. Vérification du mot de passe
       const isMatch = await bcrypt.compare(password, user.password_hash);
       if (!isMatch) {
-        return response.error(res, 'Identifiant ou mot de passe incorrect.', 400);
+        return response.error(res, AUTH_ERROR, 400);
       }
 
       // 3. Generate JWT

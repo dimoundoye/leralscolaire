@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  MessageSquare, GraduationCap, ChevronLeft, Loader2, Paperclip, Download, X, Mail, Send
+  MessageSquare, GraduationCap, ChevronLeft, ChevronDown, ChevronRight, Loader2, Paperclip, Download, X, Mail, Send, User, Users
 } from 'lucide-react';
 
 const TeacherMessagesTab = ({
@@ -22,6 +22,28 @@ const TeacherMessagesTab = ({
   setChatInput,
   chatEndRef
 }) => {
+  const [expandedClasses, setExpandedClasses] = useState({});
+  const [classSearch, setClassSearch] = useState({});
+
+  const toggleClassExpand = (classeId, e) => {
+    e?.stopPropagation();
+    setExpandedClasses(prev => ({
+      ...prev,
+      [classeId]: !prev[classeId]
+    }));
+  };
+
+  // Auto-expand class when an active contact belongs to it
+  useEffect(() => {
+    if (activeChatContact?.type === 'CLASSE' && activeChatContact.id) {
+      setExpandedClasses(prev => ({ ...prev, [activeChatContact.id]: true }));
+    } else if (activeChatContact?.type === 'ELEVE') {
+      const student = (chatChannels.students || []).find(s => s.user_id === activeChatContact.id);
+      if (student?.classe_id) {
+        setExpandedClasses(prev => ({ ...prev, [student.classe_id]: true }));
+      }
+    }
+  }, [activeChatContact, chatChannels.students]);
   return (
     <div className="messages-tab-container">
       {/* Left Panel – Channels / Contacts */}
@@ -96,54 +118,265 @@ const TeacherMessagesTab = ({
           </div>
         </div>
 
-        {/* Classes */}
+        {/* Classes & Élèves (Format Accordéon) */}
         <div>
-          <h4 style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-slate-400)', letterSpacing: '0.06em', marginBottom: '8px' }}>
-            Classes ({profAnneeFilter})
+          <h4 style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-slate-400)', letterSpacing: '0.06em', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Users size={14} /> Classes & Élèves ({profAnneeFilter || 'Toutes'})
           </h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {(() => {
               const yearClasses = (chatChannels.classes || []).filter(cl => 
                 !profAnneeFilter || !cl.annee_scolaire || cl.annee_scolaire === profAnneeFilter
               );
               const displayClasses = yearClasses.length > 0 ? yearClasses : (chatChannels.classes || []);
 
-              return displayClasses.length > 0 ? displayClasses.map(cl => {
-                const isActive = activeChatContact?.id === cl.classe_id && activeChatContact?.type === 'CLASSE';
+              if (displayClasses.length === 0) {
+                return (
+                  <p style={{ fontSize: '12px', color: 'var(--text-slate-400)', fontStyle: 'italic' }}>
+                    Aucune classe disponible pour {profAnneeFilter}.
+                  </p>
+                );
+              }
+
+              return displayClasses.map(cl => {
+                const isExpanded = !!expandedClasses[cl.classe_id];
+                const isClassActive = activeChatContact?.id === cl.classe_id && activeChatContact?.type === 'CLASSE';
+                
+                // Élèves de cette classe
+                const classStudents = (chatChannels.students || []).filter(s => s.classe_id === cl.classe_id);
+                const q = (classSearch[cl.classe_id] || '').toLowerCase().trim();
+                const filteredClassStudents = q
+                  ? classStudents.filter(s => (s.prenom?.toLowerCase().includes(q) || s.nom?.toLowerCase().includes(q)))
+                  : classStudents;
+
                 return (
                   <div
                     key={cl.classe_id}
-                    onClick={() => handleChatContactClick({ 
-                      id: cl.classe_id, 
-                      name: `${cl.classe_nom} (${cl.annee_scolaire || ''}) – ${cl.etablissement_nom}`, 
-                      type: 'CLASSE', 
-                      etablissement_id: cl.etablissement_id 
-                    })}
                     style={{
-                      padding: '10px 12px', borderRadius: '8px', cursor: 'pointer',
-                      background: isActive ? '#f0fdf4' : 'transparent',
-                      border: isActive ? '1px solid #bbf7d0' : '1px solid transparent',
-                      transition: 'all 0.15s',
-                      display: 'flex', alignItems: 'center', gap: '10px'
+                      border: isClassActive ? '1.5px solid #16a34a' : '1px solid #e2e8f0',
+                      borderRadius: '10px',
+                      background: '#ffffff',
+                      overflow: 'hidden',
+                      transition: 'all 0.15s ease-in-out',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
                     }}
                   >
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', flexShrink: 0 }} />
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: '13px', fontWeight: 700, color: isActive ? '#15803d' : 'var(--text-slate-800)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span>{cl.classe_nom}</span>
-                        {cl.annee_scolaire && (
-                          <span style={{ fontSize: '10px', background: 'rgba(21, 128, 61, 0.1)', color: '#15803d', padding: '1px 5px', borderRadius: '4px', fontWeight: 600 }}>
-                            {cl.annee_scolaire}
-                          </span>
-                        )}
+                    {/* En-tête de la classe cliquable pour déplier/replier */}
+                    <div
+                      onClick={() => toggleClassExpand(cl.classe_id)}
+                      style={{
+                        padding: '10px 12px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '8px',
+                        background: isExpanded ? '#f8fafc' : '#ffffff',
+                        borderBottom: isExpanded ? '1px solid #f1f5f9' : 'none',
+                        userSelect: 'none'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                        <div style={{
+                          width: '28px',
+                          height: '28px',
+                          borderRadius: '6px',
+                          background: '#dcfce7',
+                          color: '#16a34a',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 800,
+                          fontSize: '11px',
+                          flexShrink: 0
+                        }}>
+                          {cl.classe_nom?.slice(0, 3)}
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: '13px', fontWeight: 800, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {cl.classe_nom}
+                          </div>
+                          <div style={{ fontSize: '10px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {cl.etablissement_nom || 'Établissement'}
+                          </div>
+                        </div>
                       </div>
-                      <div style={{ fontSize: '10px', color: 'var(--text-slate-500)' }}>{cl.etablissement_nom}</div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                        <span style={{
+                          fontSize: '10px',
+                          fontWeight: 700,
+                          padding: '2px 7px',
+                          borderRadius: '10px',
+                          background: classStudents.length > 0 ? '#eff6ff' : '#f1f5f9',
+                          color: classStudents.length > 0 ? '#2563eb' : '#94a3b8'
+                        }}>
+                          {classStudents.length} {classStudents.length > 1 ? 'élèves' : 'élève'}
+                        </span>
+                        <div style={{ color: '#64748b', display: 'flex', alignItems: 'center' }}>
+                          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                        </div>
+                      </div>
                     </div>
+
+                    {/* Contenu déroulant de la classe */}
+                    {isExpanded && (
+                      <div style={{ padding: '8px 10px', background: '#fafbfc' }}>
+                        
+                        {/* 1. Bouton Canal Collectif de la classe */}
+                        <div
+                          onClick={() => handleChatContactClick({
+                            id: cl.classe_id,
+                            name: `${cl.classe_nom} (${cl.annee_scolaire || ''}) – ${cl.etablissement_nom}`,
+                            type: 'CLASSE',
+                            etablissement_id: cl.etablissement_id
+                          })}
+                          style={{
+                            padding: '8px 10px',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            background: isClassActive ? '#dcfce7' : '#ffffff',
+                            border: isClassActive ? '1.5px solid #16a34a' : '1px solid #e2e8f0',
+                            marginBottom: '8px',
+                            transition: 'all 0.15s'
+                          }}
+                        >
+                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#16a34a', flexShrink: 0 }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: '12px', fontWeight: 800, color: isClassActive ? '#15803d' : '#1e293b' }}>
+                              📢 Canal de Groupe {cl.classe_nom}
+                            </div>
+                            <div style={{ fontSize: '9.5px', color: '#64748b' }}>
+                              Message public à toute la classe
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 2. Sous-en-tête Élèves */}
+                        <div style={{
+                          fontSize: '10px',
+                          fontWeight: 800,
+                          textTransform: 'uppercase',
+                          color: '#94a3b8',
+                          letterSpacing: '0.05em',
+                          margin: '6px 2px 4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between'
+                        }}>
+                          <span>Élèves individuels</span>
+                          <span>{classStudents.length}</span>
+                        </div>
+
+                        {/* Barre de recherche si plus de 4 élèves */}
+                        {classStudents.length > 4 && (
+                          <input
+                            type="text"
+                            placeholder="Rechercher dans cette classe..."
+                            value={classSearch[cl.classe_id] || ''}
+                            onChange={(e) => setClassSearch({ ...classSearch, [cl.classe_id]: e.target.value })}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                              width: '100%',
+                              padding: '5px 8px',
+                              fontSize: '11px',
+                              borderRadius: '6px',
+                              border: '1px solid #cbd5e1',
+                              marginBottom: '6px',
+                              outline: 'none',
+                              boxSizing: 'border-box'
+                            }}
+                          />
+                        )}
+
+                        {/* Liste des élèves */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', maxHeight: '190px', overflowY: 'auto' }}>
+                          {filteredClassStudents.length > 0 ? (
+                            filteredClassStudents.map(stud => {
+                              const isStudentActive = activeChatContact?.id === stud.user_id && activeChatContact?.type === 'ELEVE';
+                              return (
+                                <div
+                                  key={stud.user_id}
+                                  onClick={() => handleChatContactClick({
+                                    id: stud.user_id,
+                                    name: `${stud.prenom} ${stud.nom}`,
+                                    classe_nom: cl.classe_nom,
+                                    type: 'ELEVE',
+                                    etablissement_id: stud.etablissement_id,
+                                    photo_url: stud.photo_url
+                                  })}
+                                  style={{
+                                    padding: '6px 8px',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    background: isStudentActive ? '#eff6ff' : 'transparent',
+                                    border: isStudentActive ? '1px solid #93c5fd' : '1px solid transparent',
+                                    transition: 'all 0.1s'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    if (!isStudentActive) e.currentTarget.style.background = '#f1f5f9';
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    if (!isStudentActive) e.currentTarget.style.background = 'transparent';
+                                  }}
+                                >
+                                  {stud.photo_url ? (
+                                    <img
+                                      src={stud.photo_url}
+                                      alt=""
+                                      style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                                    />
+                                  ) : (
+                                    <div style={{
+                                      width: '24px',
+                                      height: '24px',
+                                      borderRadius: '50%',
+                                      background: '#059669',
+                                      color: 'white',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      fontSize: '10px',
+                                      fontWeight: 800,
+                                      flexShrink: 0
+                                    }}>
+                                      {(stud.prenom?.[0] || '') + (stud.nom?.[0] || '')}
+                                    </div>
+                                  )}
+                                  <div style={{ minWidth: 0, flex: 1 }}>
+                                    <div style={{
+                                      fontSize: '12px',
+                                      fontWeight: isStudentActive ? 700 : 500,
+                                      color: isStudentActive ? '#1d4ed8' : '#334155',
+                                      whiteSpace: 'nowrap',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis'
+                                    }}>
+                                      {stud.prenom} {stud.nom}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <p style={{ fontSize: '11px', color: '#94a3b8', fontStyle: 'italic', padding: '4px', margin: 0 }}>
+                              {q ? 'Aucun élève trouvé' : 'Aucun élève inscrit dans cette classe'}
+                            </p>
+                          )}
+                        </div>
+
+                      </div>
+                    )}
                   </div>
                 );
-              }) : (
-                <p style={{ fontSize: '12px', color: 'var(--text-slate-400)', fontStyle: 'italic' }}>Aucune classe disponible pour {profAnneeFilter}.</p>
-              );
+              });
             })()}
           </div>
         </div>
@@ -168,13 +401,17 @@ const TeacherMessagesTab = ({
               >
                 <ChevronLeft size={18} />
               </button>
-              <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--primary-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '14px', fontWeight: 800, flexShrink: 0 }}>
-                {activeChatContact.name[0]}
-              </div>
+              {activeChatContact.photo_url ? (
+                <img src={activeChatContact.photo_url} alt="" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+              ) : (
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: activeChatContact.type === 'ELEVE' ? '#059669' : 'var(--primary-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '14px', fontWeight: 800, flexShrink: 0 }}>
+                  {activeChatContact.name[0]}
+                </div>
+              )}
               <div style={{ minWidth: 0 }}>
                 <h4 style={{ margin: 0, fontSize: '13px', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeChatContact.name}</h4>
                 <span style={{ fontSize: '11px', color: 'var(--text-slate-500)' }}>
-                  {activeChatContact.type === 'ADMIN' ? 'Canal Administrateur' : 'Canal de Classe'}
+                  {activeChatContact.type === 'ADMIN' ? 'Canal Administrateur' : activeChatContact.type === 'ELEVE' ? `Discussion Élève • ${activeChatContact.classe_nom || 'Classe'}` : activeChatContact.type === 'OFFICE_BAC' ? 'Office du Baccalauréat' : 'Canal de Classe'}
                 </span>
               </div>
             </div>
@@ -294,9 +531,9 @@ const TeacherMessagesTab = ({
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-slate-400)' }}>
             <MessageSquare size={48} style={{ marginBottom: '12px' }} />
-            <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--text-slate-700)' }}>Choisissez un canal</h4>
-            <p style={{ fontSize: '12px', marginTop: '4px', textAlign: 'center', maxWidth: '260px' }}>
-              Sélectionnez un administrateur d'établissement ou une classe dans la liste de gauche pour commencer à communiquer.
+            <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: 'var(--text-slate-700)' }}>Choisissez une discussion</h4>
+            <p style={{ fontSize: '12px', marginTop: '4px', textAlign: 'center', maxWidth: '280px' }}>
+              Sélectionnez un élève, une classe ou l'administration dans la liste de gauche pour échanger en direct.
             </p>
           </div>
         )}

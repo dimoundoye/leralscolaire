@@ -54,6 +54,59 @@ const MessageModel = {
     return rows;
   },
 
+  async getTeacherStudents(profUserId) {
+    const { rows } = await db.query(`
+      SELECT DISTINCT 
+        u.id as user_id, 
+        e.id as eleve_id, 
+        e.prenom, 
+        e.nom, 
+        e.photo_url,
+        e.identifiant_national,
+        c.id as classe_id, 
+        c.nom as classe_nom, 
+        c.annee_scolaire, 
+        c.etablissement_id,
+        et.nom as etablissement_nom
+      FROM inscription_classes ic
+      JOIN eleves e ON ic.eleve_id = e.id
+      JOIN users u ON e.user_id = u.id
+      JOIN classes c ON ic.classe_id = c.id
+      JOIN etablissements et ON c.etablissement_id = et.id
+      WHERE c.id IN (
+        SELECT c2.id FROM (
+          SELECT classe_id FROM professeur_matieres WHERE professeur_id = $1
+          UNION
+          SELECT classe_id FROM emplois_du_temps WHERE professeur_id = $1
+        ) pm_classes
+        JOIN classes c1 ON pm_classes.classe_id = c1.id
+        JOIN classes c2 ON c1.nom = c2.nom AND c1.etablissement_id = c2.etablissement_id
+      )
+      UNION
+      SELECT DISTINCT
+        u.id as user_id,
+        e.id as eleve_id,
+        e.prenom,
+        e.nom,
+        e.photo_url,
+        e.identifiant_national,
+        c.id as classe_id,
+        COALESCE(c.nom, 'Élève') as classe_nom,
+        c.annee_scolaire,
+        e.etablissement_id,
+        et.nom as etablissement_nom
+      FROM messages m
+      JOIN users u ON (CASE WHEN m.expediteur_id = $1 THEN m.destinataire_id ELSE m.expediteur_id END) = u.id
+      JOIN eleves e ON e.user_id = u.id
+      LEFT JOIN inscription_classes ic ON ic.eleve_id = e.id
+      LEFT JOIN classes c ON ic.classe_id = c.id
+      LEFT JOIN etablissements et ON e.etablissement_id = et.id
+      WHERE (m.destinataire_id = $1 AND m.destinataire_type = 'PROFESSEUR')
+         OR (m.expediteur_id = $1 AND m.destinataire_type = 'ELEVE')
+      ORDER BY classe_nom ASC, nom ASC, prenom ASC
+    `, [profUserId]);
+    return rows;
+  },
 
   async getEtablissementAdminDetails(userId) {
     const { rows } = await db.query(`
@@ -95,10 +148,10 @@ const MessageModel = {
       JOIN users u ON m.expediteur_id = u.id
       LEFT JOIN professeurs p ON p.id = u.id
       LEFT JOIN eleves el ON el.user_id = u.id
-      WHERE (m.etablissement_id = $1)
+      WHERE ($1::uuid IS NULL OR m.etablissement_id = $1)
         AND ((m.expediteur_id = $2 AND m.destinataire_id = $3) OR (m.expediteur_id = $3 AND m.destinataire_id = $2))
       ORDER BY m.date_envoi ASC
-    `, [etablissementId, userId1, userId2]);
+    `, [etablissementId || null, userId1, userId2]);
     return rows;
   },
 
@@ -135,12 +188,12 @@ const MessageModel = {
     return rows;
   },
 
-  async markMessagesAsRead(expediteurId, destinataireId, etablissementId) {
+  async markMessagesAsRead(expediteurId, destinataireId, etablissementId = null) {
     await db.query(`
       UPDATE messages 
       SET lu = TRUE 
-      WHERE expediteur_id != $2
-        AND (expediteur_id = $1 OR destinataire_id = $2 OR destinataire_type IN ('PROFESSEUR', 'ADMIN_ETABLISSEMENT', 'ELEVE'))
+      WHERE expediteur_id = $1
+        AND (destinataire_id = $2 OR destinataire_type IN ('PROFESSEUR', 'ADMIN_ETABLISSEMENT', 'ELEVE'))
         AND lu = FALSE
     `, [expediteurId, destinataireId]);
     return true;

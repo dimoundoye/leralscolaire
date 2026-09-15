@@ -30,31 +30,6 @@ const StudentPortfolioTab = ({
 
   return (
     <div className="tab-pane">
-      
-      {/* Top Hero Banner */}
-      <div className="portfolio-hero-banner card-box">
-        <div className="portfolio-hero-left">
-          <div className="portfolio-hero-title-group">
-            <h2>Mon Portfolio & CV Numérique Certifié</h2>
-            <span className="men-official-tag"><ShieldCheck size={14} /> Certifié MEN Sénégal</span>
-          </div>
-          <p className="portfolio-hero-desc">
-            Consultez votre livret officiel, valorisez vos compétences extra-scolaires et constituez un dossier d'excellence pour vos choix d'orientation post-BAC.
-          </p>
-        </div>
-
-        <div className="portfolio-hero-actions">
-          <button className="secondary-btn print-cv-btn" onClick={() => window.print()}>
-            <Printer size={16} /> Imprimer le CV Officiel
-          </button>
-          {!isAddingPortfolio && (
-            <button className="primary-btn add-activity-btn" onClick={() => setIsAddingPortfolio(true)}>
-              <Plus size={16} /> Ajouter une activité
-            </button>
-          )}
-        </div>
-      </div>
-
       <div className="portfolio-cv-layout">
         {/* Official Printable CV Document */}
         <div className="cv-container card-box printable-cv">
@@ -70,10 +45,21 @@ const StudentPortfolioTab = ({
               </div>
             </div>
 
-            <div className="cv-doc-badge">
-              <span className="doc-title">LIVRET NUMÉRIQUE ÉVOLUTIF</span>
-              <span className="doc-sub">Parcours Scolaire Certifié</span>
-              <span className="doc-id">N° {profile?.identifiant_national || 'SN-2026-BAC'}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+              <div className="cv-doc-badge">
+                <span className="doc-title">LIVRET NUMÉRIQUE ÉVOLUTIF</span>
+                <span className="doc-sub">Parcours Scolaire Certifié</span>
+                <span className="doc-id">N° {profile?.identifiant_national || 'SN-2026-BAC'}</span>
+              </div>
+              <button 
+                type="button"
+                className="secondary-btn print-cv-btn no-print" 
+                onClick={() => window.print()}
+                style={{ fontSize: '0.82rem', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
+                title="Imprimer le CV Officiel"
+              >
+                <Printer size={14} /> Imprimer le CV
+              </button>
             </div>
 
             <div className="cv-qr-stamp">
@@ -325,9 +311,12 @@ const StudentPortfolioTab = ({
               </form>
             </div>
           ) : (
-            <div className="pm-add-trigger">
+            <div className="pm-add-trigger" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <button className="primary-btn w-full add-activity-main-btn" onClick={() => setIsAddingPortfolio(true)}>
                 <Plus size={18} /> Ajouter une activité/projet
+              </button>
+              <button className="secondary-btn w-full print-cv-btn no-print" onClick={() => window.print()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <Printer size={16} /> Imprimer le CV Officiel
               </button>
             </div>
           )}

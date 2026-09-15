@@ -597,10 +597,7 @@
 
 .schedule-slot-card {
   background: var(--bg-white);
-  border-left: 3px solid var(--primary-blue);
-  border-right: 1px solid var(--border-slate-200);
-  border-top: 1px solid var(--border-slate-200);
-  border-bottom: 1px solid var(--border-slate-200);
+  border: 1px solid var(--border-slate-200);
   border-radius: var(--radius-md);
   padding: 10px;
   font-size: 11px;
@@ -614,11 +611,10 @@
 
 .schedule-slot-card:hover {
   box-shadow: var(--shadow-md);
-  border-left-color: var(--accent-red);
 }
 
 .schedule-slot-card.conflict {
-  border-left-color: var(--accent-red);
+  border-color: var(--accent-red);
   background: rgba(244, 63, 46, 0.04);
 }
 
@@ -1322,5 +1318,187 @@
   .teacher-quick-access-card {
     padding: 14px 10px;
     border-radius: 16px;
+  }
+}
+
+/* ─── Cahier de Texte Numérique Responsive ─── */
+.cahier-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.cahier-form-grid {
+  background: #f8fafc;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+}
+
+.cahier-col-full {
+  grid-column: 1 / -1;
+}
+
+.cahier-form-grid .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cahier-form-grid label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-slate-700);
+}
+
+.cahier-form-grid .pill-input,
+.cahier-form-grid .pill-select,
+.cahier-form-grid .pill-textarea {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background-color: #ffffff;
+  color: #1e293b;
+  font-size: 13px;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.cahier-form-grid .pill-input:focus,
+.cahier-form-grid .pill-select:focus,
+.cahier-form-grid .pill-textarea:focus {
+  outline: none;
+  border-color: var(--primary-blue, #1e40af);
+  box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.15);
+}
+
+.cahier-form-grid .pill-textarea {
+  resize: vertical;
+}
+
+.cahier-time-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cahier-time-row > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.cahier-actions-row {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cahier-file-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.cahier-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.cahier-entry-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+@media (max-width: 768px) {
+  .card-box {
+    padding: 16px 12px !important;
+    border-radius: 12px !important;
+  }
+
+  .cahier-form-grid {
+    grid-template-columns: 1fr !important;
+    padding: 14px 10px !important;
+    gap: 12px !important;
+  }
+  
+  .cahier-form-grid .form-group,
+  .cahier-col-full {
+    grid-column: 1 / -1 !important;
+  }
+
+  .cahier-actions-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .cahier-file-box {
+    width: 100% !important;
+  }
+
+  .cahier-file-box .secondary-btn {
+    width: 100% !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+  }
+
+  .cahier-submit-btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .cahier-history-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .cahier-history-header > div {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+  }
+
+  .cahier-history-header select {
+    flex: 1 !important;
+    max-width: 100% !important;
   }
 }

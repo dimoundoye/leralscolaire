@@ -315,16 +315,21 @@ const TeacherDashboard = () => {
   const sendChatMessage = async (e) => {
     e.preventDefault();
     if ((!chatInput.trim() && !attachedFile) || !activeChatContact) return;
-    const token = localStorage.getItem('token');
-    const destType = activeChatContact.type === 'ADMIN' ? 'ADMIN_ETABLISSEMENT' : activeChatContact.type === 'OFFICE_BAC' ? 'OFFICE_BAC' : 'CLASSE';
+    const destType = activeChatContact.type === 'ADMIN' ? 'ADMIN_ETABLISSEMENT' 
+      : activeChatContact.type === 'OFFICE_BAC' ? 'OFFICE_BAC' 
+      : activeChatContact.type === 'ELEVE' ? 'ELEVE' 
+      : 'CLASSE';
+    const destId = activeChatContact.type === 'OFFICE_BAC' ? null 
+      : activeChatContact.type === 'ADMIN' ? activeChatContact.etablissement_id 
+      : activeChatContact.id;
     try {
       const res = await offlineFetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
           destinataire_type: destType,
-          destinataire_id: activeChatContact.type === 'OFFICE_BAC' ? null : (activeChatContact.type === 'ADMIN' ? activeChatContact.etablissement_id : activeChatContact.id),
-          sujet: activeChatContact.type === 'OFFICE_BAC' ? 'Message Office du BAC' : 'Message',
+          destinataire_id: destId,
+          sujet: activeChatContact.type === 'OFFICE_BAC' ? 'Message Office du BAC' : (activeChatContact.type === 'ELEVE' ? `Message à ${activeChatContact.name}` : 'Message'),
           contenu: chatInput.trim() || (attachedFile ? `📎 ${attachedFile.name}` : ''),
           etablissement_id: activeChatContact.etablissement_id || null,
           fichier_url: attachedFile ? attachedFile.url : null,
@@ -418,12 +423,26 @@ const TeacherDashboard = () => {
           const validClasses = Array.isArray(classesData) ? classesData : [];
           setClasses(validClasses);
 
-          // Préchargement automatique des élèves de toutes les classes pour garantir le mode hors-ligne
+          // Préchargement automatique des élèves, barèmes et notes pour garantir le mode hors-ligne
           if (validClasses.length > 0) {
             const uniqueClassIds = Array.from(new Set(validClasses.map(c => c.classe_id || c.id).filter(Boolean)));
             uniqueClassIds.forEach(cId => {
               offlineFetch(`/api/professeurs-portal/classes/${cId}/students`, { headers: getHeaders() })
                 .catch(err => console.warn(`Pré-cache élèves hors-ligne classe ${cId}:`, err));
+            });
+
+            // Pré-cache des barèmes d'établissement et des grilles de notes
+            validClasses.forEach(c => {
+              const cId = c.classe_id || c.id;
+              const mId = c.matiere_id || c.matiere_code;
+              if (cId && mId) {
+                offlineFetch(`/api/professeurs-portal/grades/${cId}/${mId}?periode=Semestre 1`, { headers: getHeaders() })
+                  .catch(() => {});
+              }
+              if (c.etablissement_id) {
+                offlineFetch(`/api/professeurs-portal/baremes/${c.etablissement_id}`, { headers: getHeaders() })
+                  .catch(() => {});
+              }
             });
           }
         }
@@ -783,33 +802,63 @@ const TeacherDashboard = () => {
     if (!selectedClasse || !selectedMatiere) return;
     setLoading(true);
     try {
-      const res = await offlineFetch(`/api/professeurs-portal/grades/${selectedClasse}/${selectedMatiere}?periode=${selectedPeriode}`, {
-        headers: getHeaders()
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setGradesData(data);
-        // Prepare draft values — pre-fill with existing grades from DB (including those entered by school admin)
-        const drafts = {};
-        const originals = {};
-        if (Array.isArray(data.students)) {
-          data.students.forEach(stud => {
-            const g = (data.grades || []).find(gr => gr.eleve_id === stud.id && gr.type_note === selectedTypeNote);
-            const noteVal = g ? g.note : '';
-            // Use baremesOverride if provided (avoids stale closure), otherwise use current baremes state
-            const autoApprec = noteVal !== '' ? getAppreciationFromBaremes(noteVal, baremesOverride) : '';
-            drafts[stud.id] = {
-              note: noteVal,
-              appreciation: g ? (g.appreciation || autoApprec) : ''
-            };
-            if (g) {
-              originals[g.id] = g.note;
-            }
-          });
+      let data = { students: [], grades: [] };
+      try {
+        const res = await offlineFetch(`/api/professeurs-portal/grades/${selectedClasse}/${selectedMatiere}?periode=${selectedPeriode}`, {
+          headers: getHeaders()
+        });
+        if (res.ok) {
+          const fetched = await res.json();
+          if (fetched && !Array.isArray(fetched) && typeof fetched === 'object') {
+            data = fetched;
+          }
         }
-        setDraftGrades(drafts);
-        setOriginalGrades(originals);
+      } catch (fetchErr) {
+        console.warn('Chargement notes via réseau indisponible:', fetchErr);
       }
+
+      if (!Array.isArray(data.students)) data.students = [];
+      if (!Array.isArray(data.grades)) data.grades = [];
+
+      // Si aucun élève dans le retour des notes (ex: mode hors-ligne sans cache de notes préalable),
+      // on charge les élèves de secours depuis le cache IndexedDB de la classe
+      if (data.students.length === 0) {
+        try {
+          const studentsRes = await offlineFetch(`/api/professeurs-portal/classes/${selectedClasse}/students`, {
+            headers: getHeaders()
+          });
+          if (studentsRes.ok) {
+            const studentsData = await studentsRes.json();
+            if (Array.isArray(studentsData) && studentsData.length > 0) {
+              data.students = studentsData;
+            }
+          }
+        } catch (sErr) {
+          console.warn('Erreur chargement élèves de secours pour notes:', sErr);
+        }
+      }
+
+      setGradesData(data);
+      // Prepare draft values — pre-fill with existing grades from DB (including those entered by school admin)
+      const drafts = {};
+      const originals = {};
+      if (Array.isArray(data.students)) {
+        data.students.forEach(stud => {
+          const g = (data.grades || []).find(gr => gr.eleve_id === stud.id && gr.type_note === selectedTypeNote);
+          const noteVal = g ? g.note : '';
+          // Use baremesOverride if provided (avoids stale closure), otherwise use current baremes state
+          const autoApprec = noteVal !== '' ? getAppreciationFromBaremes(noteVal, baremesOverride) : '';
+          drafts[stud.id] = {
+            note: noteVal,
+            appreciation: g ? (g.appreciation || autoApprec) : ''
+          };
+          if (g) {
+            originals[g.id] = g.note;
+          }
+        });
+      }
+      setDraftGrades(drafts);
+      setOriginalGrades(originals);
 
       // Also load audit log for this class to check if there are pending/rejected modifications
       try {
@@ -835,7 +884,7 @@ const TeacherDashboard = () => {
   // Separate useEffect to load baremes when classe changes
   useEffect(() => {
     if (!selectedClasse) return;
-    const found = classes.find(cl => cl.classe_id === selectedClasse);
+    const found = classes.find(cl => (cl.classe_id || cl.id) === selectedClasse);
     if (!found || !found.etablissement_id) return;
     setSelectedEtabId(found.etablissement_id);
     offlineFetch(
@@ -876,10 +925,32 @@ const TeacherDashboard = () => {
         const data = await res.json();
         if (data.offline) {
           showNotification('Note sauvegardée localement (⏳ sera transmise dès le retour du réseau) !', 'info');
+          // Optimistically update gradesData in local state
+          setGradesData(prev => {
+            const currentGrades = Array.isArray(prev?.grades) ? [...prev.grades] : [];
+            const existingIdx = currentGrades.findIndex(g => g.eleve_id === eleveId && g.type_note === selectedTypeNote);
+            const newGradeItem = {
+              id: 'local-' + Date.now(),
+              eleve_id: eleveId,
+              note: parseFloat(draft.note),
+              type_note: selectedTypeNote,
+              appreciation: draft.appreciation
+            };
+            if (existingIdx >= 0) {
+              currentGrades[existingIdx] = newGradeItem;
+            } else {
+              currentGrades.push(newGradeItem);
+            }
+            return {
+              ...(prev || {}),
+              students: Array.isArray(prev?.students) ? prev.students : [],
+              grades: currentGrades
+            };
+          });
         } else {
           showNotification('Note enregistrée !', 'success');
+          handleLoadGradesGrid();
         }
-        handleLoadGradesGrid();
       }
     } catch (err) {
       console.error(err);

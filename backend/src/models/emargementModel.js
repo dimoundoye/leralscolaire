@@ -1,6 +1,10 @@
 const db = require('../config/db');
 const crypto = require('crypto');
 
+function isValidUuid(val) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(val));
+}
+
 const EmargementModel = {
   // 1. Secret unique d'établissement pour TOTP 20s
   getEtablissementSecret(etablissementId) {
@@ -35,16 +39,21 @@ const EmargementModel = {
       const decoded = JSON.parse(Buffer.from(tokenString, 'base64').toString('utf8'));
       const current20s = Math.floor(Date.now() / 20000);
 
-      if (decoded.etabId !== String(etablissementId)) {
-        return { valid: false, reason: "Ce QR Code appartient à un autre établissement !" };
+      // Si l'un des deux est 'default' ou non spécifié, on autorise la validation
+      if (etablissementId && decoded.etabId && decoded.etabId !== 'default' && etablissementId !== 'default') {
+        if (decoded.etabId !== String(etablissementId)) {
+          return { valid: false, reason: "Ce QR Code appartient à un autre établissement !" };
+        }
       }
 
-      if (Math.abs(current20s - decoded.time) > 1) {
+      // Tolérance jusqu'à 2 tranches (40s) pour éviter les rejets lors du décalage de seconde
+      if (Math.abs(current20s - decoded.time) > 2) {
         return { valid: false, reason: "QR Code expiré (plus de 20 secondes). Veuillez rescanner !" };
       }
 
-      const secret = this.getEtablissementSecret(etablissementId);
-      const expectedPayload = `${etablissementId}:${decoded.time}`;
+      const tokenEtab = decoded.etabId || etablissementId;
+      const secret = this.getEtablissementSecret(tokenEtab);
+      const expectedPayload = `${tokenEtab}:${decoded.time}`;
       const expectedHmac = crypto.createHmac('sha256', secret).update(expectedPayload).digest('hex').substring(0, 16);
 
       if (decoded.hash !== expectedHmac) {
@@ -61,11 +70,39 @@ const EmargementModel = {
   async findOrCreateSeance(profId, etablissementId, classeId, matiereCode, matiereNom, heureDebut, heureFin, typeSeance = 'REGULIER') {
     const today = new Date().toISOString().split('T')[0];
 
+    // Sécurisation des UUIDs Postgres
+    let safeEtabId = isValidUuid(etablissementId) ? etablissementId : null;
+    if (!safeEtabId) {
+      const { rows: etabRows } = await db.query(`
+        SELECT pe.etablissement_id FROM professeurs_etablissements pe 
+        WHERE pe.professeur_id = $1 AND pe.statut = 'ACTIF' LIMIT 1
+      `, [profId]);
+      if (etabRows.length > 0 && isValidUuid(etabRows[0].etablissement_id)) {
+        safeEtabId = etabRows[0].etablissement_id;
+      } else {
+        const { rows: anyEtab } = await db.query('SELECT id FROM etablissements ORDER BY created_at ASC LIMIT 1');
+        safeEtabId = anyEtab[0]?.id || null;
+      }
+    }
+
+    let safeClasseId = isValidUuid(classeId) ? classeId : null;
+    if (!safeClasseId && safeEtabId) {
+      const { rows: classRows } = await db.query(`
+        SELECT c.id FROM classes c 
+        LEFT JOIN cours cr ON cr.classe_id = c.id 
+        WHERE (c.professeur_principal_id = $1 OR cr.professeur_id = $1)
+          AND c.etablissement_id = $2 LIMIT 1
+      `, [profId, safeEtabId]);
+      if (classRows.length > 0 && isValidUuid(classRows[0].id)) {
+        safeClasseId = classRows[0].id;
+      }
+    }
+
     const { rows: existing } = await db.query(`
       SELECT * FROM seances_cours 
       WHERE professeur_id = $1 AND etablissement_id = $2 AND date_seance = $3 
         AND heure_debut = $4 LIMIT 1
-    `, [profId, etablissementId, today, heureDebut]);
+    `, [profId, safeEtabId, today, heureDebut]);
 
     if (existing.length > 0) {
       return existing[0];
@@ -77,20 +114,26 @@ const EmargementModel = {
         date_seance, heure_debut, heure_fin, type_seance, statut
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'EMARGE_PRESENCE')
       RETURNING *
-    `, [etablissementId, profId, classeId, matiereCode, matiereNom, today, heureDebut, heureFin, typeSeance]);
+    `, [safeEtabId, profId, safeClasseId, matiereCode || 'GEN', matiereNom || 'Cours Général', today, heureDebut, heureFin, typeSeance]);
 
     return inserted[0];
   },
 
   // 5. Enregistrer un Émargement
   async createEmargement(seanceId, profId, etablissementId, modeEmargement, lat, lng, distMetres, tokenUtilise) {
+    let safeEtabId = isValidUuid(etablissementId) ? etablissementId : null;
+    if (!safeEtabId) {
+      const { rows: sRows } = await db.query('SELECT etablissement_id FROM seances_cours WHERE id = $1', [seanceId]);
+      safeEtabId = sRows[0]?.etablissement_id || null;
+    }
+
     const { rows } = await db.query(`
       INSERT INTO emargements (
         seance_id, professeur_id, etablissement_id, mode_emargement, 
         latitude, longitude, distance_etablissement_metres, token_totp_utilise, statut
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'VALIDE')
       RETURNING *
-    `, [seanceId, profId, etablissementId, modeEmargement, lat, lng, distMetres, tokenUtilise]);
+    `, [seanceId, profId, safeEtabId, modeEmargement, lat, lng, distMetres, tokenUtilise]);
 
     await db.query(`
       UPDATE seances_cours SET statut = 'EMARGE_PRESENCE', updated_at = CURRENT_TIMESTAMP

@@ -58,6 +58,9 @@ const messageController = {
       } else if (destinataire_type === 'PROFESSEUR' && !finalEtablissementId) {
         const etabRes = await db.query('SELECT etablissement_id FROM eleves WHERE user_id = $1', [req.user.id]);
         finalEtablissementId = etabRes.rows[0]?.etablissement_id;
+      } else if (destinataire_type === 'ELEVE' && !finalEtablissementId) {
+        const etabRes = await db.query('SELECT etablissement_id FROM eleves WHERE user_id = $1 OR id = $1', [destinataire_id]);
+        finalEtablissementId = etabRes.rows[0]?.etablissement_id;
       }
 
       const message = await MessageModel.sendMessage(
@@ -102,7 +105,8 @@ const messageController = {
       if (role === 'PROFESSEUR') {
         const etabs = await MessageModel.getTeacherEtablissements(req.user.id);
         const classes = await MessageModel.getTeacherClasses(req.user.id);
-        return res.json({ etablissements: etabs, classes });
+        const students = await MessageModel.getTeacherStudents(req.user.id);
+        return res.json({ etablissements: etabs, classes, students });
       } else if (role === 'ADMIN_ETABLISSEMENT') {
         const etablissementId = await MessageModel.getEtablissementIdByAdminId(req.user.id);
         if (!etablissementId) {
@@ -131,22 +135,32 @@ const messageController = {
             classe = classRows[0];
 
             const { rows: teacherRows } = await db.query(`
-              SELECT DISTINCT u.id as user_id, p.prenom, p.nom, m.nom as matiere_nom
-              FROM (
-                SELECT classe_id, professeur_id, matiere_id FROM professeur_matieres
-                UNION
-                SELECT classe_id, professeur_id, matiere_id FROM emplois_du_temps
-              ) pm
-              JOIN classes c1 ON pm.classe_id = c1.id
-              JOIN classes c2 ON c1.nom = c2.nom AND c1.etablissement_id = c2.etablissement_id
-              JOIN users u ON pm.professeur_id = u.id
-              LEFT JOIN professeurs p ON p.id = u.id
-              LEFT JOIN matieres m ON pm.matiere_id = m.id
-              WHERE c2.id IN (
+              SELECT DISTINCT 
+                u.id as user_id, 
+                p.prenom, 
+                p.nom, 
+                p.photo_url,
+                COALESCE(m.nom, p.matiere_principale, 'Enseignant') as matiere_nom
+              FROM users u
+              JOIN professeurs p ON p.id = u.id
+              LEFT JOIN professeur_matieres pm ON pm.professeur_id = u.id AND pm.classe_id IN (
                 SELECT ic.classe_id FROM inscription_classes ic WHERE ic.eleve_id = $1
               )
+              LEFT JOIN matieres m ON pm.matiere_id = m.id
+              WHERE u.id IN (
+                SELECT pm2.professeur_id FROM professeur_matieres pm2 
+                JOIN classes c ON pm2.classe_id = c.id
+                WHERE c.id IN (SELECT ic.classe_id FROM inscription_classes ic WHERE ic.eleve_id = $1)
+                UNION
+                SELECT edt.professeur_id FROM emplois_du_temps edt
+                JOIN classes c ON edt.classe_id = c.id
+                WHERE c.id IN (SELECT ic.classe_id FROM inscription_classes ic WHERE ic.eleve_id = $1)
+                UNION
+                SELECT pe.professeur_id FROM professeurs_etablissements pe
+                WHERE pe.etablissement_id = $2 AND pe.statut = 'ACCEPTE'
+              )
               ORDER BY p.nom, p.prenom
-            `, [student.id]);
+            `, [student.id, student.etablissement_id]);
 
             teachers = teacherRows;
           }
@@ -182,15 +196,18 @@ const messageController = {
         messages = await MessageModel.getOfficeBacChatHistory(req.user.id);
       } else if (type === 'PROFESSEUR' || type === 'ELEVE') {
         let etabId = etablissement_id;
-        if (!etabId) {
+        if (!etabId && req.user.role === 'ELEVE') {
           const etabRes = await db.query('SELECT etablissement_id FROM eleves WHERE user_id = $1', [req.user.id]);
+          etabId = etabRes.rows[0]?.etablissement_id;
+        } else if (!etabId && req.user.role === 'PROFESSEUR') {
+          const etabRes = await db.query('SELECT etablissement_id FROM eleves WHERE user_id = $1', [target_id]);
           etabId = etabRes.rows[0]?.etablissement_id;
         }
         if (!etabId) {
           etabId = await MessageModel.getEtablissementIdByAdminId(req.user.id);
         }
-        messages = await MessageModel.getDirectChatHistory(etabId, req.user.id, target_id);
-        await MessageModel.markMessagesAsRead(target_id, req.user.id, etabId);
+        messages = await MessageModel.getDirectChatHistory(etabId || null, req.user.id, target_id);
+        await MessageModel.markMessagesAsRead(target_id, req.user.id, etabId || null);
       }
       return res.json(messages);
     } catch (err) {

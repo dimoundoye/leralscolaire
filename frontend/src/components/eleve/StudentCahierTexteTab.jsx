@@ -15,18 +15,6 @@ const StudentCahierTexteTab = ({
 
   return (
     <div className="tab-pane">
-      <div className="schedule-hero-banner card-box" style={{ marginBottom: '20px' }}>
-        <div className="sched-hero-left">
-          <div className="sched-title-row">
-            <h2><BookMarked size={22} style={{ color: 'var(--accent-red)' }} /> Cahier de Texte Numérique</h2>
-            <span className="sched-badge-tag"><Calendar size={14} /> Suivi des cours et devoirs</span>
-          </div>
-          <p className="sched-hero-sub">
-            Retrouvez l'ensemble des cours dispensés par vos enseignants ainsi que les devoirs et exercices à rendre.
-          </p>
-        </div>
-      </div>
-
       {/* SUB-TABS SWITCHER */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
         <button 

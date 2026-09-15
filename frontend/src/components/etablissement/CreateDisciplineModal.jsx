@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Send, Calendar, AlertTriangle, MessageSquare, Award, Scale } from 'lucide-react';
 import { api } from '../../services/api';
+import './CreateDisciplineModal.css';
 
 const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose, onSuccess }) => {
   const [eleveId, setEleveId] = useState(defaultEleveId || '');
@@ -24,28 +25,24 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
       return;
     }
 
+    setSubmitting(true);
+    setError('');
     try {
-      setSubmitting(true);
-      setError('');
-      const res = await api.createDiscipline({
+      await api.createIncident({
         eleve_id: eleveId,
-        type_action: typeAction,
-        gravite: gravite,
+        type_incident: typeAction,
+        gravite,
         motif: motif.trim(),
         description: description.trim(),
-        date_rendez_vous: typeAction === 'CONVOCATION' ? dateRendezVous : null,
+        date_rendez_vous: typeAction === 'CONVOCATION' && dateRendezVous ? dateRendezVous : null,
         lieu_rendez_vous: typeAction === 'CONVOCATION' ? lieuRendezVous : null
       });
 
-      if (res.success) {
-        if (onSuccess) onSuccess();
-        onClose();
-      } else {
-        setError(res.message || 'Erreur lors de l\'enregistrement.');
-      }
+      if (onSuccess) onSuccess();
+      onClose();
     } catch (err) {
       console.error(err);
-      setError('Erreur de connexion au serveur.');
+      setError(err.message || "Erreur lors de l'enregistrement de l'action.");
     } finally {
       setSubmitting(false);
     }
@@ -53,39 +50,26 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
 
   return (
     <div
+      className="discipline-modal-overlay"
       onClick={(e) => e.target === e.currentTarget && onClose()}
-      style={{
-        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.45)', backdropFilter: 'blur(4px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '16px'
-      }}
     >
-      <div style={{
-        backgroundColor: '#ffffff', borderRadius: '16px', width: '100%', maxWidth: '580px',
-        boxShadow: '0 20px 48px -8px rgba(19, 30, 108, 0.18)', border: '1px solid #e2e8f0', overflow: 'hidden'
-      }}>
+      <div className="discipline-modal-container">
         {/* Header - Native LeralScolaire Style */}
-        <div style={{
-          padding: '20px 24px', backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-        }}>
-          <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#131e6c', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="discipline-modal-header">
+          <h3>
             <Scale size={22} color="#131e6c" /> Nouvelle Action Vie Scolaire
           </h3>
           <button
             onClick={onClose}
-            style={{
-              background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
+            className="discipline-modal-close-btn"
+            title="Fermer"
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+        <form onSubmit={handleSubmit} className="discipline-modal-form">
           {error && (
             <div style={{ padding: '12px 16px', backgroundColor: '#fef2f2', color: '#f93f2d', borderRadius: '10px', fontSize: '0.875rem', border: '1px solid #fecaca', fontWeight: 600 }}>
               {error}
@@ -94,19 +78,18 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
 
           {/* Sélection Type d'action */}
           <div>
-            <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: '8px', letterSpacing: '0.3px' }}>
+            <label className="discipline-modal-label">
               Type d'Action *
             </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+            <div className="discipline-type-grid">
               <button
                 type="button"
                 onClick={() => { setTypeAction('SIGNALEMENT'); setGravite('AVERTISSEMENT'); }}
+                className="discipline-type-btn"
                 style={{
-                  padding: '12px 10px', borderRadius: '10px', border: typeAction === 'SIGNALEMENT' ? '2px solid #ea580c' : '1px solid #e2e8f0',
+                  border: typeAction === 'SIGNALEMENT' ? '2px solid #ea580c' : '1px solid #e2e8f0',
                   backgroundColor: typeAction === 'SIGNALEMENT' ? '#fff7ed' : '#f8fafc',
                   color: typeAction === 'SIGNALEMENT' ? '#c2410c' : '#475569',
-                  fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                  transition: 'all 0.2s'
                 }}
               >
                 <AlertTriangle size={16} /> Signalement
@@ -115,12 +98,11 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
               <button
                 type="button"
                 onClick={() => { setTypeAction('CONVOCATION'); setGravite('GRAVE'); }}
+                className="discipline-type-btn"
                 style={{
-                  padding: '12px 10px', borderRadius: '10px', border: typeAction === 'CONVOCATION' ? '2px solid #131e6c' : '1px solid #e2e8f0',
+                  border: typeAction === 'CONVOCATION' ? '2px solid #131e6c' : '1px solid #e2e8f0',
                   backgroundColor: typeAction === 'CONVOCATION' ? '#eff6ff' : '#f8fafc',
                   color: typeAction === 'CONVOCATION' ? '#131e6c' : '#475569',
-                  fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                  transition: 'all 0.2s'
                 }}
               >
                 <Calendar size={16} /> Convocation
@@ -129,12 +111,11 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
               <button
                 type="button"
                 onClick={() => { setTypeAction('REMARQUE'); setGravite('ENCOURAGEMENT'); }}
+                className="discipline-type-btn"
                 style={{
-                  padding: '12px 10px', borderRadius: '10px', border: typeAction === 'REMARQUE' ? '2px solid #16a34a' : '1px solid #e2e8f0',
+                  border: typeAction === 'REMARQUE' ? '2px solid #16a34a' : '1px solid #e2e8f0',
                   backgroundColor: typeAction === 'REMARQUE' ? '#f0fdf4' : '#f8fafc',
                   color: typeAction === 'REMARQUE' ? '#15803d' : '#475569',
-                  fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                  transition: 'all 0.2s'
                 }}
               >
                 <Award size={16} /> Remarque
@@ -144,16 +125,16 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
 
           {/* Sélection Élève */}
           <div>
-            <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: '6px', letterSpacing: '0.3px' }}>
+            <label className="discipline-modal-label">
               Sélectionner l'Élève *
             </label>
             <select
               value={eleveId}
               onChange={(e) => setEleveId(e.target.value)}
               disabled={!!defaultEleveId}
+              className="discipline-select"
               style={{
-                width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1.5px solid #e2e8f0',
-                fontSize: '0.9rem', backgroundColor: defaultEleveId ? '#f1f5f9' : '#ffffff', color: '#0f172a', outline: 'none',
+                backgroundColor: defaultEleveId ? '#f1f5f9' : '#ffffff',
                 fontWeight: 500
               }}
             >
@@ -168,16 +149,14 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
 
           {/* Niveau de Gravité */}
           <div>
-            <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: '6px', letterSpacing: '0.3px' }}>
+            <label className="discipline-modal-label">
               Niveau de Gravité / Type de remarque
             </label>
             <select
               value={gravite}
               onChange={(e) => setGravite(e.target.value)}
-              style={{
-                width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1.5px solid #e2e8f0',
-                fontSize: '0.9rem', color: '#0f172a', outline: 'none', fontWeight: 500
-              }}
+              className="discipline-select"
+              style={{ fontWeight: 500 }}
             >
               <option value="ENCOURAGEMENT">🟢 Encouragement / Félicitation (Élève exemplaire)</option>
               <option value="INFO">🔵 Information (Observation simple)</option>
@@ -188,7 +167,7 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
 
           {/* Motif */}
           <div>
-            <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: '6px', letterSpacing: '0.3px' }}>
+            <label className="discipline-modal-label">
               Motif du signalement / convocation *
             </label>
             <input
@@ -196,33 +175,28 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
               placeholder="ex: Élève exemplaire à encourager, Retards répétés, Insubordination..."
               value={motif}
               onChange={(e) => setMotif(e.target.value)}
-              style={{
-                width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1.5px solid #e2e8f0',
-                fontSize: '0.9rem', color: '#0f172a', outline: 'none', fontWeight: 500
-              }}
+              className="discipline-input"
+              style={{ fontWeight: 500 }}
             />
           </div>
 
           {/* Champs spécifiques Convocation */}
           {typeAction === 'CONVOCATION' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div className="convocation-fields-grid">
               <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: '6px', letterSpacing: '0.3px' }}>
+                <label className="discipline-modal-label">
                   Date & Heure du RDV
                 </label>
                 <input
                   type="datetime-local"
                   value={dateRendezVous}
                   onChange={(e) => setDateRendezVous(e.target.value)}
-                  style={{
-                    width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1.5px solid #e2e8f0',
-                    fontSize: '0.9rem', color: '#0f172a', outline: 'none'
-                  }}
+                  className="discipline-input"
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: '6px', letterSpacing: '0.3px' }}>
+                <label className="discipline-modal-label">
                   Lieu du RDV
                 </label>
                 <input
@@ -230,10 +204,7 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
                   placeholder="ex: Bureau du Censeur, Salle 12"
                   value={lieuRendezVous}
                   onChange={(e) => setLieuRendezVous(e.target.value)}
-                  style={{
-                    width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1.5px solid #e2e8f0',
-                    fontSize: '0.9rem', color: '#0f172a', outline: 'none'
-                  }}
+                  className="discipline-input"
                 />
               </div>
             </div>
@@ -241,7 +212,7 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
 
           {/* Description détaillée */}
           <div>
-            <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: '6px', letterSpacing: '0.3px' }}>
+            <label className="discipline-modal-label">
               Détails & Description
             </label>
             <textarea
@@ -249,10 +220,8 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
               placeholder="Expliquez en détail les circonstances du signalement ou de l'appréciation..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              style={{
-                width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1.5px solid #e2e8f0',
-                fontSize: '0.9rem', color: '#0f172a', outline: 'none', resize: 'vertical'
-              }}
+              className="discipline-textarea"
+              style={{ resize: 'vertical' }}
             />
           </div>
 
@@ -261,25 +230,18 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
           </div>
 
           {/* Actions Footer */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '6px' }}>
+          <div className="discipline-modal-footer">
             <button
               type="button"
               onClick={onClose}
-              style={{
-                padding: '11px 20px', borderRadius: '10px', border: '1px solid #cbd5e1',
-                backgroundColor: '#ffffff', color: '#475569', fontWeight: 600, cursor: 'pointer', fontSize: '0.875rem'
-              }}
+              className="discipline-btn-cancel"
             >
               Annuler
             </button>
             <button
               type="submit"
               disabled={submitting}
-              style={{
-                padding: '11px 24px', borderRadius: '10px', border: 'none',
-                backgroundColor: '#131e6c', color: '#ffffff', fontWeight: 700, cursor: 'pointer',
-                fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(19, 30, 108, 0.25)'
-              }}
+              className="discipline-btn-submit"
             >
               <Send size={16} /> {submitting ? 'Envoi...' : 'Transmettre & Enregistrer'}
             </button>

@@ -127,13 +127,10 @@ const TeacherScheduleTab = ({
                                         flexDirection: 'column',
                                         justifyContent: 'space-between',
                                         background: colors.bg || 'var(--bg-card, #ffffff)',
-                                        borderLeft: `4px solid ${conflict ? '#ef4444' : (colors.text || 'var(--primary-color)')}`,
+                                        border: `1px solid ${conflict ? '#ef4444' : (colors.border || '#e2e8f0')}`,
                                         boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
                                         padding: '8px 10px',
                                         borderRadius: '8px',
-                                        borderRight: `1px solid ${colors.border || '#e2e8f0'}`,
-                                        borderTop: `1px solid ${colors.border || '#e2e8f0'}`,
-                                        borderBottom: `1px solid ${colors.border || '#e2e8f0'}`,
                                         position: 'relative'
                                       }}
                                     >

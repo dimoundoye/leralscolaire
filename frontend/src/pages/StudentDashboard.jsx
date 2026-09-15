@@ -706,12 +706,14 @@ const StudentDashboard = () => {
         const aDate = new Date(a.date_absence).toISOString().split('T')[0];
         return aDate === dateStr;
       });
+      const isAbsentType = abs && (abs.type_presence === 'ABSENCE' || abs.type_presence === 'ABSENT');
+      const hoursVal = abs ? (Number(abs.heures_absent) || (isAbsentType ? 2 : 0)) : 0;
       
       data.push({
         date: dateStr,
         dayOfWeek: tempDate.getDay(),
         month: tempDate.getMonth(),
-        hours: abs ? abs.heures_absent : 0,
+        hours: hoursVal,
         justified: abs ? abs.justifiee : false,
         type: abs ? abs.type_presence : null,
         delay: abs ? abs.duree_retard : 0,
@@ -725,12 +727,15 @@ const StudentDashboard = () => {
   };
 
   const getAbsenceColorClass = (hours, type) => {
-    if (hours === 0 && !type) return 'cell-empty';
+    if ((!hours || hours === 0) && (!type || type === 'PRESENT')) return 'cell-empty';
     if (type === 'RETARD') return 'cell-delay';
-    if (hours <= 2) return 'cell-level-1'; // rouge clair
-    if (hours <= 4) return 'cell-level-2'; // rouge moyen
-    if (hours <= 6) return 'cell-level-3'; // rouge vif
-    return 'cell-level-4'; // rouge foncé
+    if (type === 'ABSENCE' || type === 'ABSENT' || hours > 0) {
+      if (hours > 6) return 'cell-level-4';
+      if (hours > 4) return 'cell-level-3';
+      if (hours > 2) return 'cell-level-2';
+      return 'cell-level-1';
+    }
+    return 'cell-empty';
   };
 
   const renderAbsenceCalendar = () => {
@@ -756,19 +761,36 @@ const StudentDashboard = () => {
     const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc'];
     const monthHeaders = [];
     let lastMonth = -1;
+    let lastIndex = -1;
 
     weeks.forEach((week, wIdx) => {
-      const firstValidDay = week.find(d => d.date);
-      if (firstValidDay) {
-        const m = new Date(firstValidDay.date).getMonth();
-        if (m !== lastMonth) {
-          monthHeaders.push({ label: monthNames[m], index: wIdx });
-          lastMonth = m;
+      const validDays = week.filter(d => d.date);
+      if (validDays.length === 0) return;
+
+      const monthCounts = {};
+      validDays.forEach(d => {
+        const m = new Date(d.date).getMonth();
+        monthCounts[m] = (monthCounts[m] || 0) + 1;
+      });
+
+      let dominantMonth = -1;
+      let maxCount = 0;
+      Object.keys(monthCounts).forEach(mStr => {
+        const m = Number(mStr);
+        if (monthCounts[m] > maxCount) {
+          maxCount = monthCounts[m];
+          dominantMonth = m;
         }
+      });
+
+      if (dominantMonth !== lastMonth && (lastIndex === -1 || wIdx - lastIndex >= 3)) {
+        monthHeaders.push({ label: monthNames[dominantMonth], index: wIdx });
+        lastMonth = dominantMonth;
+        lastIndex = wIdx;
       }
     });
 
-    const totalAbsenceHours = absences.reduce((sum, a) => sum + a.heures_absent, 0);
+    const totalAbsenceHours = absences.reduce((sum, a) => sum + (Number(a.heures_absent) || (a.type_presence === 'ABSENCE' || a.type_presence === 'ABSENT' ? 2 : 0)), 0);
 
     return (
       <div className="absence-heatmap-card">
@@ -801,23 +823,40 @@ const StudentDashboard = () => {
               <div className="columns-wrapper">
                 {weeks.map((week, wIdx) => (
                   <div key={wIdx} className="week-column">
-                    {week.map((day, dIdx) => (
-                      <div 
-                        key={dIdx} 
-                        className={`heatmap-cell ${day.date ? getAbsenceColorClass(day.hours, day.type) : 'cell-empty'}`}
-                      >
-                        {day.date && (
-                          <span className="cell-tooltip">
-                            {new Date(day.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}<br/>
-                            {day.hours > 0 || day.type === 'RETARD' ? (
-                              day.type === 'RETARD'
-                                ? `⏱️ Retard de ${day.delay} min en ${day.subject || 'cours'}${day.motif ? ` (${day.motif})` : ''}`
-                                : `❌ Absence de ${day.hours}h en ${day.subject || 'cours'} (${day.justified ? 'Justifiée' : 'Non justifiée'})${day.motif ? ` - ${day.motif}` : ''}`
-                            ) : 'Présence complète'}
-                          </span>
-                        )}
-                      </div>
-                    ))}
+                    {week.map((day, dIdx) => {
+                      const isAbsent = day.type === 'ABSENCE' || day.type === 'ABSENT' || day.hours > 0;
+                      const isRetard = day.type === 'RETARD';
+                      const isFuture = day.date ? new Date(day.date) > new Date() : false;
+                      const isWeekend = day.dayOfWeek === 0 || day.dayOfWeek === 6;
+
+                      return (
+                        <div 
+                          key={dIdx} 
+                          className={`heatmap-cell ${day.date ? getAbsenceColorClass(day.hours, day.type) : 'cell-empty'}`}
+                        >
+                          {day.date && (
+                            <span className="cell-tooltip">
+                              <span className="tooltip-date">
+                                {new Date(day.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                              </span>
+                              <span className="tooltip-status">
+                                {isAbsent ? (
+                                  `❌ Absence${day.hours > 0 ? ` de ${day.hours}h` : ''} en ${day.subject || 'cours'}${day.justified ? ' (Justifiée)' : ' (Non justifiée)'}${day.motif ? ` - ${day.motif}` : ''}`
+                                ) : isRetard ? (
+                                  `⏱️ Retard${day.delay > 0 ? ` de ${day.delay} min` : ''} en ${day.subject || 'cours'}${day.motif ? ` (${day.motif})` : ''}`
+                                ) : isFuture ? (
+                                  '📅 Date future'
+                                ) : isWeekend ? (
+                                  '🏖️ Week-end'
+                                ) : (
+                                  '✅ Présence complète'
+                                )}
+                              </span>
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 ))}
               </div>
@@ -2645,25 +2684,6 @@ const StudentDashboard = () => {
         </div>
       )}
 
-      {/* MOBILE BOTTOM NAVIGATION BAR */}
-      <div className="sd-mobile-nav">
-        <button className={tab === 'overview' ? 'active' : ''} onClick={() => navigate('/student/dashboard/overview')}>
-          <LayoutDashboard size={18} />
-          <span>Aperçu</span>
-        </button>
-        <button className={tab === 'grades' ? 'active' : ''} onClick={() => navigate('/student/dashboard/grades')}>
-          <BookOpen size={18} />
-          <span>Notes</span>
-        </button>
-        <button className={tab === 'portfolio' ? 'active' : ''} onClick={() => navigate('/student/dashboard/portfolio')}>
-          <Award size={18} />
-          <span>Portfolio</span>
-        </button>
-        <button className={isMobileMenuOpen ? 'active' : ''} onClick={() => setIsMobileMenuOpen(true)}>
-          <Menu size={18} />
-          <span>Menu</span>
-        </button>
-      </div>
 
       {/* MOBILE MENU DRAWER */}
       <StudentMobileDrawer

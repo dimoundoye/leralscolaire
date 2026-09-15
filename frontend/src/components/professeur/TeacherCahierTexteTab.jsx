@@ -41,25 +41,25 @@ const TeacherCahierTexteTab = ({
   return (
     <div className="tab-pane">
       <div className="card-box mb-6">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <div>
-            <h2 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--primary-blue)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <BookMarked size={22} style={{ color: 'var(--accent-red)' }} /> Cahier de Texte Numérique
+        <div className="cahier-header-row">
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--primary-blue)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <BookMarked size={22} style={{ color: 'var(--accent-red)', flexShrink: 0 }} /> Cahier de Texte Numérique
             </h2>
             <p style={{ fontSize: '12px', color: 'var(--text-slate-500)', margin: '4px 0 0' }}>
               Enregistrez le déroulé de vos séances de cours, les devoirs à maison et téléchargez vos supports pédagogiques.
             </p>
           </div>
-          <span style={{ fontSize: '11px', background: '#eff6ff', color: 'var(--primary-blue)', padding: '4px 12px', borderRadius: '20px', fontWeight: 700 }}>
+          <span style={{ fontSize: '11px', background: '#eff6ff', color: 'var(--primary-blue)', padding: '4px 12px', borderRadius: '20px', fontWeight: 700, whiteSpace: 'nowrap', alignSelf: 'flex-start' }}>
             Session : {profAnneeFilter}
           </span>
         </div>
 
         {/* FORMULAIRE DE SAISIE D'UNE SÉANCE */}
-        <form onSubmit={handleCreateCahierEntry} className="cahier-form-grid" style={{ background: '#f8fafc', padding: '18px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
+        <form onSubmit={handleCreateCahierEntry} className="cahier-form-grid">
           
           <div className="form-group">
-            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-slate-700)' }}>Classe *</label>
+            <label>Classe *</label>
             <select 
               value={cahierClasse} 
               onChange={e => {
@@ -67,7 +67,7 @@ const TeacherCahierTexteTab = ({
                 const firstMat = classes.find(c => c.classe_id === e.target.value);
                 if (firstMat) setCahierMatiere(firstMat.matiere_id);
               }}
-              className="pill-select w-full"
+              className="pill-select"
               required
             >
               <option value="">-- Choisir une classe --</option>
@@ -80,11 +80,11 @@ const TeacherCahierTexteTab = ({
           </div>
 
           <div className="form-group">
-            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-slate-700)' }}>Matière / Discipline *</label>
+            <label>Matière / Discipline *</label>
             <select 
               value={cahierMatiere} 
               onChange={e => setCahierMatiere(e.target.value)}
-              className="pill-select w-full"
+              className="pill-select"
               required
             >
               <option value="">-- Choisir la matière --</option>
@@ -97,96 +97,102 @@ const TeacherCahierTexteTab = ({
           </div>
 
           <div className="form-group">
-            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-slate-700)' }}>Date de la séance *</label>
+            <label>Date de la séance *</label>
             <input 
               type="date" 
               value={cahierDateSeance} 
               onChange={e => setCahierDateSeance(e.target.value)}
-              className="pill-input w-full"
+              className="pill-input"
               required
             />
           </div>
 
-          <div className="form-group" style={{ display: 'flex', gap: '8px' }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-slate-700)' }}>Début</label>
-              <input 
-                type="time" 
-                value={cahierHeureDebut} 
-                onChange={e => setCahierHeureDebut(e.target.value)}
-                className="pill-input w-full"
-              />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-slate-700)' }}>Fin</label>
-              <input 
-                type="time" 
-                value={cahierHeureFin} 
-                onChange={e => setCahierHeureFin(e.target.value)}
-                className="pill-input w-full"
-              />
+          <div className="form-group">
+            <label>Horaires</label>
+            <div className="cahier-time-row">
+              <div>
+                <input 
+                  type="time" 
+                  value={cahierHeureDebut} 
+                  onChange={e => setCahierHeureDebut(e.target.value)}
+                  className="pill-input"
+                  title="Heure de début"
+                />
+              </div>
+              <div>
+                <input 
+                  type="time" 
+                  value={cahierHeureFin} 
+                  onChange={e => setCahierHeureFin(e.target.value)}
+                  className="pill-input"
+                  title="Heure de fin"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-slate-700)' }}>Titre de la leçon / Chapitre *</label>
+          <div className="form-group cahier-col-full">
+            <label>Titre de la leçon / Chapitre *</label>
             <input 
               type="text" 
               placeholder="Ex: Chapitre 3 - Les équations du premier degré" 
               value={cahierTitre} 
               onChange={e => setCahierTitre(e.target.value)}
-              className="pill-input w-full"
+              className="pill-input"
               required
             />
           </div>
 
-          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-slate-700)' }}>Déroulé & Contenu du cours *</label>
+          <div className="form-group cahier-col-full">
+            <label>Déroulé & Contenu du cours *</label>
             <textarea 
               rows="3" 
               placeholder="Résumé des notions abordées en classe, exercices effectués au tableau..." 
               value={cahierContenu} 
               onChange={e => setCahierContenu(e.target.value)}
-              className="pill-textarea w-full"
+              className="pill-textarea"
               required
             ></textarea>
           </div>
 
-          <div className="form-group" style={{ gridColumn: '1 / span 2' }}>
-            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-slate-700)' }}>Travail à faire (Devoirs à la maison)</label>
+          <div className="form-group">
+            <label>Travail à faire (Devoirs à la maison)</label>
             <textarea 
               rows="2" 
               placeholder="Exercices à résoudre, lecture à faire pour le prochain cours..." 
               value={cahierTravail} 
               onChange={e => setCahierTravail(e.target.value)}
-              className="pill-textarea w-full"
+              className="pill-textarea"
             ></textarea>
           </div>
 
           <div className="form-group">
-            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-slate-700)' }}>Date de remise du devoir</label>
+            <label>Date de remise du devoir</label>
             <input 
               type="date" 
               value={cahierDateRemise} 
               onChange={e => setCahierDateRemise(e.target.value)}
-              className="pill-input w-full"
+              className="pill-input"
             />
           </div>
 
-          <div className="form-group" style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', pt: 2 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <label className="secondary-btn" style={{ cursor: 'pointer', padding: '6px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Paperclip size={14} /> {cahierFile ? cahierFile.fichier_nom : 'Joindre un support PDF/Image'}
+          <div className="form-group cahier-actions-row">
+            <div className="cahier-file-box">
+              <label className="secondary-btn" style={{ cursor: 'pointer', padding: '8px 14px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <Paperclip size={14} style={{ flexShrink: 0 }} /> 
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }}>
+                  {cahierFile ? cahierFile.fichier_nom : 'Joindre un support PDF/Image'}
+                </span>
                 <input type="file" onChange={handleCahierFileUpload} style={{ display: 'none' }} disabled={cahierUploading} />
               </label>
               {cahierFile && (
-                <button type="button" onClick={() => setCahierFile(null)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '12px' }}>
-                  <X size={14} /> Supprimer le fichier
+                <button type="button" onClick={() => setCahierFile(null)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '12px', flexShrink: 0 }}>
+                  <X size={14} /> Supprimer
                 </button>
               )}
             </div>
 
-            <button type="submit" className="primary-btn" style={{ padding: '8px 24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button type="submit" className="primary-btn cahier-submit-btn" style={{ padding: '8px 24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <CheckCircle2 size={16} /> Enregistrer la Séance
             </button>
           </div>
@@ -196,7 +202,7 @@ const TeacherCahierTexteTab = ({
 
       {/* HISTORIQUE DES SÉANCES */}
       <div className="card-box">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <div className="cahier-history-header">
           <h3 style={{ fontSize: '15px', fontWeight: 800, margin: 0 }}>Historique du Cahier de Texte</h3>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -204,7 +210,7 @@ const TeacherCahierTexteTab = ({
               value={cahierFilterClasse} 
               onChange={e => setCahierFilterClasse(e.target.value)}
               className="pill-select"
-              style={{ fontSize: '12px', height: '32px' }}
+              style={{ fontSize: '12px', height: '34px' }}
             >
               <option value="">Toutes les classes</option>
               {activeTeacherClasses.map(c => (
@@ -222,8 +228,8 @@ const TeacherCahierTexteTab = ({
             <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-slate-400)' }}>Chargement...</div>
           ) : cahierEntries.length > 0 ? (
             cahierEntries.map(entry => (
-              <div key={entry.id} className="cahier-entry-card" style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+              <div key={entry.id} className="cahier-entry-card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     <span style={{ background: 'var(--primary-blue)', color: 'white', fontSize: '11px', fontWeight: 800, padding: '3px 9px', borderRadius: '6px' }}>
                       {entry.classe_nom}
@@ -231,15 +237,15 @@ const TeacherCahierTexteTab = ({
                     <span style={{ background: '#fef3c7', color: '#92400e', fontSize: '11px', fontWeight: 700, padding: '3px 9px', borderRadius: '6px' }}>
                       {entry.matiere_nom}
                     </span>
-                    <span style={{ fontSize: '11px', color: 'var(--text-slate-500)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-slate-500)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                       <Clock size={12} /> {new Date(entry.date_seance).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
                       {entry.heure_debut && ` (${entry.heure_debut} - ${entry.heure_fin})`}
                     </span>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     {entry.visa_admin ? (
-                      <span style={{ background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', fontSize: '10px', fontWeight: 800, padding: '2px 8px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', fontSize: '10px', fontWeight: 800, padding: '2px 8px', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                         <ShieldCheck size={12} /> Visé par l'Administration
                       </span>
                     ) : (
@@ -257,7 +263,7 @@ const TeacherCahierTexteTab = ({
                           fetchCahierEntries();
                         }
                       }}
-                      style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
+                      style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px', flexShrink: 0 }}
                       title="Supprimer"
                     >
                       <Trash2 size={14} />
@@ -275,8 +281,8 @@ const TeacherCahierTexteTab = ({
 
                 {entry.travail_a_faire && (
                   <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '10px 12px', marginBottom: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 800, color: '#15803d', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 800, color: '#15803d', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                         <CheckCircle2 size={13} /> Travail à faire / Devoir
                       </span>
                       {entry.date_remise_devoir && (
@@ -297,11 +303,13 @@ const TeacherCahierTexteTab = ({
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="msg-file-attachment file-other"
-                    style={{ marginTop: '4px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--primary-blue)', background: '#eff6ff', padding: '6px 12px', borderRadius: '8px', border: '1px solid #bfdbfe' }}
+                    style={{ marginTop: '4px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--primary-blue)', background: '#eff6ff', padding: '6px 12px', borderRadius: '8px', border: '1px solid #bfdbfe', maxWidth: '100%', wordBreak: 'break-all' }}
                   >
-                    <Paperclip size={13} />
-                    <span>{entry.fichier_nom || 'Support de cours joint'}</span>
-                    <Download size={12} />
+                    <Paperclip size={13} style={{ flexShrink: 0 }} />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 'calc(100% - 30px)' }}>
+                      {entry.fichier_nom || 'Support de cours joint'}
+                    </span>
+                    <Download size={12} style={{ flexShrink: 0 }} />
                   </a>
                 )}
               </div>

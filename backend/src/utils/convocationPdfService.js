@@ -81,7 +81,7 @@ const generateConvocationPDF = (juryData) => {
       doc.fillColor('#92400e')
          .fontSize(11)
          .font('Helvetica-Bold')
-         .text('🔑 ACCÈS TEMPORAIRES SÉCURISÉS (PORTAIL DE DÉLIBÉRATION)', 65, accY + 12)
+         .text('ACCÈS TEMPORAIRES SÉCURISÉS (PORTAIL DE DÉLIBÉRATION)', 65, accY + 12)
          .fillColor('#0f172a')
          .fontSize(10)
          .font('Helvetica-Bold')

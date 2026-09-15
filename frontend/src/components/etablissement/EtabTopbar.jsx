@@ -57,8 +57,9 @@ const EtabTopbar = ({ profile, notificationsCount, onShowMessages, selectedYear,
         {/* Bouton Borne Émargement QR Code Externe */}
         <button
           onClick={() => {
+            const targetId = profile?.id || profile?.etablissement_id || 'default';
             const popWindow = window.open(
-              '/emargement/live-qr/default',
+              `/emargement/live-qr/${targetId}`,
               'QREmargementLiveKiosque',
               'width=1024,height=768,menubar=no,toolbar=no,location=no,status=no,resizable=yes'
             );

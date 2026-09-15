@@ -311,7 +311,15 @@ const AdminAttendanceTab = ({
 
             <button
               onClick={() => {
-                const popWindow = window.open('/emargement/live-qr/default', 'QREmargementLiveKiosque', 'width=1024,height=768,menubar=no,toolbar=no,location=no,status=no,resizable=yes');
+                let etabId = classes?.[0]?.etablissement_id;
+                if (!etabId) {
+                  try {
+                    const u = JSON.parse(localStorage.getItem('user') || '{}');
+                    etabId = u.etablissement_id || u.id;
+                  } catch (e) {}
+                }
+                const targetId = etabId || 'default';
+                const popWindow = window.open(`/emargement/live-qr/${targetId}`, 'QREmargementLiveKiosque', 'width=1024,height=768,menubar=no,toolbar=no,location=no,status=no,resizable=yes');
                 window.addEventListener('beforeunload', () => { if (popWindow && !popWindow.closed) popWindow.close(); });
               }}
               style={{

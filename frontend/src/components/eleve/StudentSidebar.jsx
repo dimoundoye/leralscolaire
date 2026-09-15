@@ -90,10 +90,15 @@ export const StudentMobileDrawer = ({
         <div className="drawer-student-card">
           <div className="drawer-avatar-wrap">
             {profile?.photo_url ? (
-              <img src={`${profile.photo_url}`} alt="Avatar" />
+              <img 
+                src={`${profile.photo_url}`} 
+                alt="Avatar" 
+                className="drawer-avatar-img"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+              />
             ) : (
               <div className="avatar-placeholder">
-                {profile ? `${profile.prenom[0]}${profile.nom[0]}` : 'EL'}
+                {profile ? `${profile.prenom?.[0] || ''}${profile.nom?.[0] || ''}` : 'EL'}
               </div>
             )}
           </div>

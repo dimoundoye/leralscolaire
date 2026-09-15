@@ -10,32 +10,21 @@ const StudentScheduleTab = ({ schedule, profile }) => {
 
   return (
     <div className="tab-pane">
-      
-      {/* Top Hero Banner */}
-      <div className="schedule-hero-banner card-box">
-        <div className="sched-hero-left">
-          <div className="sched-title-row">
-            <h2>Emploi du Temps & Planning des Évaluations</h2>
-            <span className="sched-badge-tag"><Calendar size={14} /> Année {activeAnnee}</span>
-          </div>
-          <p className="sched-hero-sub">
-            Consultez le déroulement hebdomadaire de vos cours et soyez informé à l'avance des dates de vos devoirs et examens.
-          </p>
-        </div>
-        {activeClassNom && (
-          <div className="sched-class-pill">
-            <BookOpen size={15} /> Classe : <strong>{activeClassNom}</strong>
-          </div>
-        )}
-      </div>
-
       {/* 1. FULL WIDTH TIMETABLE SECTION */}
-      <div className="timetable-section card-box mt-5">
-        <div className="sim-inputs-header">
+      <div className="timetable-section card-box">
+        <div className="sim-inputs-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <h3>Emploi du Temps Hebdomadaire</h3>
-            <p className="subtitle">Organisation des cours du Lundi au Samedi</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <h3 style={{ margin: 0 }}>Emploi du Temps Hebdomadaire</h3>
+              <span className="sched-badge-tag"><Calendar size={13} /> Année {activeAnnee}</span>
+            </div>
+            <p className="subtitle" style={{ margin: '4px 0 0 0' }}>Organisation des cours du Lundi au Samedi</p>
           </div>
+          {activeClassNom && (
+            <div className="sched-class-pill" style={{ margin: 0 }}>
+              <BookOpen size={15} /> Classe : <strong>{activeClassNom}</strong>
+            </div>
+          )}
         </div>
 
         {hasTimetable ? (

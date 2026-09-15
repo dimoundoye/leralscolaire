@@ -5,13 +5,21 @@ const EmargementController = {
   // 1. Obtenir le flux QR Code Live 20s (pour le surveillant)
   async getLiveQrToken(req, res) {
     try {
-      const { etablissementId } = req.params;
-      if (!etablissementId) {
-        return res.status(400).json({ success: false, error: 'Identifiant d\'établissement manquant' });
+      let { etablissementId } = req.params;
+      const isValidUuid = (val) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(val));
+
+      if (!etablissementId || !isValidUuid(etablissementId)) {
+        // Résoudre l'établissement actif ou le premier en base
+        const { rows: anyEtab } = await db.query('SELECT id FROM etablissements ORDER BY created_at ASC LIMIT 1');
+        if (anyEtab.length > 0) {
+          etablissementId = anyEtab[0].id;
+        } else {
+          return res.status(400).json({ success: false, error: 'Aucun établissement configuré.' });
+        }
       }
 
       const qrData = EmargementModel.generateLiveQrToken(etablissementId);
-      return res.json({ success: true, ...qrData });
+      return res.json({ success: true, etablissementId, ...qrData });
     } catch (err) {
       console.error('Erreur getLiveQrToken:', err);
       return res.status(500).json({ success: false, error: err.message });
@@ -28,24 +36,60 @@ const EmargementController = {
         return res.status(400).json({ success: false, error: 'Token QR Code manquant' });
       }
 
-      // Déduire automatiquement l'établissement depuis le token si non fourni ou 'default'
-      let targetEtabId = etablissementId || 'default';
+      const isValidUuid = (val) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(val));
+
+      // Extraire le token et son établissement
+      let tokenEtabId = null;
       try {
         const decoded = JSON.parse(Buffer.from(token, 'base64').toString('utf8'));
         if (decoded && decoded.etabId) {
-          targetEtabId = decoded.etabId;
+          tokenEtabId = decoded.etabId;
         }
-      } catch (e) {
-        // En cas de token brut
-      }
+      } catch (e) {}
 
-      const verification = EmargementModel.verifyQrToken(targetEtabId, token);
+      // Vérification cryptographique du QR Code
+      const verification = EmargementModel.verifyQrToken(tokenEtabId || etablissementId, token);
       if (!verification.valid) {
         return res.status(400).json({ success: false, error: verification.reason });
       }
 
+      // Résolution sécurisée d'un UUID d'établissement valide pour PostgreSQL
+      let targetEtabId = isValidUuid(etablissementId) ? etablissementId : (isValidUuid(tokenEtabId) ? tokenEtabId : null);
+      if (!targetEtabId) {
+        const { rows: profEtabs } = await db.query(
+          `SELECT etablissement_id FROM professeurs_etablissements WHERE professeur_id = $1 AND statut = 'ACTIF' LIMIT 1`,
+          [profId]
+        );
+        if (profEtabs.length > 0 && isValidUuid(profEtabs[0].etablissement_id)) {
+          targetEtabId = profEtabs[0].etablissement_id;
+        } else {
+          const { rows: anyEtab } = await db.query('SELECT id FROM etablissements ORDER BY created_at ASC LIMIT 1');
+          targetEtabId = anyEtab[0]?.id || null;
+        }
+      }
+
+      if (!targetEtabId) {
+        return res.status(400).json({ success: false, error: "Impossible d'identifier l'établissement pour cet émargement." });
+      }
+
+      // Résolution sécurisée d'un UUID de classe valide ou null
+      let targetClasseId = isValidUuid(classeId) ? classeId : null;
+      if (!targetClasseId) {
+        const { rows: profClasses } = await db.query(
+          `SELECT c.id FROM classes c 
+           LEFT JOIN cours cr ON cr.classe_id = c.id 
+           WHERE (c.professeur_principal_id = $1 OR cr.professeur_id = $1)
+             AND c.etablissement_id = $2
+           LIMIT 1`,
+          [profId, targetEtabId]
+        );
+        if (profClasses.length > 0 && isValidUuid(profClasses[0].id)) {
+          targetClasseId = profClasses[0].id;
+        }
+      }
+
       const seance = await EmargementModel.findOrCreateSeance(
-        profId, targetEtabId, classeId || 'classe-auto', matiereCode || 'GEN', matiereNom || 'Cours Général', heureDebut || '08:00', heureFin || '10:00', 'REGULIER'
+        profId, targetEtabId, targetClasseId, matiereCode || 'GEN', matiereNom || 'Cours Général', heureDebut || '08:00', heureFin || '10:00', 'REGULIER'
       );
 
       const emargement = await EmargementModel.createEmargement(

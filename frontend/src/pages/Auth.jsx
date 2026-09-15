@@ -113,7 +113,7 @@ const Auth = () => {
                 : '/dashboard';
         setTimeout(() => navigate(redirectPath), 1500);
       } else {
-        setMessage({ type: 'error', text: data.message || 'Identifiants incorrects' });
+        setMessage({ type: 'error', text: 'Mot de passe ou identifiant incorrect' });
       }
     } catch (err) {
       setMessage({ type: 'error', text: 'Erreur de connexion au serveur.' });
@@ -322,7 +322,7 @@ const Auth = () => {
                 <p className="subtitle">Accédez à votre espace personnel</p>
 
                 <div className="input-group">
-                  <label>Identifiant Unique (IUP)</label>
+                  <label>Identifiant Unique (IUP) / Accès Examen</label>
                   <div className="input-wrapper">
                     <Shield size={18} />
                     <input 
@@ -330,11 +330,11 @@ const Auth = () => {
                       required 
                       value={loginData.identifier}
                       onChange={(e) => setLoginData({...loginData, identifier: e.target.value})}
-                      placeholder="ETAB-..., ENS-... ou SN-..." 
+                      placeholder="ETAB-..., ENS-..., SN-... ou PRESIDENT.JURY..." 
                     />
                   </div>
                   <small style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', display: 'block' }}>
-                    Connexion par IUP : Établissement (ETAB-...), Enseignant (ENS-...), Élève (SN-...)
+                    IUP Établissement (ETAB-...), Enseignant (ENS-...), Élève (SN-...) ou Président de Jury (PRESIDENT.JURY...)
                   </small>
                 </div>
 

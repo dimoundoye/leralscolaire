@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  MessageSquare, Users, UserCheck, Building2, Bell, Paperclip, Download, X, Send
+  MessageSquare, Users, UserCheck, Building2, Bell, Paperclip, Download, X, Send, ChevronLeft
 } from 'lucide-react';
 
 const StudentMessagesTab = ({
@@ -22,6 +22,8 @@ const StudentMessagesTab = ({
   chatEndRef,
   API_BASE_URL
 }) => {
+  const [mobileView, setMobileView] = useState('chat'); // 'channels' | 'chat'
+
   const admin = chatChannelInfo?.admin;
   const classe = chatChannelInfo?.classe;
   const teachers = chatChannelInfo?.teachers || [];
@@ -29,6 +31,7 @@ const StudentMessagesTab = ({
   const handleSelectTarget = (target) => {
     setActiveChatTarget(target);
     fetchChatHistory(target);
+    setMobileView('chat');
   };
 
   return (
@@ -38,7 +41,7 @@ const StudentMessagesTab = ({
       <div className="messages-layout-full card-box">
         
         {/* Left Column: Channels & Contacts List */}
-        <div className="msg-channels-sidebar">
+        <div className={`msg-channels-sidebar ${mobileView === 'chat' && activeChatTarget ? 'mobile-hide' : ''}`}>
           <div className="msg-sidebar-header">
             <h3><MessageSquare size={18} /> Canaux & Messagerie</h3>
             <span>Sélectionnez une discussion</span>
@@ -156,21 +159,31 @@ const StudentMessagesTab = ({
         </div>
 
         {/* Right Column: Active Conversation Panel */}
-        <div className="msg-chat-panel">
+        <div className={`msg-chat-panel ${mobileView === 'channels' || !activeChatTarget ? 'mobile-hide' : ''}`}>
           {activeChatTarget ? (
             <>
               {/* Chat Panel Header */}
               <div className="chat-panel-header">
-                <div className="chat-target-info">
-                  <div className="target-avatar">
-                    {activeChatTarget.type === 'CLASSE' && <Users size={20} />}
-                    {activeChatTarget.type === 'PROFESSEUR' && <UserCheck size={20} />}
-                    {activeChatTarget.type === 'ADMIN' && <Building2 size={20} />}
-                    {activeChatTarget.type === 'BROADCAST' && <Bell size={20} />}
-                  </div>
-                  <div>
-                    <h4>{activeChatTarget.title}</h4>
-                    <span>{activeChatTarget.sub}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
+                  <button 
+                    type="button" 
+                    className="msg-mobile-back-btn" 
+                    onClick={() => setMobileView('channels')}
+                    title="Voir toutes les discussions"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <div className="chat-target-info" style={{ minWidth: 0, flex: 1 }}>
+                    <div className="target-avatar">
+                      {activeChatTarget.type === 'CLASSE' && <Users size={20} />}
+                      {activeChatTarget.type === 'PROFESSEUR' && <UserCheck size={20} />}
+                      {activeChatTarget.type === 'ADMIN' && <Building2 size={20} />}
+                      {activeChatTarget.type === 'BROADCAST' && <Bell size={20} />}
+                    </div>
+                    <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                      <h4 style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeChatTarget.title}</h4>
+                      <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{activeChatTarget.sub}</span>
+                    </div>
                   </div>
                 </div>
                 <span className="target-badge-pill">{activeChatTarget.badge || 'Discussion'}</span>
@@ -276,7 +289,7 @@ const StudentMessagesTab = ({
                       disabled={uploadingFile}
                     />
                     <button type="submit" className="primary-btn chat-send-btn" disabled={uploadingFile}>
-                      <Send size={15} /> Envoyer
+                      <Send size={15} /> <span>Envoyer</span>
                     </button>
                   </form>
                 </div>

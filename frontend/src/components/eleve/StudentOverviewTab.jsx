@@ -37,19 +37,38 @@ const StudentOverviewTab = ({
     const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc'];
     const monthHeaders = [];
     let lastMonth = -1;
+    let lastIndex = -1;
 
     weeks.forEach((week, wIdx) => {
-      const firstValidDay = week.find(d => d.date);
-      if (firstValidDay) {
-        const m = new Date(firstValidDay.date).getMonth();
-        if (m !== lastMonth) {
-          monthHeaders.push({ label: monthNames[m], index: wIdx });
-          lastMonth = m;
+      const validDays = week.filter(d => d.date);
+      if (validDays.length === 0) return;
+
+      // Déterminer le mois dominant dans cette semaine
+      const monthCounts = {};
+      validDays.forEach(d => {
+        const m = new Date(d.date).getMonth();
+        monthCounts[m] = (monthCounts[m] || 0) + 1;
+      });
+
+      let dominantMonth = -1;
+      let maxCount = 0;
+      Object.keys(monthCounts).forEach(mStr => {
+        const m = Number(mStr);
+        if (monthCounts[m] > maxCount) {
+          maxCount = monthCounts[m];
+          dominantMonth = m;
         }
+      });
+
+      // Éviter les chevauchements : au moins 3 semaines d'écart entre deux labels de mois
+      if (dominantMonth !== lastMonth && (lastIndex === -1 || wIdx - lastIndex >= 3)) {
+        monthHeaders.push({ label: monthNames[dominantMonth], index: wIdx });
+        lastMonth = dominantMonth;
+        lastIndex = wIdx;
       }
     });
 
-    const totalAbsenceHours = absences.reduce((sum, a) => sum + a.heures_absent, 0);
+    const totalAbsenceHours = absences.reduce((sum, a) => sum + (Number(a.heures_absent) || (a.type_presence === 'ABSENCE' || a.type_presence === 'ABSENT' ? 2 : 0)), 0);
 
     return (
       <div className="absence-heatmap-card">
@@ -82,23 +101,40 @@ const StudentOverviewTab = ({
               <div className="columns-wrapper">
                 {weeks.map((week, wIdx) => (
                   <div key={wIdx} className="week-column">
-                    {week.map((day, dIdx) => (
-                      <div 
-                        key={dIdx} 
-                        className={`heatmap-cell ${day.date ? getAbsenceColorClass(day.hours, day.type) : 'cell-empty'}`}
-                      >
-                        {day.date && (
-                          <span className="cell-tooltip">
-                            {new Date(day.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}<br/>
-                            {day.hours > 0 || day.type === 'RETARD' ? (
-                              day.type === 'RETARD'
-                                ? `⏱️ Retard de ${day.delay} min en ${day.subject || 'cours'}${day.motif ? ` (${day.motif})` : ''}`
-                                : `❌ Absence de ${day.hours}h en ${day.subject || 'cours'} (${day.justified ? 'Justifiée' : 'Non justifiée'})${day.motif ? ` - ${day.motif}` : ''}`
-                            ) : 'Présence complète'}
-                          </span>
-                        )}
-                      </div>
-                    ))}
+                    {week.map((day, dIdx) => {
+                      const isAbsent = day.type === 'ABSENCE' || day.type === 'ABSENT' || day.hours > 0;
+                      const isRetard = day.type === 'RETARD';
+                      const isFuture = day.date ? new Date(day.date) > new Date() : false;
+                      const isWeekend = day.dayOfWeek === 0 || day.dayOfWeek === 6;
+
+                      return (
+                        <div 
+                          key={dIdx} 
+                          className={`heatmap-cell ${day.date ? getAbsenceColorClass(day.hours, day.type) : 'cell-empty'}`}
+                        >
+                          {day.date && (
+                            <span className="cell-tooltip">
+                              <span className="tooltip-date">
+                                {new Date(day.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                              </span>
+                              <span className="tooltip-status">
+                                {isAbsent ? (
+                                  `❌ Absence${day.hours > 0 ? ` de ${day.hours}h` : ''} en ${day.subject || 'cours'}${day.justified ? ' (Justifiée)' : ' (Non justifiée)'}${day.motif ? ` - ${day.motif}` : ''}`
+                                ) : isRetard ? (
+                                  `⏱️ Retard${day.delay > 0 ? ` de ${day.delay} min` : ''} en ${day.subject || 'cours'}${day.motif ? ` (${day.motif})` : ''}`
+                                ) : isFuture ? (
+                                  '📅 Date future'
+                                ) : isWeekend ? (
+                                  '🏖️ Week-end'
+                                ) : (
+                                  '✅ Présence complète'
+                                )}
+                              </span>
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 ))}
               </div>

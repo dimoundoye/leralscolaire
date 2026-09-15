@@ -109,10 +109,10 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
     if (!scheduleList || scheduleList.length === 0) {
       if (classesList && classesList.length > 0 && !selectedClassId) {
         const first = classesList[0];
-        setSelectedClassId(first.id || first.classe_id || '');
+        setSelectedClassId(first.classe_id || first.id || '');
         setSelectedMatiereCode(first.matiere_code || 'GEN');
         setSelectedMatiereNom(first.matiere_nom || first.nom || 'Cours');
-        setSelectedEtabId(first.etablissement_id || 'default');
+        setSelectedEtabId(first.etablissement_id || '');
       }
       return;
     }
@@ -123,7 +123,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
     const currentHour = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
     const match = scheduleList.find(s => {
-      const matchDay = (s.jour || '').toUpperCase() === currentDay;
+      const matchDay = (s.jour || s.jour_semaine || '').toUpperCase() === currentDay;
       const matchTime = s.heure_debut <= currentHour && s.heure_fin >= currentHour;
       return matchDay && matchTime;
     });
@@ -133,15 +133,15 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
       setSelectedClassId(match.classe_id || match.id || '');
       setSelectedMatiereCode(match.matiere_code || 'GEN');
       setSelectedMatiereNom(match.matiere_nom || match.matiere || 'Matière');
-      setSelectedEtabId(match.etablissement_id || 'default');
-      setHeureDebut(match.heure_debut || '08:00');
-      setHeureFin(match.heure_fin || '10:00');
+      setSelectedEtabId(match.etablissement_id || '');
+      setHeureDebut(match.heure_debut?.slice(0, 5) || '08:00');
+      setHeureFin(match.heure_fin?.slice(0, 5) || '10:00');
     } else if (classesList && classesList.length > 0 && !selectedClassId) {
       const first = classesList[0];
-      setSelectedClassId(first.id || first.classe_id || '');
+      setSelectedClassId(first.classe_id || first.id || '');
       setSelectedMatiereCode(first.matiere_code || 'GEN');
       setSelectedMatiereNom(first.matiere_nom || first.nom || 'Cours');
-      setSelectedEtabId(first.etablissement_id || 'default');
+      setSelectedEtabId(first.etablissement_id || '');
     }
   }, [scheduleList, classesList]);
 
@@ -149,11 +149,11 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
   const handleClassChange = (e) => {
     const classId = e.target.value;
     setSelectedClassId(classId);
-    const found = classesList.find(c => (c.id || c.classe_id) === classId);
+    const found = classesList.find(c => (c.classe_id || c.id) === classId);
     if (found) {
       setSelectedMatiereCode(found.matiere_code || 'GEN');
       setSelectedMatiereNom(found.matiere_nom || found.nom || 'Cours');
-      setSelectedEtabId(found.etablissement_id || 'default');
+      setSelectedEtabId(found.etablissement_id || '');
     }
   };
 
@@ -374,8 +374,8 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
         },
         body: JSON.stringify({
           token: qrTokenInput,
-          etablissementId: selectedEtabId || 'default',
-          classeId: selectedClassId || 'classe-auto',
+          etablissementId: (selectedEtabId && selectedEtabId !== 'default') ? selectedEtabId : undefined,
+          classeId: (selectedClassId && selectedClassId !== 'classe-auto') ? selectedClassId : undefined,
           matiereCode: selectedMatiereCode || 'GEN',
           matiereNom: selectedMatiereNom || 'Cours Général',
           heureDebut: heureDebut || '08:00',

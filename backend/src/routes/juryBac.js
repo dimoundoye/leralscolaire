@@ -10,16 +10,31 @@ const checkJuryAccess = async (req, res, next) => {
   }
 
   try {
-    const checkRes = await db.query(`
-      SELECT * FROM jurys_bac
-      WHERE president_prof_id = $1 AND statut = 'ACTIF'
-    `, [req.user.id]);
+    let checkRes;
+    if (req.user.jury_id) {
+      checkRes = await db.query(
+        "SELECT * FROM jurys_bac WHERE id = $1 AND statut = 'ACTIF'",
+        [req.user.jury_id]
+      );
+    } else {
+      checkRes = await db.query(`
+        SELECT * FROM jurys_bac
+        WHERE president_prof_id = $1 AND statut = 'ACTIF'
+      `, [req.user.id]);
+    }
 
     if (checkRes.rows.length === 0) {
       return res.status(403).json({ message: 'Accès réservé aux Présidents de Jury du BAC désignés.' });
     }
 
-    req.juryInfo = checkRes.rows[0];
+    const juryInfo = checkRes.rows[0];
+
+    // Vérifier l'expiration des accès si définie
+    if (juryInfo.date_expiration_acces && new Date() > new Date(juryInfo.date_expiration_acces)) {
+      return res.status(403).json({ message: 'Vos accès temporaires de Président de Jury ont expiré.' });
+    }
+
+    req.juryInfo = juryInfo;
     next();
   } catch (err) {
     console.error(err);
