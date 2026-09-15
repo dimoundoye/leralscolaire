@@ -16,16 +16,16 @@ const StudentCahierTexteTab = ({
   return (
     <div className="tab-pane">
       {/* SUB-TABS SWITCHER */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
         <button 
           type="button" 
           onClick={() => setCahierSubTab('cours')} 
           className={`secondary-btn ${cahierSubTab === 'cours' ? 'active' : ''}`}
           style={{ 
-            padding: '10px 20px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer',
+            padding: '10px 16px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer',
             background: cahierSubTab === 'cours' ? 'var(--primary-blue)' : '#f1f5f9',
             color: cahierSubTab === 'cours' ? '#ffffff' : 'var(--text-slate-700)',
-            border: 'none', display: 'flex', alignItems: 'center', gap: '8px'
+            border: 'none', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px'
           }}
         >
           <BookOpen size={16} /> Journal des Cours ({cahierEntries.length})
@@ -35,10 +35,10 @@ const StudentCahierTexteTab = ({
           onClick={() => setCahierSubTab('devoirs')} 
           className={`secondary-btn ${cahierSubTab === 'devoirs' ? 'active' : ''}`}
           style={{ 
-            padding: '10px 20px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer',
+            padding: '10px 16px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer',
             background: cahierSubTab === 'devoirs' ? 'var(--primary-blue)' : '#f1f5f9',
             color: cahierSubTab === 'devoirs' ? '#ffffff' : 'var(--text-slate-700)',
-            border: 'none', display: 'flex', alignItems: 'center', gap: '8px'
+            border: 'none', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px'
           }}
         >
           <ClipboardList size={16} /> Devoirs & Travaux à faire ({devoirsAfaire.length})

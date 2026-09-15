@@ -131,14 +131,20 @@ export const StudentMobileDrawer = ({
           <button className={`drawer-nav-item ${tab === 'schedule' ? 'active' : ''}`} onClick={() => { navigate('/student/dashboard/schedule'); setIsMobileMenuOpen(false); }}>
             <Calendar size={18} /> <span>Emploi du Temps</span>
           </button>
+          <button className={`drawer-nav-item ${tab === 'cahier-texte' ? 'active' : ''}`} onClick={() => { navigate('/student/dashboard/cahier-texte'); setIsMobileMenuOpen(false); }}>
+            <BookMarked size={18} /> <span>Cahier de Texte</span>
+          </button>
           <button className={`drawer-nav-item ${tab === 'exams' ? 'active' : ''}`} onClick={() => { navigate('/student/dashboard/exams'); setIsMobileMenuOpen(false); }}>
-            <GraduationCap size={18} /> <span>Examens Nationaux</span>
+            <GraduationCap size={18} /> <span>Résultats BAC / BFEM</span>
           </button>
           <button className={`drawer-nav-item ${tab === 'messages' ? 'active' : ''}`} onClick={() => { navigate('/student/dashboard/messages'); setIsMobileMenuOpen(false); }}>
             <MessageSquare size={18} /> <span>Messagerie & Alertes</span>
           </button>
           <button className={`drawer-nav-item ${tab === 'ai-assistant' ? 'active' : ''}`} onClick={() => { navigate('/student/dashboard/ai-assistant'); setIsMobileMenuOpen(false); }}>
             <Sparkles size={18} /> <span>Assistant IA Pédagogique</span>
+          </button>
+          <button className={`drawer-nav-item ${tab === 'discipline' ? 'active' : ''}`} onClick={() => { navigate('/student/dashboard/discipline'); setIsMobileMenuOpen(false); }}>
+            <Scale size={18} /> <span>Vie Scolaire & Remarques</span>
           </button>
           <button className={`drawer-nav-item ${tab === 'attestation' ? 'active' : ''}`} onClick={() => { navigate('/student/dashboard/attestation'); setIsMobileMenuOpen(false); }}>
             <Award size={18} /> <span>Attestation d'Inscription</span>

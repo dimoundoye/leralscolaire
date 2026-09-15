@@ -1,12 +1,34 @@
-import React from 'react';
-import { Calendar, BookOpen, Clock, User, GraduationCap, CheckCircle2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Calendar, BookOpen, Clock, User, GraduationCap, CheckCircle2, CalendarDays, MapPin } from 'lucide-react';
+
+const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+const DAY_MAP = { 1: 'Lundi', 2: 'Mardi', 3: 'Mercredi', 4: 'Jeudi', 5: 'Vendredi', 6: 'Samedi' };
 
 const StudentScheduleTab = ({ schedule, profile }) => {
   const hasTimetable = schedule.timetable && schedule.timetable.length > 0;
   const hasExams = schedule.exams && schedule.exams.length > 0;
 
+  const todayDay = DAY_MAP[new Date().getDay()] || 'Lundi';
+
+  // Sur mobile, pré-sélectionner le jour actuel ; sur grand écran, vue semaine complète
+  const [selectedDay, setSelectedDay] = useState(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      return todayDay;
+    }
+    return 'ALL';
+  });
+
   const activeClassNom = schedule.timetable[0]?.classe_nom || profile?.classe_nom || '';
   const activeAnnee = schedule.timetable[0]?.annee_scolaire || '2025-2026';
+
+  const formatRoom = (roomStr) => {
+    if (!roomStr || roomStr.trim() === '') return 'Salle N/A';
+    const trimmed = roomStr.trim();
+    if (trimmed.toLowerCase().startsWith('salle')) {
+      return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+    }
+    return `Salle ${trimmed}`;
+  };
 
   return (
     <div className="tab-pane">
@@ -28,52 +50,131 @@ const StudentScheduleTab = ({ schedule, profile }) => {
         </div>
 
         {hasTimetable ? (
-          <div className="timetable-grid-full mt-4">
-            {['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'].map(jour => {
-              const classesForDay = schedule.timetable.filter(t => t.jour_semaine === jour);
-              return (
-                <div key={jour} className="day-column-full">
-                  <div className="day-header-pill">
+          <>
+            {/* Barre interactive de sélection des jours */}
+            <div className="schedule-day-selector">
+              <button
+                type="button"
+                className={`schedule-day-btn ${selectedDay === 'ALL' ? 'active' : ''}`}
+                onClick={() => setSelectedDay('ALL')}
+              >
+                <CalendarDays size={14} />
+                <span>Semaine complète</span>
+                <span className="badge-count">{schedule.timetable.length}</span>
+              </button>
+              {DAYS.map(jour => {
+                const count = schedule.timetable.filter(t => t.jour_semaine === jour).length;
+                const isToday = jour === todayDay;
+                return (
+                  <button
+                    key={jour}
+                    type="button"
+                    className={`schedule-day-btn ${selectedDay === jour ? 'active' : ''}`}
+                    onClick={() => setSelectedDay(jour)}
+                  >
                     <span>{jour}</span>
-                    {classesForDay.length > 0 && <span className="count-dot">{classesForDay.length}</span>}
-                  </div>
-                  <div className="slots-list">
-                    {classesForDay.length > 0 ? (
-                      classesForDay.map(slot => {
-                        const formatRoom = (roomStr) => {
-                          if (!roomStr || roomStr.trim() === '') return 'Salle N/A';
-                          const trimmed = roomStr.trim();
-                          if (trimmed.toLowerCase().startsWith('salle')) {
-                            return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
-                          }
-                          return `Salle ${trimmed}`;
-                        };
+                    {isToday && <span className="today-indicator">Auj.</span>}
+                    {count > 0 && <span className="badge-count">{count}</span>}
+                  </button>
+                );
+              })}
+            </div>
 
-                        return (
-                          <div key={slot.id} className="slot-card-full">
-                            <div className="slot-time-badge">
-                              <Clock size={12} /> {slot.heure_debut.slice(0, 5)} - {slot.heure_fin.slice(0, 5)}
-                            </div>
-                            <strong className="slot-subject-title">{slot.matiere_nom}</strong>
-                            <div className="slot-footer-details">
-                              <span className="slot-teacher-lbl" title={slot.professeur_email}>
-                                <User size={11} /> {slot.professeur_email ? slot.professeur_email.split('@')[0] : 'Enseignant'}
-                              </span>
-                              <span className="slot-room-lbl">
+            {/* Vue Semaine Complète (Défilement horizontal fluide sur petit écran) */}
+            {selectedDay === 'ALL' ? (
+              <div className="timetable-scroll-wrapper">
+                <div className="timetable-grid-full mt-2">
+                  {DAYS.map(jour => {
+                    const classesForDay = schedule.timetable.filter(t => t.jour_semaine === jour);
+                    return (
+                      <div key={jour} className="day-column-full">
+                        <div className="day-header-pill">
+                          <span>{jour}</span>
+                          {classesForDay.length > 0 && <span className="count-dot">{classesForDay.length}</span>}
+                        </div>
+                        <div className="slots-list">
+                          {classesForDay.length > 0 ? (
+                            classesForDay.map(slot => (
+                              <div key={slot.id} className="slot-card-full">
+                                <div className="slot-time-badge">
+                                  <Clock size={12} /> {slot.heure_debut.slice(0, 5)} - {slot.heure_fin.slice(0, 5)}
+                                </div>
+                                <strong className="slot-subject-title">{slot.matiere_nom}</strong>
+                                <div className="slot-footer-details">
+                                  <span className="slot-teacher-lbl" title={slot.professeur_email}>
+                                    <User size={11} /> {slot.professeur_email ? slot.professeur_email.split('@')[0] : 'Enseignant'}
+                                  </span>
+                                  <span className="slot-room-lbl">
+                                    {formatRoom(slot.salle)}
+                                  </span>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="slot-empty-full">Pas de cours</div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              /* Vue détaillée par jour sélectionné (Ultra confortable sur smartphone) */
+              (() => {
+                const classesForSelectedDay = schedule.timetable.filter(t => t.jour_semaine === selectedDay);
+                return (
+                  <div className="day-single-view">
+                    <div className="day-single-header">
+                      <div className="day-single-title">
+                        <Calendar size={18} color="#16a34a" />
+                        <span>Cours du {selectedDay}</span>
+                        {selectedDay === todayDay && <span className="today-indicator">Aujourd'hui</span>}
+                      </div>
+                      <span className="day-single-count-badge">
+                        {classesForSelectedDay.length} cours planifié{classesForSelectedDay.length > 1 ? 's' : ''}
+                      </span>
+                    </div>
+
+                    {classesForSelectedDay.length > 0 ? (
+                      <div className="day-single-slots-grid">
+                        {classesForSelectedDay.map(slot => (
+                          <div key={slot.id} className="slot-card-large">
+                            <div className="slot-large-top">
+                              <div className="slot-time-badge" style={{ fontSize: '12px' }}>
+                                <Clock size={14} /> {slot.heure_debut.slice(0, 5)} - {slot.heure_fin.slice(0, 5)}
+                              </div>
+                              <span className="slot-room-lbl" style={{ fontSize: '11px', padding: '3px 8px' }}>
+                                <MapPin size={11} style={{ display: 'inline', marginRight: '3px', verticalAlign: '-1px' }} />
                                 {formatRoom(slot.salle)}
                               </span>
                             </div>
+
+                            <div className="slot-large-subject">{slot.matiere_nom}</div>
+
+                            <div className="slot-large-footer">
+                              <span className="slot-teacher-lbl" style={{ fontSize: '12px' }} title={slot.professeur_email}>
+                                <User size={13} /> {slot.professeur_email ? slot.professeur_email.split('@')[0] : 'Enseignant'}
+                              </span>
+                              <span style={{ fontSize: '11px', color: '#16a34a', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <CheckCircle2 size={12} /> Confirmé
+                              </span>
+                            </div>
                           </div>
-                        );
-                      })
+                        ))}
+                      </div>
                     ) : (
-                      <div className="slot-empty-full">Pas de cours</div>
+                      <div className="slot-empty-single">
+                        <Calendar size={36} color="#94a3b8" />
+                        <div><strong>Aucun cours prévu le {selectedDay}</strong></div>
+                        <div style={{ fontSize: '12px', color: '#94a3b8' }}>Profitez-en pour vos révisions ou devoirs personnels.</div>
+                      </div>
                     )}
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })()
+            )}
+          </>
         ) : (
           <div className="empty-state py-8">
             <Calendar size={48} className="text-gray" />

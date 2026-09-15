@@ -342,31 +342,6 @@ const StudentDashboard = () => {
       if (res.ok) {
         const data = await res.json();
         setChatChannelInfo(data);
-        // Default active target to Class channel if available, or Admin
-        if (!activeChatTarget) {
-          if (data.classe) {
-            const defaultTarget = {
-              type: 'CLASSE',
-              target_id: data.classe.classe_id,
-              title: `Canal de Groupe ${data.classe.classe_nom}`,
-              sub: `Discussion de la classe • ${data.classe.annee_scolaire}`,
-              badge: 'Groupe'
-            };
-            setActiveChatTarget(defaultTarget);
-            await fetchChatHistory(defaultTarget);
-          } else if (data.admin) {
-            const defaultTarget = {
-              type: 'ADMIN',
-              target_id: data.admin.admin_user_id,
-              etablissement_id: data.admin.etablissement_id,
-              title: data.admin.etablissement_nom,
-              sub: "Administration de l'établissement",
-              badge: 'Admin'
-            };
-            setActiveChatTarget(defaultTarget);
-            await fetchChatHistory(defaultTarget);
-          }
-        }
       }
     } catch (err) { console.error(err); }
   };

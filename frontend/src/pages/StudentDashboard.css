@@ -2162,12 +2162,106 @@
   color: #facc15;
 }
 
-/* Full Width Timetable Grid (6 Days side-by-side) */
+/* Full Width Timetable Grid & Day Selector */
+.schedule-day-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 2px 14px 2px;
+  margin-top: 14px;
+  scrollbar-width: thin;
+}
+
+.schedule-day-selector::-webkit-scrollbar {
+  height: 4px;
+}
+
+.schedule-day-selector::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.schedule-day-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease-in-out;
+  flex-shrink: 0;
+}
+
+.schedule-day-btn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+  border-color: #cbd5e1;
+}
+
+.schedule-day-btn.active {
+  background: #16a34a;
+  color: #ffffff;
+  border-color: #16a34a;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
+}
+
+.schedule-day-btn .badge-count {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.07);
+  color: inherit;
+}
+
+.schedule-day-btn.active .badge-count {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.schedule-day-btn .today-indicator {
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: #fef08a;
+  color: #854d0e;
+  text-transform: uppercase;
+}
+
+.schedule-day-btn.active .today-indicator {
+  background: #ffffff;
+  color: #16a34a;
+}
+
+/* Horizontal scroll wrapper for full week */
+.timetable-scroll-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 8px;
+}
+
 .timetable-grid-full {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(220px, 1fr));
   gap: 14px;
   align-items: start;
+  min-width: 100%;
+}
+
+@media (min-width: 1280px) {
+  .timetable-grid-full {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
 }
 
 .day-column-full {
@@ -2281,6 +2375,117 @@
   border: 1.5px dashed var(--border-slate-200);
   margin-top: auto;
   margin-bottom: auto;
+}
+
+/* Single Day Detailed View (Mobile & Focused Day) */
+.day-single-view {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.day-single-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.day-single-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.day-single-count-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.day-single-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.slot-card-large {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+  transition: all 0.15s ease-in-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.slot-card-large:hover {
+  border-color: #16a34a;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+  transform: translateY(-2px);
+}
+
+.slot-card-large::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+  background: #16a34a;
+  border-radius: 4px 0 0 4px;
+}
+
+.slot-large-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.slot-large-subject {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.slot-large-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.slot-empty-single {
+  text-align: center;
+  padding: 36px 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1.5px dashed #cbd5e1;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
 }
 
 /* Full Width Exams Grid */
@@ -3412,7 +3617,33 @@
 }
 
 .chat-send-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
   padding: 10px 18px !important;
+  background: var(--primary-blue, #131e6c) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  width: auto !important;
+  max-width: fit-content !important;
+  transition: var(--transition);
+}
+
+.chat-send-btn:hover {
+  background: #0f1754 !important;
+  transform: translateY(-1px);
+}
+
+.chat-send-btn:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
 }
 
 .msg-mobile-back-btn {
@@ -3502,35 +3733,61 @@
   }
 
   .chat-input-footer {
+    display: flex !important;
+    align-items: center !important;
     padding: 10px 12px !important;
     gap: 8px !important;
+    background: #ffffff !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
   }
 
   .chat-input-footer input {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
     padding: 9px 12px !important;
     font-size: 13px !important;
-    min-width: 0 !important;
+    height: 40px !important;
+    box-sizing: border-box !important;
   }
 
   .chat-send-btn {
-    padding: 9px 14px !important;
+    width: auto !important;
+    height: 40px !important;
+    padding: 0 14px !important;
     font-size: 13px !important;
     flex-shrink: 0 !important;
+    box-sizing: border-box !important;
   }
 
   .file-upload-btn {
-    padding: 8px 10px !important;
+    width: 40px !important;
+    height: 40px !important;
+    padding: 0 !important;
     flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
   }
 }
 
-@media (max-width: 440px) {
+@media (max-width: 480px) {
   .chat-send-btn span {
-    display: none;
+    display: none !important;
   }
 
   .chat-send-btn {
-    padding: 9px 12px !important;
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    height: 40px !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   .target-badge-pill {
@@ -3901,8 +4158,8 @@
     margin-bottom: 12px !important;
   }
 
-  .secondary-btn,
-  .primary-btn {
+  .secondary-btn:not(.chat-send-btn),
+  .primary-btn:not(.chat-send-btn) {
     font-size: 13px !important;
     padding: 10px 14px !important;
     width: 100% !important;

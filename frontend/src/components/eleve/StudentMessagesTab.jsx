@@ -22,7 +22,7 @@ const StudentMessagesTab = ({
   chatEndRef,
   API_BASE_URL
 }) => {
-  const [mobileView, setMobileView] = useState('chat'); // 'channels' | 'chat'
+  const [mobileView, setMobileView] = useState('channels'); // 'channels' | 'chat'
 
   const admin = chatChannelInfo?.admin;
   const classe = chatChannelInfo?.classe;
@@ -168,7 +168,10 @@ const StudentMessagesTab = ({
                   <button 
                     type="button" 
                     className="msg-mobile-back-btn" 
-                    onClick={() => setMobileView('channels')}
+                    onClick={() => {
+                      setMobileView('channels');
+                      setActiveChatTarget(null);
+                    }}
                     title="Voir toutes les discussions"
                   >
                     <ChevronLeft size={20} />
@@ -288,17 +291,20 @@ const StudentMessagesTab = ({
                       onChange={e => setChatInput(e.target.value)}
                       disabled={uploadingFile}
                     />
-                    <button type="submit" className="primary-btn chat-send-btn" disabled={uploadingFile}>
-                      <Send size={15} /> <span>Envoyer</span>
+                    <button type="submit" className="chat-send-btn" disabled={uploadingFile} title="Envoyer le message">
+                      <Send size={16} /> <span>Envoyer</span>
                     </button>
                   </form>
                 </div>
               )}
             </>
           ) : (
-            <div className="empty-state py-12">
-              <MessageSquare size={48} className="text-gray" />
-              <p>Sélectionnez un canal dans le menu de gauche pour démarrer la discussion.</p>
+            <div className="empty-state py-12" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '340px', padding: '40px 20px', color: 'var(--text-slate-400)' }}>
+              <MessageSquare size={52} style={{ marginBottom: '14px', opacity: 0.35, color: 'var(--primary-blue)' }} />
+              <h4 style={{ margin: '0 0 6px', fontSize: '16px', fontWeight: 800, color: 'var(--text-slate-800)' }}>Choisissez une discussion</h4>
+              <p style={{ fontSize: '13px', margin: 0, textAlign: 'center', maxWidth: '320px', color: 'var(--text-slate-500)', lineHeight: 1.5 }}>
+                Sélectionnez votre canal de classe, un enseignant ou l'administration dans le volet de gauche pour démarrer la discussion.
+              </p>
             </div>
           )}
         </div>
