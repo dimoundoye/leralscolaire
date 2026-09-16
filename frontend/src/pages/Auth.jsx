@@ -152,6 +152,12 @@ const Auth = () => {
   return (
     <div className="auth-page">
       <div className="auth-container">
+        {/* Bouton retour accueil en haut */}
+        <Link to="/" className="auth-back-link" title="Retourner à la page d'accueil">
+          <ArrowLeft size={16} />
+          <span>Retour à l'accueil</span>
+        </Link>
+
         {/* Info Side */}
         <div className="auth-info">
           <Link to="/" className="auth-logo">
@@ -172,7 +178,7 @@ const Auth = () => {
 
         {/* Form Side */}
         <div className="auth-form-card">
-          <div className="auth-header-brand">
+          <Link to="/" className="auth-header-brand" title="Retour à l'accueil">
             <img 
               src="/logo_leralscolaire.png" 
               alt="Logo LéralScolaire" 
@@ -180,7 +186,7 @@ const Auth = () => {
             />
             <h2>LéralScolaire</h2>
             <p>Plateforme Nationale du Livret Scolaire</p>
-          </div>
+          </Link>
 
           <div className="form-toggle">
             <button className={isLogin && !showForgot ? 'active' : ''} onClick={() => { setIsLogin(true); setShowForgot(false); setMessage({type:'',text:''}); }}>Connexion</button>
@@ -447,6 +453,14 @@ const Auth = () => {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Lien retour accueil en bas de formulaire */}
+          <div className="auth-card-footer">
+            <Link to="/" className="auth-footer-home-link">
+              <ArrowLeft size={14} />
+              <span>Retourner sur la page d'accueil</span>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

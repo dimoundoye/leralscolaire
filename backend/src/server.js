@@ -216,6 +216,11 @@ db.pool.connect(async (err, client, release) => {
       -- Colonnes complémentaires élèves et établissements
       ALTER TABLE eleves ADD COLUMN IF NOT EXISTS sexe VARCHAR(10) DEFAULT 'M';
       ALTER TABLE eleves ADD COLUMN IF NOT EXISTS email VARCHAR(255);
+      ALTER TABLE eleves ADD COLUMN IF NOT EXISTS lieu_naissance VARCHAR(100);
+      ALTER TABLE eleves ADD COLUMN IF NOT EXISTS nationalite VARCHAR(100);
+      ALTER TABLE eleves ADD COLUMN IF NOT EXISTS telephone VARCHAR(50);
+      ALTER TABLE eleves ADD COLUMN IF NOT EXISTS coordonnees_parent TEXT;
+      ALTER TABLE eleves ADD COLUMN IF NOT EXISTS justificatif_inapte_url TEXT;
       ALTER TABLE etablissements ADD COLUMN IF NOT EXISTS nom_directeur VARCHAR(255);
 
       -- Messagerie et pièces jointes

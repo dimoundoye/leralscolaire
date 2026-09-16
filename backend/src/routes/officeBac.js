@@ -666,7 +666,7 @@ router.post('/publier', auth, checkOfficeBac, async (req, res) => {
       );
       if (eleveUser.rows[0]) {
         await db.query(`
-          INSERT INTO notifications (user_id, titre, message, type)
+          INSERT INTO notifications (user_id, titre, description, type)
           VALUES ($1, $2, $3, 'info')
         `, [
           eleveUser.rows[0].user_id,

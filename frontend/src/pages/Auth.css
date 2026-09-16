@@ -24,6 +24,31 @@
   flex-direction: column;
 }
 
+/* Bouton retour en haut de carte */
+.auth-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  text-decoration: none;
+  margin-bottom: 1.25rem;
+  padding: 6px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  width: fit-content;
+  transition: all 0.2s ease;
+}
+
+.auth-back-link:hover {
+  color: #1e3a8a;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  transform: translateX(-2px);
+}
+
 .auth-info {
   display: none;
 }
@@ -32,6 +57,12 @@
 .auth-header-brand {
   text-align: center;
   margin-bottom: 1.5rem;
+  text-decoration: none;
+  display: block;
+}
+
+.auth-header-brand:hover h2 {
+  color: #2563eb;
 }
 
 .auth-header-brand img {
@@ -40,6 +71,11 @@
   object-fit: contain;
   margin: 0 auto 10px auto;
   display: block;
+  transition: transform 0.2s ease;
+}
+
+.auth-header-brand:hover img {
+  transform: scale(1.05);
 }
 
 .auth-header-brand h2 {
@@ -48,6 +84,7 @@
   color: #1e3a8a; /* Bleu officiel de la plateforme */
   margin: 0;
   letter-spacing: -0.02em;
+  transition: color 0.2s ease;
 }
 
 .auth-header-brand p {
@@ -55,6 +92,32 @@
   color: #64748b;
   margin: 4px 0 0 0;
   font-weight: 500;
+}
+
+/* Footer return home link */
+.auth-card-footer {
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.auth-footer-home-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #64748b;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.auth-footer-home-link:hover {
+  color: #1e3a8a;
+  background: #f1f5f9;
 }
 
 /* Toggle buttons */

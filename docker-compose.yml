@@ -11,6 +11,7 @@ services:
       - "5433:5432"
     volumes:
       - leral_pgdata:/var/lib/postgresql/data
+      - ./backend/scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - leralscolaire-network
     healthcheck:
