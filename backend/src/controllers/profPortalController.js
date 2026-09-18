@@ -261,17 +261,20 @@ const profPortalController = {
         return response.error(res, 'Accès refusé. Vous n\'enseignez pas cette matière dans cette classe.', 403);
       }
 
-      // Convert "Trimestre X" to integer
-      let trimestre = 1;
-      if (periode && periode.includes('1')) trimestre = 1;
-      if (periode && periode.includes('2')) trimestre = 2;
-      if (periode && periode.includes('3')) trimestre = 3;
+      // Convert "Trimestre X" / "Semestre X" to integer
+      let periodeNum = 1;
+      if (periode && periode.includes('1')) periodeNum = 1;
+      if (periode && periode.includes('2')) periodeNum = 2;
+      if (periode && periode.includes('3')) periodeNum = 3;
+
+      // Ensure constraint allows both DEVOIR and COMPOSITION for the period
+      await db.query(`ALTER TABLE notes DROP CONSTRAINT IF EXISTS unique_note_per_period;`);
 
       // 2. Insérer ou mettre à jour la note (valeur)
       const exist = await db.query(
         `SELECT id FROM notes 
-         WHERE eleve_id = $1 AND matiere_id = $2 AND type_note = $3 AND trimestre = $4`,
-        [eleve_id, matiere_id, type_note, trimestre]
+         WHERE eleve_id = $1 AND matiere_id = $2 AND type_note = $3 AND (trimestre = $4 OR semestre = $4)`,
+        [eleve_id, matiere_id, type_note, periodeNum]
       );
 
       let result;
@@ -286,10 +289,10 @@ const profPortalController = {
       } else {
         // Insert
         result = await db.query(
-          `INSERT INTO notes (eleve_id, matiere_id, valeur, type_note, trimestre, professeur_id, appreciation, date_saisie)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)
+          `INSERT INTO notes (eleve_id, matiere_id, valeur, type_note, trimestre, semestre, classe_id, professeur_id, appreciation, date_saisie)
+           VALUES ($1, $2, $3, $4, $5, $5, $6, $7, $8, CURRENT_TIMESTAMP)
            RETURNING id, eleve_id, valeur as note, type_note`,
-          [eleve_id, matiere_id, note, type_note, trimestre, req.user.id, appreciation || null]
+          [eleve_id, matiere_id, note, type_note, periodeNum, classe_id || null, req.user.id, appreciation || null]
         );
       }
 

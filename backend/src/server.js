@@ -239,6 +239,17 @@ db.pool.connect(async (err, client, release) => {
       ALTER TABLE historique_notes ADD COLUMN IF NOT EXISTS motif TEXT;
       ALTER TABLE historique_notes ADD COLUMN IF NOT EXISTS statut VARCHAR(20) DEFAULT 'EN_ATTENTE';
 
+      -- Contrainte d'unicité sur les notes (autorise devoir ET composition pour une même période)
+      ALTER TABLE notes DROP CONSTRAINT IF EXISTS unique_note_per_period;
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'unique_note_per_type'
+        ) THEN
+          ALTER TABLE notes ADD CONSTRAINT unique_note_per_type UNIQUE (eleve_id, matiere_id, semestre, type_note, trimestre);
+        END IF;
+      END $$;
+
       -- Messagerie et pièces jointes
       CREATE TABLE IF NOT EXISTS messages (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
