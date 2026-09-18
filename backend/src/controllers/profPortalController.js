@@ -334,7 +334,9 @@ const profPortalController = {
             auteur_id UUID REFERENCES users(id) ON DELETE SET NULL,
             date_modification TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             statut VARCHAR(20) DEFAULT 'EN_ATTENTE'
-          )
+          );
+          ALTER TABLE historique_notes ADD COLUMN IF NOT EXISTS motif TEXT;
+          ALTER TABLE historique_notes ADD COLUMN IF NOT EXISTS statut VARCHAR(20) DEFAULT 'EN_ATTENTE';
         `);
 
         await client.query(

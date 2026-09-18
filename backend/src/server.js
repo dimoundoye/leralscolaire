@@ -223,6 +223,22 @@ db.pool.connect(async (err, client, release) => {
       ALTER TABLE eleves ADD COLUMN IF NOT EXISTS justificatif_inapte_url TEXT;
       ALTER TABLE etablissements ADD COLUMN IF NOT EXISTS nom_directeur VARCHAR(255);
 
+      -- Historique des notes
+      CREATE TABLE IF NOT EXISTS historique_notes (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        note_id UUID REFERENCES notes(id) ON DELETE CASCADE,
+        ancienne_valeur NUMERIC,
+        nouvelle_valeur NUMERIC,
+        ancienne_appreciation TEXT,
+        nouvelle_appreciation TEXT,
+        motif TEXT,
+        auteur_id UUID REFERENCES users(id) ON DELETE SET NULL,
+        date_modification TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        statut VARCHAR(20) DEFAULT 'EN_ATTENTE'
+      );
+      ALTER TABLE historique_notes ADD COLUMN IF NOT EXISTS motif TEXT;
+      ALTER TABLE historique_notes ADD COLUMN IF NOT EXISTS statut VARCHAR(20) DEFAULT 'EN_ATTENTE';
+
       -- Messagerie et pièces jointes
       CREATE TABLE IF NOT EXISTS messages (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

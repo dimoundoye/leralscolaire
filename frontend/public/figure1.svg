@@ -20,9 +20,8 @@
     <text x="70" y="103" fill="#ffffff" font-size="14" font-weight="bold">1. Création et Saisie (6ème à la 1ère)</text>
     
     <text x="70" y="140" fill="#334155" font-size="12">• Évaluation trimestrielle / semestrielle par matière</text>
-    <text x="70" y="165" fill="#334155" font-size="12">• Report manuel des notes sur les bulletins papier</text>
-    <text x="70" y="190" fill="#334155" font-size="12">• Transcription par le secrétariat sur le livret cartonné</text>
-    <text x="70" y="215" fill="#334155" font-size="12">• Conservation aux archives physiques de l'établissement</text>
+    <text x="70" y="165" fill="#334155" font-size="12">• Report des notes sur les bulletins</text>
+    <text x="70" y="190" fill="#334155" font-size="12">• Conservation aux archives physiques de l'établissement</text>
     
   </g>
 
