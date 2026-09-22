@@ -234,7 +234,7 @@ export const AboutPage = () => {
           <div className="author-presentation-card">
             <div className="author-info-content">
               <h3 className="author-name">Khadim Ndoye</h3>
-              <p className="author-title-sub">Développeur Fullstack & DevOps • Étudiant-Ingénieur à l'ESMT Dakar</p>
+              <p className="author-title-sub">Développeur Fullstack & DevOps</p>
 
               <div className="author-text-paragraphs">
                 <p>
@@ -524,8 +524,7 @@ export const AboutPage = () => {
 
             <div className="footer-col-nav">
               <h4 className="footer-col-heading">Contact & Support</h4>
-              <p className="footer-contact-line">Direction des Systèmes d'Information (DSI)</p>
-              <p className="footer-contact-line">Sphères Ministérielles de Diamniadio</p>
+              <p className="footer-contact-phone">+221 76 162 95 29</p>
               <p className="footer-contact-email">contact@leralscolaire.com</p>
             </div>
           </div>

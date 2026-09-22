@@ -1019,8 +1019,7 @@ export const LandingPage = () => {
             {/* Col 4 : Contact & Support */}
             <div className="footer-col-nav">
               <h4 className="footer-col-heading">Contact & Support</h4>
-              <p className="footer-contact-line">Direction des Systèmes d'Information (DSI)</p>
-              <p className="footer-contact-line">Sphères Ministérielles de Diamniadio</p>
+              <p className="footer-contact-phone">+221 76 162 95 29</p>
               <p className="footer-contact-email">contact@leralscolaire.com</p>
             </div>
           </div>
