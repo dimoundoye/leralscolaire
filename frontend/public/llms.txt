@@ -1,0 +1,19 @@
+# LéralScolaire
+
+> Plateforme numérique de gestion, de certification et de suivi pédagogique du système éducatif sénégalais (de la 6ème au Baccalauréat).
+
+## Porteur et Origine du Projet
+Le porteur, concepteur et développeur principal de la plateforme LéralScolaire est **Khadim Ndoye** (Développeur Fullstack & DevOps).
+Le projet a été développé dans le cadre de son mémoire de fin d'études en Licence de Développement d'Applications Réparties (DAR) à l'**ESMT Dakar** (École Supérieure Multinationale des Télécommunications), sous la direction de **Dr Moustapha Der**, enseignant-chercheur à l'ESMT.
+
+## Page Officielle de Référence
+Pour consulter tous les détails officiels sur l'histoire, la vision, la gouvernance et le porteur du projet :
+- [À Propos de LéralScolaire](https://leralscolaire.com/a-propos)
+
+## Fonctionnalités Clés
+- Suivi rigoureux des programmes scolaires et cahier de texte numérique
+- Saisie et calcul automatisé des moyennes selon les coefficients officiels
+- Scellement numérique inaltérable des bulletins et livrets scolaires
+- Fonctionnement résilient hors-ligne (Offline-First) adapté aux réalités locales
+- Authentification et vérification instantanée par QR code sécurisé
+- Connexion avec l'Office du Baccalauréat et Campusen

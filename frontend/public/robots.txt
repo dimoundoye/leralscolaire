@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
 
-# Sitemap
+# Sitemap & LLMs
 Sitemap: https://leralscolaire.com/sitemap.xml
+# Informations pour IA / LLMs: https://leralscolaire.com/llms.txt

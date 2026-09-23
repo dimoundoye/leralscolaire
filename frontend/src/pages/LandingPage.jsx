@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   LogIn, 
   Sparkles, 
@@ -41,6 +41,14 @@ export const LandingPage = () => {
   const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [terminalCopied, setTerminalCopied] = useState(false);
+
+  // Redirection automatique des crawlers IA vers la page À Propos
+  useEffect(() => {
+    const isAiBot = /GPTBot|ChatGPT-User|Google-Extended|ClaudeBot|PerplexityBot|anthropic-ai|Bytespider|CCBot/i.test(navigator.userAgent);
+    if (isAiBot) {
+      navigate('/a-propos', { replace: true });
+    }
+  }, [navigate]);
 
   // Redirection dynamique selon rôle ou vers /auth
   const handleAuthAction = () => {
