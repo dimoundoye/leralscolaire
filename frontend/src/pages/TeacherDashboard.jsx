@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useParams } from 'react-router-dom';
 import { offlineFetch } from '../services/api';
 import { 
@@ -30,6 +31,7 @@ import './TeacherDashboard.css';
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const { tab } = useParams();
   const activeTab = tab || 'overview';
 
@@ -70,14 +72,13 @@ const TeacherDashboard = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingFile(true);
-    const token = localStorage.getItem('token');
     const formData = new FormData();
     formData.append('fichier', file);
 
     try {
       const res = await fetch('/api/messages/upload', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: {},
         body: formData
       });
       if (res.ok) {
@@ -280,10 +281,9 @@ const TeacherDashboard = () => {
   };
 
   const fetchChatChannels = async () => {
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch('/api/messages/channels', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) {
         const data = await res.json();
@@ -295,18 +295,17 @@ const TeacherDashboard = () => {
   const fetchChatHistory = async (contact) => {
     if (!contact) return;
     setChatLoading(true);
-    const token = localStorage.getItem('token');
     try {
       const params = new URLSearchParams({ type: contact.type, target_id: contact.id });
       if (contact.etablissement_id) params.append('etablissement_id', contact.etablissement_id);
       const res = await fetch(`/api/messages/history?${params}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) {
         const data = await res.json();
         setChatHistory(data);
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-        const detRes = await fetch('/api/professeurs-portal/dashboard-details', { headers: { 'Authorization': `Bearer ${token}` } });
+        const detRes = await fetch('/api/professeurs-portal/dashboard-details', { headers: {} });
         if (detRes.ok) setDashboardDetails(await detRes.json());
       }
     } catch (err) { console.error(err); } finally { setChatLoading(false); }
@@ -325,7 +324,7 @@ const TeacherDashboard = () => {
     try {
       const res = await offlineFetch('/api/messages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           destinataire_type: destType,
           destinataire_id: destId,
@@ -359,10 +358,8 @@ const TeacherDashboard = () => {
 
 
   const getHeaders = () => {
-    const token = localStorage.getItem('token');
     return {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
     };
   };
 
@@ -371,8 +368,7 @@ const TeacherDashboard = () => {
     const fetchBaseData = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
+        if (!user) {
           navigate('/auth');
           return;
         }
@@ -471,13 +467,12 @@ const TeacherDashboard = () => {
   }, [activeTab]);
 
   const fetchCahierEntries = async () => {
-    const token = localStorage.getItem('token');
     setCahierLoading(true);
     try {
       const params = new URLSearchParams();
       if (cahierFilterClasse) params.append('classe_id', cahierFilterClasse);
       const res = await fetch(`/api/cahier-texte/professeur?${params}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) {
         const data = await res.json();
@@ -498,14 +493,13 @@ const TeacherDashboard = () => {
       return;
     }
     setCahierUploading(true);
-    const token = localStorage.getItem('token');
     const formData = new FormData();
     formData.append('fichier', file);
 
     try {
       const res = await fetch('/api/cahier-texte/upload', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: {},
         body: formData
       });
       if (res.ok) {
@@ -531,11 +525,10 @@ const TeacherDashboard = () => {
       return;
     }
 
-    const token = localStorage.getItem('token');
     try {
       const res = await offlineFetch('/api/cahier-texte', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           classe_id: cahierClasse,
           matiere_id: cahierMatiere,
@@ -604,9 +597,8 @@ const TeacherDashboard = () => {
 
   const handleDownloadPDF = async () => {
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch('/api/professeurs-portal/schedule/pdf', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) {
         const blob = await res.blob();
@@ -718,11 +710,7 @@ const TeacherDashboard = () => {
     }
   }, [activeTab]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/auth');
-  };
+  const handleLogout = () => logout();
 
   const handleRespondInvitation = async (etablissementId, accept) => {
     try {

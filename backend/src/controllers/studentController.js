@@ -1,12 +1,11 @@
 const bcrypt = require('bcryptjs');
-const XLSX = require('xlsx');
-const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const StudentModel = require('../models/studentModel');
 const db = require('../config/db'); // For transaction connection
 const response = require('../utils/response');
 const { canAccessClasse } = require('../middleware/access');
+const { readRows, rowsToXlsxBuffer } = require('../utils/excel');
 
 const { generateIUP } = require('../utils/iupGenerator');
 const emailService = require('../services/emailService');
@@ -165,9 +164,7 @@ const studentController = {
       const etablissementId = etab.id;
       const etabRegion = etab.region || 'Dakar';
 
-      const workbook = XLSX.readFile(req.file.path);
-      const sheetName = workbook.SheetNames[0];
-      const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+      const data = await readRows(req.file.path, req.file.originalname);
       const importedEleves = [];
 
       for (const row of data) {
@@ -239,25 +236,10 @@ const studentController = {
       }
 
       const rows = await StudentModel.getExportStudents(etablissementId, classe_id);
-      const worksheet = XLSX.utils.json_to_sheet(rows);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Eleves');
-
-      const exportsDir = path.join(__dirname, '../../exports');
-      if (!fs.existsSync(exportsDir)) {
-        fs.mkdirSync(exportsDir, { recursive: true });
-      }
-
-      const filePath = path.join(exportsDir, `eleves_${etablissementId}.xlsx`);
-      XLSX.writeFile(workbook, filePath);
-
-      return res.download(filePath, 'liste_eleves.xlsx', () => {
-        try {
-          fs.unlinkSync(filePath);
-        } catch (err) {
-          console.error('Error removing export file:', err);
-        }
-      });
+      const buffer = await rowsToXlsxBuffer(rows, 'Eleves');
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', 'attachment; filename="liste_eleves.xlsx"');
+      return res.send(Buffer.from(buffer));
     } catch (err) {
       console.error(err);
       return response.error(res, "Erreur lors de l'exportation.", 500);

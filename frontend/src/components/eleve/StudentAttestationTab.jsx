@@ -4,7 +4,6 @@ import { Award, Clock, Lock, CheckCircle, Download, XCircle, Send } from 'lucide
 const StudentAttestationTab = ({
   attestationHistory,
   profile,
-  token,
   refreshAttestationHistory,
   handleSubmitAttestationRequest,
   attestationMotif,
@@ -70,7 +69,7 @@ const StudentAttestationTab = ({
                   <CheckCircle size={18} color="#4ade80" /> Demande acceptée — votre attestation est disponible !
                 </div>
                 <a
-                  href={`/api/documents/attestation/${profile?.id}?token=${token}`}
+                  href={`/api/documents/attestation/${profile?.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => {

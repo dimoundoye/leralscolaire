@@ -61,7 +61,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
+        // Les documents (PDF, exports, fichiers envoyés) ouverts par lien ne sont pas des pages de l'application
+        navigateFallbackDenylist: [/^\/api\//, /^\/uploads\//]
       },
       devOptions: {
         enabled: true
@@ -69,9 +71,10 @@ export default defineConfig({
     })
   ],
   server: {
+    // Backend cible en développement (modifiable avec la variable d'environnement API_PROXY_TARGET)
     proxy: {
-      '/api': 'http://localhost:5002',
-      '/uploads': 'http://localhost:5002'
+      '/api': process.env.API_PROXY_TARGET || 'http://localhost:5002',
+      '/uploads': process.env.API_PROXY_TARGET || 'http://localhost:5002'
     }
   }
 })

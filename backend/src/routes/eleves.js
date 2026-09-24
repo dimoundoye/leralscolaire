@@ -5,25 +5,25 @@ const fs = require('fs');
 const studentController = require('../controllers/studentController');
 const auth = require('../middleware/authMiddleware');
 
-const { isCloudinaryConfigured, cloudinary, randomFileId, safeFileName } = require('../config/cloudinary');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const { isCloudinaryConfigured, safeFileName, cloudinaryStorage, cloudinaryParams } = require('../config/cloudinary');
 
-const upload = multer({ dest: 'uploads/' });
+// Fichier d'import : dossier temporaire du système (jamais servi publiquement), Excel ou CSV uniquement
+const upload = multer({
+  dest: require('os').tmpdir(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!/\.(xlsx|csv)$/i.test(file.originalname)) {
+      return cb(new Error('Format non pris en charge : utilisez un fichier Excel (.xlsx) ou CSV.'));
+    }
+    cb(null, true);
+  }
+});
 
 let photoAndJustifStorage;
 if (isCloudinaryConfigured) {
-  photoAndJustifStorage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: async (req, file) => {
-      const isPdf = file.mimetype === 'application/pdf' || file.originalname.toLowerCase().endsWith('.pdf');
-      const subFolder = file.fieldname === 'photo' ? 'photos' : 'justificatifs_inapte';
-      return {
-        folder: `leralscolaire/${subFolder}`,
-        resource_type: isPdf ? 'raw' : 'auto',
-        public_id: randomFileId()
-      };
-    }
-  });
+  photoAndJustifStorage = cloudinaryStorage((req, file) =>
+    cloudinaryParams(file.fieldname === 'photo' ? 'photos' : 'justificatifs_inapte', file)
+  );
 } else {
   photoAndJustifStorage = multer.diskStorage({
     destination: (req, file, cb) => {

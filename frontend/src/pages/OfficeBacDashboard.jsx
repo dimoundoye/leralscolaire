@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   LayoutDashboard, Users, ClipboardList, Send, BarChart3,
@@ -81,8 +82,8 @@ const DEFAULT_COEFFS = {
 // ─── Composant principal ──────────────────────
 const OfficeBacDashboard = () => {
   const navigate = useNavigate();
+  const { user, logout: endSession } = useAuth();
   const { tab = 'overview' } = useParams();
-  const token = localStorage.getItem('token');
 
   // Mode d'examen : BAC ou BFEM
   const [examenMode, setExamenMode] = useState('BAC');
@@ -179,7 +180,7 @@ const OfficeBacDashboard = () => {
     setTimeout(() => setToast(null), 4000);
   };
 
-  const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+  const headers = { 'Content-Type': 'application/json' };
 
   // State Demandes publiques
   const [demandesList, setDemandesList] = useState([]);
@@ -193,10 +194,8 @@ const OfficeBacDashboard = () => {
     try {
       const res = await fetch(url, { ...options, headers });
       if (res.status === 401 || res.status === 403) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
         showToast('Session expirée ou non autorisée. Redirection...', 'error');
-        setTimeout(() => navigate('/auth'), 1200);
+        setTimeout(() => endSession(), 1200);
         return null;
       }
       return res;
@@ -566,7 +565,7 @@ const OfficeBacDashboard = () => {
   };
 
   useEffect(() => {
-    if (!token) { navigate('/auth'); return; }
+    if (!user) { navigate('/auth'); return; }
     fetchStats();
     fetchPalmares();
     fetchEtablissements();
@@ -867,11 +866,7 @@ const OfficeBacDashboard = () => {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/auth');
-  };
+  const logout = () => endSession();
 
   return (
     <div className="ob-dashboard">

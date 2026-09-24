@@ -121,7 +121,7 @@ const EmargementModel = {
   },
 
   // 5. Enregistrer un Émargement
-  async createEmargement(seanceId, profId, etablissementId, modeEmargement, lat, lng, distMetres, tokenUtilise) {
+  async createEmargement(seanceId, profId, etablissementId, modeEmargement, lat, lng, distMetres, tokenUtilise, terrainEpsId = null) {
     let safeEtabId = isValidUuid(etablissementId) ? etablissementId : null;
     if (!safeEtabId) {
       const { rows: sRows } = await db.query('SELECT etablissement_id FROM seances_cours WHERE id = $1', [seanceId]);
@@ -131,10 +131,10 @@ const EmargementModel = {
     const { rows } = await db.query(`
       INSERT INTO emargements (
         seance_id, professeur_id, etablissement_id, mode_emargement, 
-        latitude, longitude, distance_etablissement_metres, token_totp_utilise, statut
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'VALIDE')
+        latitude, longitude, distance_etablissement_metres, token_totp_utilise, statut, terrain_eps_id
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'VALIDE', $9)
       RETURNING *
-    `, [seanceId, profId, safeEtabId, modeEmargement, lat, lng, distMetres, tokenUtilise]);
+    `, [seanceId, profId, safeEtabId, modeEmargement, lat, lng, distMetres, tokenUtilise, terrainEpsId]);
 
     await db.query(`
       UPDATE seances_cours SET statut = 'EMARGE_PRESENCE', updated_at = CURRENT_TIMESTAMP

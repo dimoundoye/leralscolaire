@@ -1,8 +1,11 @@
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../config/secrets');
+const { readSessionToken } = require('../utils/session');
 
+// Authentification par le cookie de session (ou l'en-tête Authorization).
+// Le jeton n'est jamais accepté dans l'URL : il finirait dans les journaux et l'historique.
 const authMiddleware = (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '') || req.query.token;
+  const token = readSessionToken(req);
 
   if (!token) {
     return res.status(401).json({ message: 'Accès refusé. Aucun jeton fourni.' });

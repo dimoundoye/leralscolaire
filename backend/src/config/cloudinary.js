@@ -1,5 +1,4 @@
 const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -16,6 +15,39 @@ function safeFileName(originalname) {
   return randomFileId() + ext;
 }
 
+/**
+ * Moteur de stockage Multer envoyant directement le fichier vers Cloudinary (sans passer par le disque).
+ * @param {(req, file) => Promise<object>|object} paramsFn - options d'upload Cloudinary par fichier
+ */
+function cloudinaryStorage(paramsFn) {
+  return {
+    _handleFile(req, file, cb) {
+      Promise.resolve(paramsFn(req, file))
+        .then((params) => {
+          const upload = cloudinary.uploader.upload_stream(params, (err, result) => {
+            if (err) return cb(err);
+            cb(null, { path: result.secure_url, filename: result.public_id, size: result.bytes });
+          });
+          file.stream.pipe(upload);
+        })
+        .catch(cb);
+    },
+    _removeFile(req, file, cb) {
+      cloudinary.uploader.destroy(file.filename, { invalidate: true }).then(() => cb(null), cb);
+    },
+  };
+}
+
+// Options Cloudinary communes : dossier, type (PDF en « raw ») et identifiant aléatoire
+function cloudinaryParams(folder, file) {
+  const isPdf = file.mimetype === 'application/pdf' || file.originalname.toLowerCase().endsWith('.pdf');
+  return {
+    folder: `leralscolaire/${folder}`,
+    resource_type: isPdf ? 'raw' : 'auto',
+    public_id: randomFileId(),
+  };
+}
+
 if (isCloudinaryConfigured) {
   console.log('☁️  Cloudinary configuré pour le stockage des fichiers');
 } else {
@@ -28,17 +60,7 @@ if (isCloudinaryConfigured) {
  */
 function createUploadMiddleware(subFolder = 'uploads') {
   if (isCloudinaryConfigured) {
-    const storage = new CloudinaryStorage({
-      cloudinary: cloudinary,
-      params: async (req, file) => {
-        const isPdf = file.mimetype === 'application/pdf' || file.originalname.toLowerCase().endsWith('.pdf');
-        return {
-          folder: `leralscolaire/${subFolder}`,
-          resource_type: isPdf ? 'raw' : 'auto',
-          public_id: randomFileId(),
-        };
-      },
-    });
+    const storage = cloudinaryStorage((req, file) => cloudinaryParams(subFolder, file));
 
     return multer({
       storage,
@@ -84,5 +106,7 @@ module.exports = {
   createUploadMiddleware,
   getUploadedFileUrl,
   randomFileId,
-  safeFileName
+  safeFileName,
+  cloudinaryStorage,
+  cloudinaryParams
 };

@@ -42,7 +42,7 @@ const BODY_LIMIT = '25mb';
 // Middlewares
 // En-têtes de sécurité HTTP (l'API ne sert que du JSON, des PDF et les fichiers envoyés)
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'same-site' } }));
-app.use(cors({ origin: allowedOrigins }));
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json({ limit: BODY_LIMIT }));
 app.use(express.urlencoded({ limit: BODY_LIMIT, extended: true }));
 // Fichiers envoyés par les utilisateurs : jamais interprétés comme page ou script.

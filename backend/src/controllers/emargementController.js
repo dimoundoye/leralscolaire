@@ -1,13 +1,15 @@
 const EmargementModel = require('../models/emargementModel');
 const db = require('../config/db');
-const { getAdminEtablissementId } = require('../middleware/access');
+const { getAdminEtablissementId, isProfAffiliated, isProfOfClasse } = require('../middleware/access');
+const { parsePosition, checkInsideRadius } = require('../utils/geo');
+
+const isValidUuid = (val) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(val));
 
 const EmargementController = {
   // 1. Obtenir le flux QR Code Live 20s (pour le surveillant)
   async getLiveQrToken(req, res) {
     try {
       let { etablissementId } = req.params;
-      const isValidUuid = (val) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(val));
 
       if (!etablissementId || !isValidUuid(etablissementId)) {
         // Résoudre l'établissement actif ou le premier en base
@@ -27,123 +29,142 @@ const EmargementController = {
     }
   },
 
-  // 2. Scanner un Émargement par le Prof (QR Code 20s)
+  // 2. Scanner un Émargement par le Prof (QR Code 20s + position dans l'établissement)
   async scanEmargement(req, res) {
     try {
       const profId = req.user.id;
-      const { token, etablissementId, classeId, matiereCode, matiereNom, heureDebut, heureFin, latitude, longitude } = req.body;
+      const { token, classeId, matiereCode, matiereNom, heureDebut, heureFin, latitude, longitude, precision } = req.body;
 
       if (!token) {
         return res.status(400).json({ success: false, error: 'Token QR Code manquant' });
       }
 
-      const isValidUuid = (val) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(val));
-
-      // Extraire le token et son établissement
-      let tokenEtabId = null;
+      // L'établissement est celui encodé dans le QR Code, jamais celui envoyé par le client
+      let etablissementId = null;
       try {
-        const decoded = JSON.parse(Buffer.from(token, 'base64').toString('utf8'));
-        if (decoded && decoded.etabId) {
-          tokenEtabId = decoded.etabId;
-        }
-      } catch (e) {}
+        etablissementId = JSON.parse(Buffer.from(token, 'base64').toString('utf8'))?.etabId || null;
+      } catch (e) {
+        etablissementId = null;
+      }
+      if (!isValidUuid(etablissementId)) {
+        return res.status(400).json({ success: false, error: 'QR Code invalide.' });
+      }
 
-      // Vérification cryptographique du QR Code
-      const verification = EmargementModel.verifyQrToken(tokenEtabId || etablissementId, token);
+      const verification = EmargementModel.verifyQrToken(etablissementId, token);
       if (!verification.valid) {
         return res.status(400).json({ success: false, error: verification.reason });
       }
 
-      // Résolution sécurisée d'un UUID d'établissement valide pour PostgreSQL
-      let targetEtabId = isValidUuid(etablissementId) ? etablissementId : (isValidUuid(tokenEtabId) ? tokenEtabId : null);
-      if (!targetEtabId) {
-        const { rows: profEtabs } = await db.query(
-          `SELECT etablissement_id FROM professeurs_etablissements WHERE professeur_id = $1 AND statut = 'ACTIF' LIMIT 1`,
-          [profId]
-        );
-        if (profEtabs.length > 0 && isValidUuid(profEtabs[0].etablissement_id)) {
-          targetEtabId = profEtabs[0].etablissement_id;
-        } else {
-          const { rows: anyEtab } = await db.query('SELECT id FROM etablissements ORDER BY created_at ASC LIMIT 1');
-          targetEtabId = anyEtab[0]?.id || null;
-        }
+      if (!(await isProfAffiliated(profId, etablissementId))) {
+        return res.status(403).json({ success: false, error: 'Vous n\'êtes pas rattaché à cet établissement.' });
       }
 
-      if (!targetEtabId) {
-        return res.status(400).json({ success: false, error: "Impossible d'identifier l'établissement pour cet émargement." });
+      // Le professeur doit se trouver dans le rayon autorisé autour de l'établissement
+      const position = parsePosition(latitude, longitude, precision);
+      if (!position) {
+        return res.status(400).json({ success: false, error: 'Position GPS requise : autorisez la localisation pour émarger.' });
+      }
+      const { rows: etabRows } = await db.query(
+        'SELECT latitude, longitude, rayon_emargement_metres FROM etablissements WHERE id = $1',
+        [etablissementId]
+      );
+      const etab = etabRows[0];
+      if (!etab || etab.latitude === null || etab.longitude === null) {
+        return res.status(409).json({
+          success: false,
+          error: 'La position GPS de l\'établissement n\'est pas encore enregistrée. Contactez l\'administration.'
+        });
+      }
+      const geo = checkInsideRadius(position, etab, etab.rayon_emargement_metres, 'de l\'établissement');
+      if (!geo.ok) {
+        return res.status(403).json({ success: false, error: geo.message });
       }
 
-      // Résolution sécurisée d'un UUID de classe valide ou null
-      let targetClasseId = isValidUuid(classeId) ? classeId : null;
-      if (!targetClasseId) {
-        const { rows: profClasses } = await db.query(
-          `SELECT c.id FROM classes c 
-           LEFT JOIN cours cr ON cr.classe_id = c.id 
-           WHERE (c.professeur_principal_id = $1 OR cr.professeur_id = $1)
-             AND c.etablissement_id = $2
-           LIMIT 1`,
-          [profId, targetEtabId]
-        );
-        if (profClasses.length > 0 && isValidUuid(profClasses[0].id)) {
-          targetClasseId = profClasses[0].id;
-        }
-      }
+      // Classe retenue uniquement si le professeur y enseigne
+      const targetClasseId = isValidUuid(classeId) && await isProfOfClasse(profId, classeId) ? classeId : null;
 
       const seance = await EmargementModel.findOrCreateSeance(
-        profId, targetEtabId, targetClasseId, matiereCode || 'GEN', matiereNom || 'Cours Général', heureDebut || '08:00', heureFin || '10:00', 'REGULIER'
+        profId, etablissementId, targetClasseId, matiereCode || 'GEN', matiereNom || 'Cours Général', heureDebut || '08:00', heureFin || '10:00', 'REGULIER'
       );
 
       const emargement = await EmargementModel.createEmargement(
-        seance.id, profId, targetEtabId, 'QR_SCAN_20S', latitude || null, longitude || null, 15, token
+        seance.id, profId, etablissementId, 'QR_SCAN_20S', position.latitude, position.longitude, geo.distance, token
       );
 
       return res.json({
         success: true,
-        message: 'Présence physique émargée avec succès ! N\'oubliez pas de renseigner le cahier de texte pour valider définitivement la séance.',
+        message: `Présence physique émargée avec succès (${geo.distance} m de l'établissement) ! N'oubliez pas de renseigner le cahier de texte pour valider définitivement la séance.`,
         seance,
         emargement
       });
     } catch (err) {
       console.error('Erreur scanEmargement:', err);
-      return res.status(500).json({ success: false, error: err.message });
+      return res.status(500).json({ success: false, error: 'Erreur lors de l\'émargement.' });
     }
   },
 
-  // 3. Mode Terrain EPS (Géofencing GPS <100m)
+  // 3. Mode Terrain EPS : position comparée au terrain d'EPS déclaré par l'établissement
+  // (un terrain peut se trouver à plusieurs kilomètres de l'établissement)
   async emargerEpsTerrain(req, res) {
     try {
       const profId = req.user.id;
-      const { etablissementId, classeId, matiereCode, matiereNom, heureDebut, heureFin, latitude, longitude } = req.body;
+      const { terrainId, classeId, heureDebut, heureFin, latitude, longitude, precision } = req.body;
 
-      if (!latitude || !longitude || !etablissementId) {
-        return res.status(400).json({ success: false, error: 'Coordonnées GPS et Établissement requis pour le Mode EPS' });
+      if (!isValidUuid(terrainId)) {
+        return res.status(400).json({ success: false, error: 'Veuillez choisir le terrain d\'EPS où se déroule la séance.' });
+      }
+      const { rows: terrainRows } = await db.query('SELECT * FROM terrains_eps WHERE id = $1', [terrainId]);
+      const terrain = terrainRows[0];
+      if (!terrain) {
+        return res.status(404).json({ success: false, error: 'Terrain d\'EPS introuvable.' });
+      }
+      if (!(await isProfAffiliated(profId, terrain.etablissement_id))) {
+        return res.status(403).json({ success: false, error: 'Vous n\'êtes pas rattaché à l\'établissement de ce terrain.' });
       }
 
-      let nomEtab = 'Établissement';
-      try {
-        const { rows: etab } = await db.query('SELECT nom FROM etablissements WHERE id::text = $1::text', [etablissementId]);
-        if (etab[0]?.nom) nomEtab = etab[0].nom;
-      } catch (e) {}
-      const distanceMetres = 45;
+      const position = parsePosition(latitude, longitude, precision);
+      if (!position) {
+        return res.status(400).json({ success: false, error: 'Position GPS requise : autorisez la localisation pour émarger.' });
+      }
+      const geo = checkInsideRadius(position, terrain, terrain.rayon_metres, `du terrain « ${terrain.nom} »`);
+      if (!geo.ok) {
+        return res.status(403).json({ success: false, error: geo.message });
+      }
+
+      const targetClasseId = isValidUuid(classeId) && await isProfOfClasse(profId, classeId) ? classeId : null;
 
       const seance = await EmargementModel.findOrCreateSeance(
-        profId, etablissementId, classeId, matiereCode || 'EPS', matiereNom || 'Éducation Physique & Sportive', 
+        profId, terrain.etablissement_id, targetClasseId, 'EPS', 'Éducation Physique & Sportive',
         heureDebut || '08:00', heureFin || '10:00', 'EPS_OUTDOOR'
       );
 
       const emargement = await EmargementModel.createEmargement(
-        seance.id, profId, etablissementId, 'EPS_GPS_TERRAIN', latitude, longitude, distanceMetres, 'EPS_GPS_VALIDATED'
+        seance.id, profId, terrain.etablissement_id, 'EPS_GPS_TERRAIN', position.latitude, position.longitude, geo.distance, 'EPS_GPS_VALIDATED', terrain.id
       );
 
       return res.json({
         success: true,
-        message: `Émargement Terrain EPS validé avec succès (Position GPS confirmée au stade du lycée - ${distanceMetres}m).`,
+        message: `Émargement EPS validé sur le terrain « ${terrain.nom} » (${geo.distance} m).`,
         seance,
         emargement
       });
     } catch (err) {
       console.error('Erreur emargerEpsTerrain:', err);
-      return res.status(500).json({ success: false, error: err.message });
+      return res.status(500).json({ success: false, error: 'Erreur lors de l\'émargement EPS.' });
+    }
+  },
+
+  // Terrains d'EPS d'un établissement, pour le choix du professeur
+  async listTerrainsEps(req, res) {
+    try {
+      const { rows } = await db.query(
+        'SELECT id, nom, latitude, longitude, rayon_metres FROM terrains_eps WHERE etablissement_id = $1 ORDER BY nom',
+        [req.params.etablissementId]
+      );
+      return res.json({ success: true, terrains: rows });
+    } catch (err) {
+      console.error('Erreur listTerrainsEps:', err);
+      return res.status(500).json({ success: false, error: 'Erreur lors du chargement des terrains d\'EPS.' });
     }
   },
 

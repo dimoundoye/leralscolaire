@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
   LayoutDashboard, User, BookOpen, GraduationCap, Calendar, 
@@ -51,9 +52,8 @@ const normalizeNotesData = (rawNotes) => {
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
+  const { user, logout: endSession } = useAuth();
   const { tab = 'overview' } = useParams();
-  const token = localStorage.getItem('token');
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   // Network & Sync state
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
@@ -153,7 +153,7 @@ const StudentDashboard = () => {
 
   // Fetch all data
   const fetchData = async (forceSync = false) => {
-    if (!token) {
+    if (!user) {
       navigate('/auth');
       return;
     }
@@ -161,7 +161,7 @@ const StudentDashboard = () => {
     if (navigator.onLine && !isOffline) {
       if (forceSync) setSyncing(true);
       try {
-        const headers = { 'Authorization': `Bearer ${token}` };
+        const headers = { };
 
         // Fetch Profile
         const profRes = await fetch(`${API_BASE_URL}/eleve-portal/profile`, { headers });
@@ -296,7 +296,6 @@ const StudentDashboard = () => {
     const storedOffline = JSON.parse(localStorage.getItem('offline_portfolio_adds') || '[]');
     if (storedOffline.length > 0 && navigator.onLine) {
       const headers = { 
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       };
       for (const item of storedOffline) {
@@ -327,17 +326,13 @@ const StudentDashboard = () => {
   }, [tab]);
 
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/auth');
-  };
+  const logout = () => endSession();
 
   // === MESSAGING FUNCTIONS ===
   const fetchChatChannel = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/messages/channels`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) {
         const data = await res.json();
@@ -365,7 +360,7 @@ const StudentDashboard = () => {
       }
 
       const res = await fetch(`${API_BASE_URL}/messages/history?${params}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) {
         const data = await res.json();
@@ -389,7 +384,7 @@ const StudentDashboard = () => {
     try {
       const res = await fetch(`${API_BASE_URL}/messages/upload`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: {},
         body: formData
       });
       if (res.ok) {
@@ -435,7 +430,7 @@ const StudentDashboard = () => {
     try {
       const res = await fetch(`${API_BASE_URL}/messages`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       if (res.ok) {
@@ -455,7 +450,7 @@ const StudentDashboard = () => {
   const refreshAttestationHistory = async () => {
     try {
       const attRes = await fetch(`${API_BASE_URL}/eleve-portal/attestations/history`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (attRes.ok) {
         const attData = await attRes.json();
@@ -474,7 +469,6 @@ const StudentDashboard = () => {
       const res = await fetch(`${API_BASE_URL}/eleve-portal/attestations/request`, {
         method: 'POST',
         headers: { 
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ motif_demande: attestationMotif })
@@ -522,7 +516,6 @@ const StudentDashboard = () => {
       const response = await fetch(`${API_BASE_URL}/eleve-portal/portfolio`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(newPortfolio)
@@ -562,7 +555,7 @@ const StudentDashboard = () => {
       try {
         const response = await fetch(`${API_BASE_URL}/eleve-portal/portfolio/${id}`, {
           method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: {}
         });
         if (response.ok) {
           fetchData();
@@ -578,7 +571,7 @@ const StudentDashboard = () => {
     setCahierLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/cahier-texte/eleve`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) {
         const data = await res.json();
@@ -603,7 +596,7 @@ const StudentDashboard = () => {
     try {
       await fetch(`${API_BASE_URL}/eleve-portal/notifications/read`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
     } catch (err) {
       console.error('Failed to mark read on server:', err);
@@ -2340,7 +2333,7 @@ const StudentDashboard = () => {
                         </span>
                       ) : (
                         <a 
-                          href={`/api/documents/bulletin/${bull.eleve_id}?semestre=${bull.semestre}&token=${token}`}
+                          href={`/api/documents/bulletin/${bull.eleve_id}?semestre=${bull.semestre}`}
                           target="_blank" 
                           rel="noopener noreferrer" 
                           className="download-action-btn"
@@ -2465,7 +2458,6 @@ const StudentDashboard = () => {
               selectedGradePeriod={selectedGradePeriod}
               setSelectedGradePeriod={setSelectedGradePeriod}
               documents={documents}
-              token={token}
               fetchData={fetchData}
             />
           )}
@@ -2540,7 +2532,6 @@ const StudentDashboard = () => {
             <StudentAttestationTab
               attestationHistory={attestationHistory}
               profile={profile}
-              token={token}
               refreshAttestationHistory={refreshAttestationHistory}
               handleSubmitAttestationRequest={handleSubmitAttestationRequest}
               attestationMotif={attestationMotif}

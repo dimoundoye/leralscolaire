@@ -8,7 +8,6 @@ const StudentGradesTab = ({
   selectedGradePeriod,
   setSelectedGradePeriod,
   documents,
-  token,
   fetchData
 }) => {
   const hasNotes = notes && Object.keys(notes).length > 0;
@@ -187,7 +186,7 @@ const StudentGradesTab = ({
                       </span>
                     ) : (
                       <a 
-                        href={`/api/documents/bulletin/${bull.eleve_id}?semestre=${bull.semestre}&token=${token}`}
+                        href={`/api/documents/bulletin/${bull.eleve_id}?semestre=${bull.semestre}`}
                         target="_blank" 
                         rel="noopener noreferrer" 
                         className="download-action-btn"

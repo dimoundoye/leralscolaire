@@ -160,14 +160,13 @@ const Dashboard = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingFile(true);
-    const token = localStorage.getItem('token');
     const formData = new FormData();
     formData.append('fichier', file);
 
     try {
       const res = await fetch('/api/messages/upload', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: {},
         body: formData
       });
       if (res.ok) {
@@ -340,8 +339,7 @@ const Dashboard = () => {
   const [copiedPass, setCopiedPass] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!user && !token) {
+    if (!user) {
       navigate('/auth');
     } else {
       fetchAllData();
@@ -363,11 +361,10 @@ const Dashboard = () => {
   };
 
   const fetchTransfers = async () => {
-    const token = localStorage.getItem('token');
     try {
       const [incRes, outRes] = await Promise.all([
-        fetch('/api/eleves/transfers/incoming', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/eleves/transfers/outgoing', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch('/api/eleves/transfers/incoming', { headers: {} }),
+        fetch('/api/eleves/transfers/outgoing', { headers: {} })
       ]);
       if (incRes.ok) setIncomingTransfers(await incRes.json());
       if (outRes.ok) setOutgoingTransfers(await outRes.json());
@@ -375,11 +372,10 @@ const Dashboard = () => {
   };
 
   const fetchPartages = async () => {
-    const token = localStorage.getItem('token');
     try {
       const [recusRes, envoyesRes] = await Promise.all([
-        fetch('/api/partages/received', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/partages/sent', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch('/api/partages/received', { headers: {} }),
+        fetch('/api/partages/sent', { headers: {} })
       ]);
       if (recusRes.ok) setPartagesRecus(await recusRes.json());
       if (envoyesRes.ok) setPartagesEnvoyes(await envoyesRes.json());
@@ -388,10 +384,9 @@ const Dashboard = () => {
 
   const fetchPartageEtab = async (q) => {
     if (q.length < 2) { setPartageResults([]); return; }
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/etablissement/search?q=${encodeURIComponent(q)}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) setPartageResults(await res.json());
     } catch (err) { console.error(err); }
@@ -400,14 +395,13 @@ const Dashboard = () => {
   const fetchDecisions = async (classeId) => {
     if (!classeId) return;
     setLoading(true);
-    const token = localStorage.getItem('token');
     try {
       const [decisionsRes, reglesRes] = await Promise.all([
         fetch(`/api/notes/decisions/${classeId}?annee_scolaire=${notesAnneeScolaire}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: {}
         }),
         fetch('/api/notes/regles-passage', {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: {}
         })
       ]);
       if (decisionsRes.ok) setDecisions(await decisionsRes.json());
@@ -418,7 +412,6 @@ const Dashboard = () => {
 
   const fetchAuditLog = async (classeId = '', trimestre = '', anneeScolaire = notesAnneeScolaire) => {
     setAuditLoading(true);
-    const token = localStorage.getItem('token');
     try {
       let url = '/api/etablissement/audit';
       const params = new URLSearchParams();
@@ -427,7 +420,7 @@ const Dashboard = () => {
       if (anneeScolaire) params.append('annee_scolaire', anneeScolaire);
       if ([...params].length > 0) url += '?' + params.toString();
 
-      const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await fetch(url, { headers: {} });
       if (res.ok) setAuditLog(await res.json());
     } catch (err) { console.error(err); }
     setAuditLoading(false);
@@ -441,13 +434,12 @@ const Dashboard = () => {
   const executeAuditAction = async () => {
     if (!auditConfirmAction) return;
     const { type, entry } = auditConfirmAction;
-    const token = localStorage.getItem('token');
     const endpoint = type === 'confirm' ? 'confirm' : 'reject';
     
     try {
       const res = await fetch(`/api/etablissement/audit/${entry.id}/${endpoint}`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       const data = await res.json();
       if (res.ok) {
@@ -467,10 +459,9 @@ const Dashboard = () => {
 
   const fetchSuiviRemplissage = async (sem = suiviSemestre, anneeScolaire = notesAnneeScolaire) => {
     setSuiviLoading(true);
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/notes/suivi-remplissage?semestre=${sem}&annee_scolaire=${anneeScolaire}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) setSuiviRemplissage(await res.json());
     } catch (err) { console.error(err); }
@@ -478,13 +469,11 @@ const Dashboard = () => {
   };
 
   const handleToggleBulletinPublication = async (classeId, anneeScolaire, currentStatus) => {
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/notes/publications/${classeId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           semestre: suiviSemestre,
@@ -520,7 +509,6 @@ const Dashboard = () => {
 
   const fetchAbsencesLog = async (classeId = '', justifiee = '', date = '', q = '') => {
     setAbsLoading(true);
-    const token = localStorage.getItem('token');
     try {
       let url = '/api/etablissement/absences';
       const params = new URLSearchParams();
@@ -530,7 +518,7 @@ const Dashboard = () => {
       if (q) params.append('q', q);
       if ([...params].length > 0) url += '?' + params.toString();
 
-      const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await fetch(url, { headers: {} });
       if (res.ok) setAbsencesLog(await res.json());
     } catch (err) { console.error(err); }
     setAbsLoading(false);
@@ -539,13 +527,11 @@ const Dashboard = () => {
   const handleJustifyAbsence = async (e) => {
     e.preventDefault();
     if (!selectedAbsenceForJustify) return;
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/etablissement/absences/${selectedAbsenceForJustify.id}/justifier`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ motif_justification: absJustificationMotif })
       });
@@ -579,12 +565,11 @@ const Dashboard = () => {
   const fetchCahierAdmin = async () => {
     setCahierLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const params = new URLSearchParams();
       if (cahierFilterClasse) params.append('classe_id', cahierFilterClasse);
       if (cahierFilterProf) params.append('professeur_id', cahierFilterProf);
       const res = await fetch(`/api/cahier-texte/admin?${params}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) {
         const data = await res.json();
@@ -599,10 +584,9 @@ const Dashboard = () => {
 
   const handleToggleVisa = async (id) => {
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(`/api/cahier-texte/${id}/visa`, {
         method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) {
         const data = await res.json();
@@ -622,11 +606,10 @@ const Dashboard = () => {
 
   const handleSaveRegles = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch('/api/notes/regles-passage', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(reglesPassage)
       });
       if (res.ok) {
@@ -639,11 +622,10 @@ const Dashboard = () => {
 
   const handleSaveDecisions = async () => {
     setLoading(true);
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/notes/decisions/${decisionsClasseId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ decisions, annee_scolaire: notesAnneeScolaire })
       });
       if (res.ok) {
@@ -694,10 +676,9 @@ const Dashboard = () => {
   };
 
   const fetchClasses = async () => {
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch('/api/classes', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.status === 401) {
         logout?.();
@@ -710,10 +691,9 @@ const Dashboard = () => {
   };
 
   const fetchEleves = async () => {
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch('/api/eleves', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.status === 401) {
         logout?.();
@@ -726,10 +706,9 @@ const Dashboard = () => {
   };
 
   const fetchMatieres = async () => {
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch('/api/notes/matieres', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       const data = await res.json();
       if (res.ok) setMatieres(data);
@@ -737,10 +716,9 @@ const Dashboard = () => {
   };
 
   const fetchProfs = async () => {
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch('/api/professeurs', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       const data = await res.json();
       if (res.ok) setProfs(data);
@@ -748,10 +726,9 @@ const Dashboard = () => {
   };
 
   const fetchSchedule = async (classeId) => {
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/classes/${classeId}/schedule`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       const data = await res.json();
       if (res.ok) setScheduleEntries(data);
@@ -759,10 +736,9 @@ const Dashboard = () => {
   };
 
   const fetchExams = async (classeId) => {
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/classes/${classeId}/exams`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       const data = await res.json();
       if (res.ok) setExamPlans(data);
@@ -770,10 +746,9 @@ const Dashboard = () => {
   };
 
   const fetchProposedDevoirs = async () => {
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch('/api/etablissement/planning/propositions', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       const data = await res.json();
       if (res.ok) setProposedDevoirs(data);
@@ -783,12 +758,10 @@ const Dashboard = () => {
   };
 
   const handleDecideProposal = async (proposalId, action) => {
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/etablissement/planning/propositions/${proposalId}/decider`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ action })
@@ -808,10 +781,9 @@ const Dashboard = () => {
   };
 
   const fetchAllExams = async (debut, fin) => {
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/classes/exams/all?debut=${debut}&fin=${fin}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       const data = await res.json();
       if (res.ok) setCalendarExams(data);
@@ -819,10 +791,9 @@ const Dashboard = () => {
   };
 
   const fetchScheduleMatieres = async (classeId) => {
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/classes/${classeId}/matieres`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       const data = await res.json();
       if (res.ok) setScheduleMatieres(data);
@@ -830,10 +801,9 @@ const Dashboard = () => {
   };
 
   const fetchProfile = async () => {
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch('/api/etablissement/profile', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       const data = await res.json();
       if (res.ok) setProfile(data);
@@ -841,11 +811,10 @@ const Dashboard = () => {
   };
 
   const fetchClassAverages = async (semestre, anneeScolaire) => {
-    const token = localStorage.getItem('token');
     const targetYear = anneeScolaire || overviewAnneeFilter;
     try {
       const res = await fetch(`/api/notes/moyennes-classes?semestre=${semestre || 1}&annee_scolaire=${encodeURIComponent(targetYear)}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       const data = await res.json();
       if (res.ok) {
@@ -855,10 +824,9 @@ const Dashboard = () => {
   };
 
   const fetchMessages = async () => {
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch('/api/messages/inbox', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       const data = await res.json();
       if (res.ok) setMessages(data);
@@ -866,10 +834,9 @@ const Dashboard = () => {
   };
 
   const fetchChatChannels = async () => {
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch('/api/messages/channels', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) {
         const data = await res.json();
@@ -881,12 +848,11 @@ const Dashboard = () => {
   const fetchChatHistory = async (contact) => {
     if (!contact) return;
     setChatLoading(true);
-    const token = localStorage.getItem('token');
     try {
       const params = new URLSearchParams({ type: contact.type, target_id: contact.id });
       if (chatChannels.etablissement_id) params.append('etablissement_id', chatChannels.etablissement_id);
       const res = await fetch(`/api/messages/history?${params}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) {
         const data = await res.json();
@@ -899,14 +865,13 @@ const Dashboard = () => {
   const sendChatMessage = async (e) => {
     e.preventDefault();
     if ((!chatInput.trim() && !attachedFile) || !activeChatContact) return;
-    const token = localStorage.getItem('token');
     const destType = activeChatContact.type === 'PROFESSEUR' ? 'PROFESSEUR' :
                      activeChatContact.type === 'ELEVE' ? 'ELEVE' :
                      activeChatContact.type === 'CLASSE' ? 'CLASSE' : 'ADMIN_ETABLISSEMENT';
     try {
       const res = await fetch('/api/messages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           destinataire_type: destType,
           destinataire_id: activeChatContact.id,
@@ -931,11 +896,10 @@ const Dashboard = () => {
   };
 
   const toggleMessagePermission = async (profId, currentValue) => {
-    const token = localStorage.getItem('token');
     try {
       await fetch(`/api/professeurs/${profId}/permission`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ droit_envoi_message: !currentValue })
       });
       fetchProfs();
@@ -960,10 +924,9 @@ const Dashboard = () => {
   const fetchNotesGrid = async (classeId, matiereId) => {
     if (!classeId || !matiereId) return;
     setLoading(true);
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/notes/classe/${classeId}/matiere/${matiereId}?semestre=${selectedSemestre}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
 
       const data = await res.json();
@@ -1060,10 +1023,9 @@ const Dashboard = () => {
       return;
     }
     const delayDebounceFn = setTimeout(async () => {
-      const token = localStorage.getItem('token');
       try {
         const res = await fetch(`/api/etablissement/search?q=${encodeURIComponent(transferSearch.trim())}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: {}
         });
         const data = await res.json();
         if (res.ok) {
@@ -1086,9 +1048,8 @@ const Dashboard = () => {
     setShowGradesModal(true);
     setSelectedGradesData(null);
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(`/api/notes/eleve/${eleveId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) {
         const data = await res.json();
@@ -1133,7 +1094,6 @@ const Dashboard = () => {
     e.preventDefault();
     if (!selectedGradesData || !selectedGradesData.student) return;
     setSavingJuryDecision(true);
-    const token = localStorage.getItem('token');
     
     const student = selectedGradesData.student;
     const activeYear = Object.keys(selectedGradesData.notes)[0];
@@ -1175,7 +1135,6 @@ const Dashboard = () => {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(payload)
       });
@@ -1219,9 +1178,8 @@ const Dashboard = () => {
     }
     setRankingLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(`/api/notes/classe/${classeId}/classement?period=${period}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) {
         const data = await res.json();
@@ -1258,8 +1216,7 @@ const Dashboard = () => {
 
   const handleDownloadRankingPDF = () => {
     if (!rankingClasseId) return;
-    const token = localStorage.getItem('token');
-    const url = `/api/documents/classe/${rankingClasseId}/classement-pdf?period=${rankingPeriod}&token=${token}`;
+    const url = `/api/documents/classe/${rankingClasseId}/classement-pdf?period=${rankingPeriod}`;
     window.open(url, '_blank');
   };
 
@@ -1279,7 +1236,6 @@ const Dashboard = () => {
   const handleAddEleve = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const token = localStorage.getItem('token');
     const formData = new FormData();
     const fields = ['nom', 'prenom', 'sexe', 'date_naissance', 'lieu_naissance', 'nationalite', 'telephone', 'email', 'coordonnees_parent', 'classe_id', 'statut'];
     fields.forEach(key => {
@@ -1291,7 +1247,7 @@ const Dashboard = () => {
     try {
       const res = await fetch('/api/eleves', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: {},
         body: formData
       });
       if (res.ok) {
@@ -1312,7 +1268,6 @@ const Dashboard = () => {
   const handleUpdateEleve = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const token = localStorage.getItem('token');
     const formData = new FormData();
     const fields = ['nom', 'prenom', 'sexe', 'date_naissance', 'lieu_naissance', 'nationalite', 'telephone', 'email', 'coordonnees_parent', 'statut', 'classe_id'];
     fields.forEach(key => {
@@ -1330,7 +1285,7 @@ const Dashboard = () => {
     try {
       const res = await fetch(`/api/eleves/${editingEleve.id}`, {
         method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: {},
         body: formData
       });
       if (res.ok) {
@@ -1342,23 +1297,20 @@ const Dashboard = () => {
 
   const handleDeleteEleve = async (id) => {
     if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet élève et son compte ?')) return;
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/eleves/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) fetchEleves();
     } catch (err) { console.error(err); }
   };
 
   const fetchPreInscriptions = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
     setLoadingPreInscriptions(true);
     try {
       const res = await fetch('/api/pre-inscriptions', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) {
         const data = await res.json();
@@ -1373,14 +1325,12 @@ const Dashboard = () => {
   };
 
   const handleValidatePreInscription = async (id, overrideEmail = null) => {
-    const token = localStorage.getItem('token');
     if (overrideEmail !== null) setResolvingDuplicateEmail(true);
     try {
       const body = overrideEmail !== null ? JSON.stringify({ email: overrideEmail }) : undefined;
       const res = await fetch(`/api/pre-inscriptions/${id}/validate`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           ...(body ? { 'Content-Type': 'application/json' } : {})
         },
         body
@@ -1415,11 +1365,10 @@ const Dashboard = () => {
 
   const handleRejectPreInscription = async (id) => {
     if (!window.confirm('Êtes-vous sûr de vouloir rejeter cette demande ?')) return;
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/pre-inscriptions/${id}/reject`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) {
         showNotification('Demande rejetée.');
@@ -1435,13 +1384,11 @@ const Dashboard = () => {
 
   const handleUpdatePreInscription = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/pre-inscriptions/${editingPreInscription.id}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
         },
         body: JSON.stringify(editingPreInscription)
       });
@@ -1470,7 +1417,6 @@ const Dashboard = () => {
     if (!selectedTargetEtab) return showNotification('Veuillez sélectionner un établissement destinataire.', 'error');
 
     setLoading(true);
-    const token = localStorage.getItem('token');
     try {
       const isBulk = selectedEleveIds.length > 0;
       const url = isBulk 
@@ -1483,7 +1429,7 @@ const Dashboard = () => {
 
       const res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
       const data = await res.json();
@@ -1505,11 +1451,10 @@ const Dashboard = () => {
   const handleAcceptTransfer = async (transferId) => {
     setLoading(true);
     setConfirmTransferModal(null);
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/eleves/transfers/${transferId}/accept`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       const data = await res.json();
       if (res.ok) {
@@ -1525,11 +1470,10 @@ const Dashboard = () => {
   const handleRejectTransfer = async (transferId) => {
     setLoading(true);
     setConfirmTransferModal(null);
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/eleves/transfers/${transferId}/reject`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       const data = await res.json();
       if (res.ok) {
@@ -1544,11 +1488,10 @@ const Dashboard = () => {
   const handleCancelTransfer = async (transferId) => {
     setLoading(true);
     setConfirmTransferModal(null);
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/eleves/transfers/${transferId}/cancel`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       const data = await res.json();
       if (res.ok) {
@@ -1564,11 +1507,10 @@ const Dashboard = () => {
   const handleAssignClass = async (eleve, classeId) => {
     if (!classeId) return;
     setLoading(true);
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/eleves/${eleve.id}/assign-class`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ classe_id: classeId })
       });
       const data = await res.json();
@@ -1590,11 +1532,10 @@ const Dashboard = () => {
   const handleAddSchedule = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/classes/${scheduleClassId}/schedule`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newSchedule)
       });
       if (res.ok) {
@@ -1608,11 +1549,10 @@ const Dashboard = () => {
 
   const handleDeleteSchedule = async (scheduleId) => {
     if (!window.confirm('Supprimer ce créneau ?')) return;
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/classes/${scheduleClassId}/schedule/${scheduleId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) { fetchSchedule(scheduleClassId); showNotification('Créneau supprimé.'); }
     } catch (err) { console.error(err); }
@@ -1621,7 +1561,6 @@ const Dashboard = () => {
   const handleAddExam = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const token = localStorage.getItem('token');
     const dateTime = newExam.heure_examen
       ? `${newExam.date_examen}T${newExam.heure_examen}:00`
       : newExam.date_examen;
@@ -1632,7 +1571,7 @@ const Dashboard = () => {
     try {
       const res = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...newExam, date_examen: dateTime })
       });
       if (res.ok) {
@@ -1648,11 +1587,10 @@ const Dashboard = () => {
 
   const handleDeleteExam = async (examId) => {
     if (!window.confirm('Supprimer cet examen ?')) return;
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/classes/${examClassId}/exams/${examId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) { fetchExams(examClassId); showNotification('Examen supprimé.'); }
     } catch (err) { console.error(err); }
@@ -1661,13 +1599,12 @@ const Dashboard = () => {
   const handleAddClass = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const token = localStorage.getItem('token');
     const method = editingClass ? 'PUT' : 'POST';
     const url = editingClass ? `/api/classes/${editingClass.id}` : '/api/classes';
     try {
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editingClass || newClass)
       });
       if (res.ok) {
@@ -1682,7 +1619,6 @@ const Dashboard = () => {
   const handleAddMatiere = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const token = localStorage.getItem('token');
     const method = editingMatiere ? 'PUT' : 'POST';
     const url = editingMatiere ? `/api/notes/matieres/${editingMatiere.id}` : '/api/notes/matieres';
     const payload = editingMatiere 
@@ -1691,7 +1627,7 @@ const Dashboard = () => {
     try {
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       if (res.ok) {
@@ -1705,11 +1641,10 @@ const Dashboard = () => {
 
   const handleDeleteMatiere = async (id) => {
     if (!window.confirm('Supprimer cette matière ?')) return;
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/notes/matieres/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) fetchMatieres();
     } catch (err) { console.error(err); }
@@ -1718,14 +1653,13 @@ const Dashboard = () => {
   const handleSaveNotes = async () => {
     if (!selectedClasse || !selectedMatiere) return showNotification('Veuillez sélectionner une classe et une matière.', 'error');
     setLoading(true);
-    const token = localStorage.getItem('token');
     try {
       const editable = notesGrid.filter(n => !n.readonly);
 
       // 1. Envoi des Devoirs
       const resDevoir = await fetch('/api/notes/batch', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           notes: editable.map(n => ({ eleve_id: n.eleve_id, valeur: n.note_devoir, appreciation: '' })),
           matiere_id: selectedMatiere,
@@ -1742,7 +1676,7 @@ const Dashboard = () => {
       // 2. Envoi des Examens
       const resExamen = await fetch('/api/notes/batch', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           notes: editable.map(n => ({ eleve_id: n.eleve_id, valeur: n.note_examen, appreciation: n.appreciation })),
           matiere_id: selectedMatiere,
@@ -1770,10 +1704,9 @@ const Dashboard = () => {
   const openCoefModal = async (classe) => {
     setSelectedClassCoef(classe);
     setLoading(true);
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/classes/${classe.id}/matieres`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       const data = await res.json();
       if (res.ok) {
@@ -1788,7 +1721,6 @@ const Dashboard = () => {
 
   const handleSaveCoefs = async () => {
     setLoading(true);
-    const token = localStorage.getItem('token');
     const matieresToUpdate = Object.keys(currentCoefs).map(id => ({
       matiere_id: id,
       coefficient: currentCoefs[id]
@@ -1797,7 +1729,7 @@ const Dashboard = () => {
     try {
       const res = await fetch(`/api/classes/${selectedClassCoef.id}/matieres`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ matieres: matieresToUpdate })
       });
       if (res.ok) {
@@ -1813,8 +1745,7 @@ const Dashboard = () => {
 
 
   const handleExportExcel = async () => {
-    const token = localStorage.getItem('token');
-    window.open(`/api/eleves/export?token=${token}&classe_id=${selectedClasseFilter}`, '_blank');
+    window.open(`/api/eleves/export?classe_id=${selectedClasseFilter}`, '_blank');
   };
 
 
@@ -1824,11 +1755,10 @@ const Dashboard = () => {
     setLoading(true);
     const formData = new FormData();
     formData.append('file', file);
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch('/api/eleves/import', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: {},
         body: formData
       });
       const data = await res.json();
@@ -1848,11 +1778,10 @@ const Dashboard = () => {
     setLoading(true);
     const formData = new FormData();
     formData.append('image', file);
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch('/api/ai/scan-students', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: {},
         body: formData
       });
       const data = await res.json();
@@ -1887,16 +1816,15 @@ const Dashboard = () => {
 
   const handleDownloadDocument = async () => {
     if (!docPreviewModal.eleve) return;
-    const token = localStorage.getItem('token');
     const eleve = docPreviewModal.eleve;
     let url = '';
     let fileName = '';
 
     if (docPreviewModal.type === 'bulletin') {
-      url = `/api/documents/bulletin/${eleve.id}?token=${token}&semestre=${docPreviewModal.semestre}`;
+      url = `/api/documents/bulletin/${eleve.id}?semestre=${docPreviewModal.semestre}`;
       fileName = `Bulletin_${eleve.prenom}_${eleve.nom}_S${docPreviewModal.semestre}.pdf`.replace(/\s+/g, '_');
     } else if (docPreviewModal.type === 'dossier') {
-      url = `/api/documents/dossier-transfert/${eleve.id}?token=${token}`;
+      url = `/api/documents/dossier-transfert/${eleve.id}`;
       fileName = `Dossier_Transfert_${eleve.prenom}_${eleve.nom}.pdf`.replace(/\s+/g, '_');
     }
 
@@ -1924,7 +1852,6 @@ const Dashboard = () => {
     if (!selectedPartageEtab) return showNotification('Sélectionnez un établissement destinataire.', 'error');
     if (!partageFile) return showNotification('Sélectionnez un fichier.', 'error');
     setLoading(true);
-    const token = localStorage.getItem('token');
     try {
       const formData = new FormData();
       formData.append('fichier', partageFile);
@@ -1934,7 +1861,7 @@ const Dashboard = () => {
 
       const res = await fetch('/api/partages', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: {},
         body: formData
       });
       if (res.ok) {
@@ -1955,17 +1882,15 @@ const Dashboard = () => {
   };
 
   const handleDownloadPartage = async (id) => {
-    const token = localStorage.getItem('token');
-    window.open(`/api/partages/${id}/download?token=${token}`, '_blank');
+    window.open(`/api/partages/${id}/download`, '_blank');
     fetchPartages();
   };
 
   const handleDeletePartage = async (id) => {
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/partages/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) {
         showNotification('Document supprimé.');
@@ -1977,11 +1902,10 @@ const Dashboard = () => {
   const handleSendMessage = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch('/api/messages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newMessage)
       });
       if (res.ok) {
@@ -1995,11 +1919,10 @@ const Dashboard = () => {
 
   const handleTransmettreLivretsZone = async () => {
     if (!window.confirm(" Transmettre officiellement les Livrets Scolaires des élèves de Terminale / BFEM vers l'Office du BAC et la Zone d'Examen attribuée ?")) return;
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch('/api/office-bac/transmettre-livrets-zone', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       const data = await res.json();
       if (res.ok) {
@@ -2014,10 +1937,9 @@ const Dashboard = () => {
   };
 
   const fetchAttestations = async () => {
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch('/api/documents/attestations/requests', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) {
         const data = await res.json();
@@ -2027,11 +1949,10 @@ const Dashboard = () => {
   };
 
   const handleAcceptAttestation = async (id) => {
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/documents/attestations/requests/${id}/accept`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) {
         showNotification('Demande d\'attestation acceptée !');
@@ -2043,13 +1964,11 @@ const Dashboard = () => {
   const handleRefuseAttestation = async (e) => {
     e.preventDefault();
     if (!motifRefusAttestation) return;
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/documents/attestations/requests/${refusingAttestation.id}/refuse`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
         },
         body: JSON.stringify({ motif_refus: motifRefusAttestation })
       });
@@ -2065,13 +1984,12 @@ const Dashboard = () => {
   const handleAddProf = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const token = localStorage.getItem('token');
     const method = editingProf ? 'PUT' : 'POST';
     const url = editingProf ? `/api/professeurs/${editingProf.id}` : '/api/professeurs';
     try {
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editingProf || newProf)
       });
       if (res.ok) {
@@ -2089,10 +2007,9 @@ const Dashboard = () => {
     setSearchLoading(true);
     setSearchError('');
     setSearchedProf(null);
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/professeurs/search/${profSearchId.trim()}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       const data = await res.json();
       if (res.ok) {
@@ -2111,11 +2028,10 @@ const Dashboard = () => {
   const handleInviteProf = async () => {
     if (!searchedProf) return;
     setLoading(true);
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch('/api/professeurs/invite', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ professeur_id: searchedProf.id })
       });
       const data = await res.json();
@@ -2145,10 +2061,9 @@ const Dashboard = () => {
     setAssignMatiereId('');
     
     // Fetch current assignments
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/professeurs/${p.id}/assignments`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       const data = await res.json();
       if (res.ok) {
@@ -2163,11 +2078,10 @@ const Dashboard = () => {
     e.preventDefault();
     if (!assignClasseId || !assignMatiereId || !editingProf) return;
     setLoading(true);
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch('/api/professeurs/assignments', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           professeur_id: editingProf.id,
           classe_id: assignClasseId,
@@ -2180,7 +2094,7 @@ const Dashboard = () => {
         
         // Refresh assignments list
         const resList = await fetch(`/api/professeurs/${editingProf.id}/assignments`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: {}
         });
         const dataList = await resList.json();
         if (resList.ok) setProfAssignments(dataList);
@@ -2201,11 +2115,10 @@ const Dashboard = () => {
   const handleDeleteAssignment = async (assignmentId) => {
     if (!window.confirm('Retirer cette affectation ?')) return;
     setLoading(true);
-    const token = localStorage.getItem('token');
     try {
       const res = await fetch(`/api/professeurs/assignments/${assignmentId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {}
       });
       const data = await res.json();
       if (res.ok) {
@@ -2213,7 +2126,7 @@ const Dashboard = () => {
         
         // Refresh assignments list
         const resList = await fetch(`/api/professeurs/${editingProf.id}/assignments`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: {}
         });
         const dataList = await resList.json();
         if (resList.ok) setProfAssignments(dataList);
@@ -2231,7 +2144,6 @@ const Dashboard = () => {
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const token = localStorage.getItem('token');
     const formData = new FormData();
     formData.append('nom', profile.nom || '');
     formData.append('code_etablissement', profile.code_etablissement || '');
@@ -2249,7 +2161,7 @@ const Dashboard = () => {
     try {
       const res = await fetch('/api/etablissement/profile', {
         method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: {},
         body: formData
       });
       if (res.ok) {
@@ -2268,11 +2180,7 @@ const Dashboard = () => {
   };
 
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/auth');
-  };
+  const handleLogout = () => logout();
 
   const availableYears = Array.from(new Set(classes.map(c => c.annee_scolaire))).filter(Boolean);
   if (availableYears.length === 0) {
@@ -4716,8 +4624,8 @@ const Dashboard = () => {
                 ref={docIframeRef}
                 src={
                   docPreviewModal.type === 'bulletin'
-                    ? `/api/documents/bulletin/${docPreviewModal.eleve.id}?token=${localStorage.getItem('token')}&semestre=${docPreviewModal.semestre}`
-                    : `/api/documents/dossier-transfert/${docPreviewModal.eleve.id}?token=${localStorage.getItem('token')}`
+                    ? `/api/documents/bulletin/${docPreviewModal.eleve.id}?semestre=${docPreviewModal.semestre}`
+                    : `/api/documents/dossier-transfert/${docPreviewModal.eleve.id}`
                 }
                 title="Prévisualisation du document"
                 style={{ width: '100%', height: '100%', border: 'none' }}

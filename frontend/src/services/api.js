@@ -3,20 +3,10 @@ import { API_BASE_URL as BASE_URL } from '../config/api';
 
 const API_BASE_URL = `${BASE_URL}/api`;
 
-const getHeaders = () => {
-  const token = localStorage.getItem('token');
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : '',
-  };
-};
+// La session est portée par un cookie httpOnly envoyé automatiquement : aucun jeton à ajouter
+const getHeaders = () => ({ 'Content-Type': 'application/json' });
 
-const getUploadHeaders = () => {
-  const token = localStorage.getItem('token');
-  return {
-    'Authorization': token ? `Bearer ${token}` : '',
-  };
-};
+const getUploadHeaders = () => ({});
 
 const normalizeCacheKey = (url) => {
   try {
@@ -166,19 +156,6 @@ export const api = {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.message || 'Identifiants incorrects');
-    }
-    return res.json();
-  },
-
-  async registerEtablissement(registerData) {
-    const res = await fetch(`${API_BASE_URL}/auth/register-etablissement`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(registerData),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || "Erreur lors de l'inscription");
     }
     return res.json();
   },
@@ -599,8 +576,7 @@ export const api = {
   },
 
   async downloadDossierPdf(eleveId) {
-    const token = localStorage.getItem('token');
-    window.open(`${API_BASE_URL}/discipline/eleve/${eleveId}/pdf?token=${token}`, '_blank');
+    window.open(`${API_BASE_URL}/discipline/eleve/${eleveId}/pdf`, '_blank');
   },
 
   // Actions Enseignants Spécifiques (Notes, Présences, Émargement)
@@ -647,5 +623,47 @@ export const api = {
       body: JSON.stringify(cahierData),
     }, 'Cahier de texte');
     return res.json();
-  }
+  },
+
+  // Géolocalisation de l'émargement (administration) — nécessite le réseau : pas de file hors ligne
+  async getGeolocalisation() {
+    return jsonOrThrow(await fetch(`${API_BASE_URL}/etablissement/geolocalisation`, { headers: getHeaders() }));
+  },
+
+  async updatePositionEtablissement({ latitude, longitude, rayon_metres }) {
+    return jsonOrThrow(await fetch(`${API_BASE_URL}/etablissement/geolocalisation`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ latitude, longitude, rayon_metres }),
+    }));
+  },
+
+  async createTerrainEps({ nom, latitude, longitude, rayon_metres }) {
+    return jsonOrThrow(await fetch(`${API_BASE_URL}/etablissement/terrains-eps`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ nom, latitude, longitude, rayon_metres }),
+    }));
+  },
+
+  async deleteTerrainEps(id) {
+    return jsonOrThrow(await fetch(`${API_BASE_URL}/etablissement/terrains-eps/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    }));
+  },
+
+  // Terrains d'EPS d'un établissement de rattachement (professeur)
+  async getTerrainsEps(etablissementId) {
+    return jsonOrThrow(await fetch(`${API_BASE_URL}/emargement/terrains-eps/${etablissementId}`, { headers: getHeaders() }));
+  },
 };
+
+// Réponse JSON, ou erreur portant le message renvoyé par le serveur
+async function jsonOrThrow(res) {
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.message || data.error || 'Erreur de communication avec le serveur.');
+  }
+  return data;
+}

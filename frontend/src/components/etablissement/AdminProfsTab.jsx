@@ -92,8 +92,7 @@ const AdminProfsTab = ({
                       </button>
                       <button className="btn-action-text delete-btn" onClick={async () => {
                         if (!window.confirm('Supprimer ce professeur de votre établissement ?')) return;
-                        const token = localStorage.getItem('token');
-                        await fetch(`/api/professeurs/${p.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }});
+                        await fetch(`/api/professeurs/${p.id}`, { method: 'DELETE', headers: {}});
                         fetchProfs();
                       }} title="Supprimer" style={{ color: '#ef4444', borderColor: 'rgba(239,68,68,0.2)' }}>
                         <Trash2 size={12} /> <span>Supprimer</span>

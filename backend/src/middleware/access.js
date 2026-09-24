@@ -181,6 +181,7 @@ module.exports = {
   requireProfAffiliation,
   requireProfOfClasse,
   requireOwnRecord,
+  isProfAffiliated,
   canAccessEleve,
   canAccessClasse,
   getAdminEtablissementId,

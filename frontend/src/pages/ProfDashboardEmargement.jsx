@@ -5,12 +5,15 @@ import {
   Compass, Calendar, History, Sparkles, UserCheck, ChevronRight
 } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
-import { offlineFetch } from '../services/api';
+import { offlineFetch, api } from '../services/api';
+import { getCurrentPosition } from '../utils/geolocation';
 
 export default function ProfDashboardEmargement({ classes: propClasses = [], schedule: propSchedule = [], profile: propProfile = null, onNavigateTab = null }) {
   const [activeTab, setActiveTab] = useState('scanne');
   const [qrTokenInput, setQrTokenInput] = useState('');
   const [gpsStatus, setGpsStatus] = useState(null);
+  const [terrainsEps, setTerrainsEps] = useState([]);
+  const [selectedTerrainId, setSelectedTerrainId] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
@@ -50,9 +53,8 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
   const fetchMyStats = async () => {
     try {
       setStatsLoading(true);
-      const token = localStorage.getItem('token');
       const res = await offlineFetch('/api/emargement/my-stats', {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: {}
       });
       if (res.ok) {
         const data = await res.json();
@@ -68,8 +70,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
   };
 
   const fetchClassesAndSchedule = async () => {
-    const token = localStorage.getItem('token');
-    const headers = { Authorization: `Bearer ${token}` };
+    const headers = { };
     try {
       if (classesList.length === 0) {
         const res = await offlineFetch('/api/professeurs-portal/classes', { headers });
@@ -354,10 +355,15 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
   }, [activeTab]);
 
   // 5. Submit QR Attendance
+  // L'émargement exige le réseau : le QR Code expire en 20 s et la position est vérifiée par le serveur.
   const handleScanQrSubmit = async (e) => {
     if (e) e.preventDefault();
     if (!qrTokenInput) {
       setError('Veuillez scanner ou saisir le token du QR Code.');
+      return;
+    }
+    if (!navigator.onLine) {
+      setError('Connexion Internet requise pour émarger : le QR Code et votre position sont vérifiés en direct.');
       return;
     }
     setLoading(true);
@@ -365,92 +371,95 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
     setMessage(null);
 
     try {
-      const token = localStorage.getItem('token');
-      const res = await offlineFetch('/api/emargement/scan', {
+      const position = await getCurrentPosition();
+      const res = await fetch('/api/emargement/scan', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
           token: qrTokenInput,
-          etablissementId: (selectedEtabId && selectedEtabId !== 'default') ? selectedEtabId : undefined,
           classeId: (selectedClassId && selectedClassId !== 'classe-auto') ? selectedClassId : undefined,
           matiereCode: selectedMatiereCode || 'GEN',
           matiereNom: selectedMatiereNom || 'Cours Général',
           heureDebut: heureDebut || '08:00',
-          heureFin: heureFin || '10:00'
+          heureFin: heureFin || '10:00',
+          ...position
         })
-      }, 'Émargement QR séance');
+      });
 
       const data = await res.json();
-      if (data.success || data.offline) {
-        setMessage(data.offline ? 'Émargement sauvegardé localement (⏳ synchronisation dès retour du réseau) !' : data.message);
+      if (data.success) {
+        setMessage(data.message);
         setQrTokenInput('');
-        if (data.seance) {
-          setSelectedSeanceId(data.seance.id);
-        }
         fetchMyStats(); // Refresh real stats
       } else {
         setError(data.error || 'Erreur lors de la validation du scan.');
       }
     } catch (err) {
-      setError('Erreur lors de la communication avec le serveur d\'émargement.');
+      setError(err.message || 'Erreur lors de la communication avec le serveur d\'émargement.');
     } finally {
       setLoading(false);
     }
   };
 
-  // 6. Submit EPS Attendance
+  // Terrains d'EPS de l'établissement sélectionné
+  useEffect(() => {
+    if (activeTab !== 'eps' || !selectedEtabId || selectedEtabId === 'default') {
+      setTerrainsEps([]);
+      return;
+    }
+    api.getTerrainsEps(selectedEtabId)
+      .then((data) => {
+        setTerrainsEps(data.terrains || []);
+        setSelectedTerrainId((current) => (data.terrains || []).some((t) => t.id === current) ? current : (data.terrains?.[0]?.id || ''));
+      })
+      .catch(() => setTerrainsEps([]));
+  }, [activeTab, selectedEtabId]);
+
+  // 6. Submit EPS Attendance : position comparée au terrain d'EPS choisi
   const handleEpsGpsEmargement = async () => {
+    if (!selectedTerrainId) {
+      setError('Choisissez le terrain d\'EPS où se déroule la séance.');
+      return;
+    }
+    if (!navigator.onLine) {
+      setError('Connexion Internet requise pour émarger : votre position est vérifiée en direct.');
+      return;
+    }
     setLoading(true);
     setError(null);
     setMessage(null);
 
-    if (!navigator.geolocation) {
-      setError('La géolocalisation n\'est pas supportée par votre navigateur.');
-      setLoading(false);
-      return;
-    }
+    try {
+      const position = await getCurrentPosition();
+      const res = await fetch('/api/emargement/eps-terrain', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          terrainId: selectedTerrainId,
+          classeId: selectedClassId || undefined,
+          heureDebut: heureDebut || '08:00',
+          heureFin: heureFin || '10:00',
+          ...position
+        })
+      });
 
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      try {
-        const token = localStorage.getItem('token');
-        const res = await offlineFetch('/api/emargement/eps-terrain', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            etablissementId: selectedEtabId || 'default',
-            classeId: selectedClassId || 'classe-eps',
-            matiereCode: 'EPS',
-            matiereNom: 'Éducation Physique & Sportive',
-            heureDebut: heureDebut || '08:00',
-            heureFin: heureFin || '10:00',
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude
-          })
-        }, 'Émargement EPS Terrain');
-
-        const data = await res.json();
-        if (data.success || data.offline) {
-          setMessage(data.offline ? 'Émargement EPS enregistré en cache local !' : data.message);
-          setGpsStatus(`GPS Validé : Lat ${pos.coords.latitude.toFixed(4)}, Lng ${pos.coords.longitude.toFixed(4)}`);
-          fetchMyStats();
-        } else {
-          setError(data.error || 'Position hors périmètre du stade.');
-        }
-      } catch (err) {
-        setError('Erreur de transmission EPS.');
-      } finally {
-        setLoading(false);
+      const data = await res.json();
+      if (data.success) {
+        setMessage(data.message);
+        setGpsStatus(`Position validée (précision ± ${Math.round(position.precision)} m)`);
+        fetchMyStats();
+      } else {
+        setError(data.error || 'Position hors du périmètre du terrain.');
       }
-    }, () => {
-      setError('Accès GPS refusé. Veuillez autoriser la localisation pour valider votre séance EPS sur le terrain.');
+    } catch (err) {
+      setError(err.message || 'Erreur de transmission EPS.');
+    } finally {
       setLoading(false);
-    }, { enableHighAccuracy: true });
+    }
   };
 
   // 7. Submit Rattrapage
@@ -467,12 +476,10 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
     const targetClass = classesList.find(c => (c.id || c.classe_id) === (rattrapageClassId || selectedClassId));
 
     try {
-      const token = localStorage.getItem('token');
       const res = await offlineFetch('/api/emargement/rattrapage/demande', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
           etablissementId: targetClass?.etablissement_id || selectedEtabId || 'default',
@@ -1097,8 +1104,27 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
               </div>
 
               <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '14px', borderRadius: '12px', fontSize: '12.5px', color: '#166534', lineHeight: 1.5 }}>
-                📍 Ce mode vérifie que votre appareil se trouve dans le périmètre du terrain d'EPS (stade / plateau sportif du lycée) dans un rayon de moins de 100 mètres.
+                📍 Ce mode vérifie que votre appareil se trouve dans le périmètre du terrain d'EPS choisi (stade, plateau sportif…), qui peut être éloigné de l'établissement.
               </div>
+
+              {terrainsEps.length === 0 ? (
+                <div style={{ fontSize: '12.5px', color: '#b45309', background: '#fffbeb', border: '1px solid #fde68a', padding: '10px 14px', borderRadius: '8px' }}>
+                  Aucun terrain d'EPS n'est enregistré pour cet établissement. Demandez à l'administration de le déclarer dans ses paramètres.
+                </div>
+              ) : (
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', fontWeight: 700, color: '#334155' }}>
+                  Terrain de la séance
+                  <select
+                    value={selectedTerrainId}
+                    onChange={(e) => setSelectedTerrainId(e.target.value)}
+                    style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                  >
+                    {terrainsEps.map((terrain) => (
+                      <option key={terrain.id} value={terrain.id}>{terrain.nom} (rayon {terrain.rayon_metres} m)</option>
+                    ))}
+                  </select>
+                </label>
+              )}
 
               {gpsStatus && (
                 <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#166534', background: '#dcfce7', padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1109,7 +1135,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
               <button
                 type="button"
                 onClick={handleEpsGpsEmargement}
-                disabled={loading}
+                disabled={loading || !selectedTerrainId}
                 style={{
                   padding: '13px',
                   background: '#059669',

@@ -81,7 +81,7 @@ const AdminElevesTab = ({
               className="search-input"
             />
           </div>
-          <input type="file" ref={chatFileInputRef} style={{display: 'none'}} onChange={handleImportExcel} accept=".xlsx,.xls" />
+          <input type="file" ref={chatFileInputRef} style={{display: 'none'}} onChange={handleImportExcel} accept=".xlsx,.csv" />
           <input type="file" ref={scanInputRef} style={{display: 'none'}} onChange={handleScanStudents} accept="image/*" />
           <button className="btn btn-outline" onClick={() => scanInputRef.current.click()} style={{ fontSize: '11px', padding: '6px 12px' }}><Brain size={14} /> Scan IA</button>
           <button className="btn btn-outline" onClick={() => fileInputRef.current.click()} style={{ fontSize: '11px', padding: '6px 12px' }}><FileUp size={14} /> Importer</button>

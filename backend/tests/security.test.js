@@ -173,6 +173,23 @@ test('la carte d\'identité enseignant est réservée à l\'Office du Bac', asyn
   }
 });
 
+test('émargement : réservé aux professeurs, QR invalide et terrain manquant refusés', async () => {
+  const profToken = token(OUTSIDER_ID, 'PROFESSEUR');
+  const eleveScan = await request('POST', '/api/emargement/scan', tokens.eleveAutre, { token: 'x' });
+  assert.strictEqual(eleveScan.status, 403);
+
+  const qrInvalide = await request('POST', '/api/emargement/scan', profToken, { token: 'pas-un-qr', latitude: 14.7, longitude: -17.4 });
+  assert.strictEqual(qrInvalide.status, 400);
+
+  const sansTerrain = await request('POST', '/api/emargement/eps-terrain', profToken, { latitude: 14.7, longitude: -17.4 });
+  assert.strictEqual(sansTerrain.status, 400);
+});
+
+test('inscription directe d\'un établissement désactivée', async () => {
+  const res = await request('POST', '/api/auth/register-etablissement', null, { nom: 'X', email: 'x@test.local', password: 'x' });
+  assert.strictEqual(res.status, 404);
+});
+
 test('inscription publique : un fichier HTML déguisé est refusé', async () => {
   const html = Buffer.from('<script>alert(1)</script>').toString('base64');
   const res = await request('POST', '/api/office-bac/demande-public', null, {

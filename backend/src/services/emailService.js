@@ -273,53 +273,6 @@ const emailService = {
   },
 
   /**
-   * Envoi de l'email de bienvenue à un Établissement
-   */
-  async sendEtablissementWelcome({ to, nomEtablissement, codeEtablissement, emailAdmin }) {
-    if (!to) return;
-    try {
-      const contentHtml = `
-        <div class="greeting">Félicitations pour l'enregistrement de votre établissement !</div>
-        <p>L'établissement <strong>${nomEtablissement}</strong> a été enregistré avec succès sur la plateforme nationale <strong>LéralScolaire</strong>.</p>
-        <p>Voici vos identifiants officiels d'administration :</p>
-        
-        <div class="credentials-box">
-          <div class="credential-item">
-            <div class="credential-label">Code IUP Établissement</div>
-            <div class="credential-value">${codeEtablissement}</div>
-          </div>
-          <div class="credential-item">
-            <div class="credential-label">Email de connexion Administrateur</div>
-            <div class="credential-value">${emailAdmin || to}</div>
-          </div>
-        </div>
-
-        <p>Grâce à cet espace, vous pouvez gérer vos classes, vos enseignants, vos élèves et dématérialiser les livrets et relevés scolaires de votre établissement.</p>
-      `;
-
-      const html = getEmailLayout({
-        title: 'Bienvenue sur LéralScolaire - Établissement',
-        subtitle: 'Confirmation d\'enregistrement d\'établissement',
-        contentHtml,
-        ctaText: 'Accéder à l\'espace Établissement',
-        ctaLink: `${FRONTEND_URL}/auth`
-      });
-
-      const info = await sendMailWithLogo({
-        from: EMAIL_FROM,
-        to,
-        subject: `[LéralScolaire] Création de votre compte Établissement : ${nomEtablissement} (${codeEtablissement})`,
-        html
-      });
-
-      console.log(`✉️ Email établissement envoyé à ${to} (MessageId: ${info.messageId})`);
-      return info;
-    } catch (err) {
-      console.error(`⚠️ Erreur envoi email établissement à ${to}:`, err.message);
-    }
-  },
-
-  /**
    * Envoi de l'email de bienvenue à un Enseignant (Professeur)
    */
   async sendProfesseurWelcome({ to, nom, prenom, iupProf, tempPassword, nomEtablissement }) {

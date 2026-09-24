@@ -42,9 +42,8 @@ export default function ProfCarteIdentiteOfficeBac() {
     setSelectedProfId(profId);
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(`/api/emargement/office/carte-identite/${profId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: {}
       });
       const data = await res.json();
       if (data.success) {

@@ -121,11 +121,8 @@ class SyncEngine {
         await db.outbox.update(item.id, { status: 'syncing' });
 
         try {
-          // Token d'authentification frais
-          const token = localStorage.getItem('token');
           const finalHeaders = {
             'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
             ...item.headers,
             'X-Client-Mutation-Id': item.clientMutationId
           };

@@ -16,15 +16,6 @@ const Auth = () => {
 
   // Form states
   const [loginData, setLoginData] = useState({ identifier: '', password: '' });
-  const [registerData, setRegisterData] = useState({
-    nom: '',
-    code_etablissement: '',
-    email: '',
-    email_professionnel: '',
-    password: '',
-    region: 'Dakar',
-    ville: ''
-  });
   const [forgotData, setForgotData] = useState({ iup: '', email: '', code: '', newPassword: '' });
 
   const handleRequestResetCode = async (e) => {
@@ -99,7 +90,7 @@ const Auth = () => {
       const data = await response.json();
 
       if (response.ok) {
-        login(data.token, data.user);
+        login(data.user);
         setMessage({ type: 'success', text: 'Connexion réussie ! Redirection...' });
 
         const redirectPath = data.user.role === 'PRESIDENT_JURY'
@@ -114,33 +105,6 @@ const Auth = () => {
         setTimeout(() => navigate(redirectPath), 1500);
       } else {
         setMessage({ type: 'error', text: 'Mot de passe ou identifiant incorrect' });
-      }
-    } catch (err) {
-      setMessage({ type: 'error', text: 'Erreur de connexion au serveur.' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage({ type: '', text: '' });
-
-    try {
-      const response = await fetch('/api/auth/register-etablissement', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(registerData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setMessage({ type: 'success', text: 'Établissement inscrit ! Vous pouvez vous connecter.' });
-        setIsLogin(true);
-      } else {
-        setMessage({ type: 'error', text: data.message || 'Erreur lors de l\'inscription.' });
       }
     } catch (err) {
       setMessage({ type: 'error', text: 'Erreur de connexion au serveur.' });

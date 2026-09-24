@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
   Award, GraduationCap, Users, BookOpen, CheckCircle, AlertCircle, XCircle,
@@ -12,10 +13,9 @@ const API = '/api';
 
 const JuryDeliberationDashboard = () => {
   const navigate = useNavigate();
-  const token = localStorage.getItem('token');
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const { user, logout } = useAuth();
 
-  const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+  const headers = { 'Content-Type': 'application/json' };
 
   const [juryInfo, setJuryInfo] = useState(null);
   const [candidats, setCandidats] = useState([]);
@@ -68,7 +68,7 @@ const JuryDeliberationDashboard = () => {
   };
 
   useEffect(() => {
-    if (!token) { navigate('/auth'); return; }
+    if (!user) { navigate('/auth'); return; }
     fetchJuryAndCandidats();
   }, []);
 
@@ -340,7 +340,7 @@ const JuryDeliberationDashboard = () => {
             <ShieldCheck size={16} />
             <span>Pr. {user.nom || 'Saliou Diop'} (Président de Jury)</span>
           </div>
-          <button className="jdd-logout-btn" onClick={() => { localStorage.clear(); navigate('/auth'); }}>
+          <button className="jdd-logout-btn" onClick={() => logout()}>
             <LogOut size={16} /> Déconnexion
           </button>
         </div>

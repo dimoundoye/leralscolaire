@@ -4,7 +4,8 @@ const multer = require('multer');
 const fs = require('fs');
 const etablissementController = require('../controllers/etablissementController');
 const auth = require('../middleware/authMiddleware');
-const { requireOwnRecord } = require('../middleware/access');
+const { requireOwnRecord, requireRole } = require('../middleware/access');
+const geolocalisationController = require('../controllers/geolocalisationController');
 const { safeFileName } = require('../config/cloudinary');
 
 const upload = multer({
@@ -36,6 +37,13 @@ router.put('/profile', auth, upload.fields([
   { name: 'signature', maxCount: 1 },
   { name: 'cachet', maxCount: 1 }
 ]), etablissementController.updateProfile);
+
+// Géolocalisation de l'émargement : position de l'établissement et terrains d'EPS
+const adminOnly = requireRole('ADMIN_ETABLISSEMENT');
+router.get('/geolocalisation', auth, adminOnly, geolocalisationController.getParametres);
+router.put('/geolocalisation', auth, adminOnly, geolocalisationController.updatePosition);
+router.post('/terrains-eps', auth, adminOnly, geolocalisationController.createTerrain);
+router.delete('/terrains-eps/:id', auth, adminOnly, geolocalisationController.deleteTerrain);
 
 // Search establishments
 router.get('/search', auth, etablissementController.searchEtablissements);

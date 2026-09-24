@@ -2,16 +2,19 @@ const express = require('express');
 const router = express.Router();
 const EmargementController = require('../controllers/emargementController');
 const authenticateToken = require('../middleware/authMiddleware');
-const { requireRole } = require('../middleware/access');
+const { requireRole, requireProfAffiliation } = require('../middleware/access');
 
 // 1. Borne QR Code Live 20s (Accès public ou surveillant)
 router.get('/live-qr/:etablissementId', EmargementController.getLiveQrToken);
 
 // 2. Émargement Professeur (QR Code 20s)
-router.post('/scan', authenticateToken, EmargementController.scanEmargement);
+router.post('/scan', authenticateToken, requireRole('PROFESSEUR'), EmargementController.scanEmargement);
 
 // 3. Émargement Terrain EPS (GPS Stadium <100m)
-router.post('/eps-terrain', authenticateToken, EmargementController.emargerEpsTerrain);
+router.post('/eps-terrain', authenticateToken, requireRole('PROFESSEUR'), EmargementController.emargerEpsTerrain);
+
+// Terrains d'EPS d'un établissement de rattachement (choix du terrain par le professeur)
+router.get('/terrains-eps/:etablissementId', authenticateToken, requireProfAffiliation('etablissementId'), EmargementController.listTerrainsEps);
 
 // 4. Cahier de Texte complet (Validation 100%)
 router.post('/cahier-texte-complete', authenticateToken, EmargementController.completeCahierTexte);

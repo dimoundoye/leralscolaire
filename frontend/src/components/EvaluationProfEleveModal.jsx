@@ -20,12 +20,10 @@ export default function EvaluationProfEleveModal({ isOpen, onClose, professeur, 
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch('/api/emargement/evaluation-eleve', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
           profId: professeur?.id || 'prof-demo-1',

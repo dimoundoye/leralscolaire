@@ -258,8 +258,7 @@ const TeacherCahierTexteTab = ({
                       type="button"
                       onClick={async () => {
                         if (window.confirm('Supprimer cette séance du cahier de texte ?')) {
-                          const token = localStorage.getItem('token');
-                          await fetch(`/api/cahier-texte/${entry.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+                          await fetch(`/api/cahier-texte/${entry.id}`, { method: 'DELETE', headers: {} });
                           fetchCahierEntries();
                         }
                       }}
