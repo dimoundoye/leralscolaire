@@ -29,6 +29,6 @@ process.on('uncaughtException', (err) => {
   console.error('💥 CRASH INATTENDU :', err);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason) => {
   console.error('⚠️ PROMESSE NON GÉRÉE :', reason);
 });

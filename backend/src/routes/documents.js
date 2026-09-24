@@ -364,7 +364,6 @@ router.get('/dossier-transfert/:eleveId', auth, livretEleve, async (req, res) =>
     doc.moveDown(0.8);
 
     const labelX = 60;
-    const valueX = 200;
     let y = doc.y;
 
     doc.fontSize(10).fillColor(gray);

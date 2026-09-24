@@ -859,7 +859,53 @@ const OfficeBacDashboard = () => {
       const data = await r.json();
       if (r.ok) {
         showToast(data.message);
+        fetchLivrets();
+      } else {
         showToast(data.message || 'Erreur lors de la restitution.', 'error');
+      }
+    } catch (e) {
+      showToast('Erreur réseau.', 'error');
+    }
+  };
+
+  // Transmission d'un livret scolaire au jury du BAC (élève choisi dans la recherche)
+  const handleAddLivret = async (e) => {
+    e.preventDefault();
+    if (!selectedEleve) { showToast('Veuillez sélectionner un élève.', 'error'); return; }
+    try {
+      const r = await fetch(`${API}/office-bac/livrets`, {
+        method: 'POST', headers,
+        body: JSON.stringify({ ...newLivret, eleve_id: selectedEleve.id })
+      });
+      const data = await r.json();
+      if (r.ok) {
+        showToast(data.message);
+        setShowAddLivretModal(false);
+        setSelectedEleve(null);
+        setEleveSearch('');
+        setNewLivret(livret => ({ ...livret, moyenne_seconde: '', moyenne_premiere: '', moyenne_terminale: '', appreciation_conseil: '' }));
+        fetchLivrets();
+      } else {
+        showToast(data.message || 'Erreur lors de la transmission du livret.', 'error');
+      }
+    } catch (e) {
+      showToast('Erreur réseau.', 'error');
+    }
+  };
+
+  // Certification (CONFORME) ou rejet (REJETÉ) d'un livret reçu
+  const handleValiderLivret = async (livretId, statut) => {
+    try {
+      const r = await fetch(`${API}/office-bac/livrets/${livretId}/valider`, {
+        method: 'PUT', headers,
+        body: JSON.stringify({ statut_validation: statut })
+      });
+      const data = await r.json();
+      if (r.ok) {
+        showToast(data.message);
+        fetchLivrets();
+      } else {
+        showToast(data.message || 'Erreur lors de la mise à jour du livret.', 'error');
       }
     } catch (e) {
       showToast('Erreur réseau.', 'error');

@@ -947,7 +947,6 @@ router.put('/demandes/:id/valider', auth, checkOfficeBac, async (req, res) => {
     const d = demRes.rows[0];
     if (d.statut === 'VALIDÉ') return res.status(400).json({ message: 'Cette demande a déjà été validée.' });
 
-    let credentials = {};
 
     if (d.type_demande === 'ETABLISSEMENT') {
       const generatedCode = (d.specialite_ou_code && d.specialite_ou_code.startsWith('ETAB-'))
@@ -968,7 +967,6 @@ router.put('/demandes/:id/valider', auth, checkOfficeBac, async (req, res) => {
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       `, [generatedCode, d.nom, d.region, d.ville, userRes.rows[0].id, d.telephone || '', d.autorisation_numero || '', d.email]);
 
-      credentials = { login: generatedCode, code_etablissement: generatedCode, temp_password: tempPassword };
 
       // Envoi de l'email officiel d'approbation
       emailService.sendDemandeValidee({
@@ -998,7 +996,6 @@ router.put('/demandes/:id/valider', auth, checkOfficeBac, async (req, res) => {
         ON CONFLICT (id) DO UPDATE SET nom = $2, prenom = $3, telephone = $4, matiere_principale = $5, sexe = $6
       `, [userRes.rows[0].id, d.nom, d.prenom || '', d.telephone || '', d.specialite_ou_code || 'Général', d.sexe || 'M']);
 
-      credentials = { login: generatedIne, identifiant_national: generatedIne, temp_password: tempPassword };
 
       // Envoi de l'email officiel d'approbation
       emailService.sendDemandeValidee({
@@ -1103,7 +1100,7 @@ router.get('/livrets', auth, checkOfficeBac, async (req, res) => {
 });
 
 router.post('/livrets', auth, checkOfficeBac, async (req, res) => {
-  const { eleve_id, etablissement_id, annee, serie, moyenne_seconde, moyenne_premiere, moyenne_terminale, appreciation_conseil } = req.body;
+  const { eleve_id, annee, serie, moyenne_seconde, moyenne_premiere, moyenne_terminale, appreciation_conseil } = req.body;
   if (!eleve_id || !serie) {
     return res.status(400).json({ message: 'L\'élève et la série sont obligatoires.' });
   }
@@ -1112,10 +1109,11 @@ router.post('/livrets', auth, checkOfficeBac, async (req, res) => {
     const result = await db.query(`
       INSERT INTO livrets_scolaires_bac
         (eleve_id, etablissement_id, annee, serie, moyenne_seconde, moyenne_premiere, moyenne_terminale, appreciation_conseil, statut_validation)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'CONFORME')
+      -- L'établissement est celui de l'élève, jamais une valeur envoyée par le client
+      VALUES ($1, (SELECT etablissement_id FROM eleves WHERE id = $1), $2, $3, $4, $5, $6, $7, 'CONFORME')
       RETURNING *
     `, [
-      eleve_id, etablissement_id || null, annee || new Date().getFullYear(),
+      eleve_id, annee || new Date().getFullYear(),
       serie, moyenne_seconde || null, moyenne_premiere || null, moyenne_terminale || null,
       appreciation_conseil || null
     ]);
@@ -1129,6 +1127,9 @@ router.post('/livrets', auth, checkOfficeBac, async (req, res) => {
 
 router.put('/livrets/:id/valider', auth, checkOfficeBac, async (req, res) => {
   const { statut_validation } = req.body;
+  if (!['RÉCEPTIONNÉ', 'CONFORME', 'REJETÉ'].includes(statut_validation)) {
+    return res.status(400).json({ message: 'Statut de livret invalide.' });
+  }
   try {
     const result = await db.query(`
       UPDATE livrets_scolaires_bac

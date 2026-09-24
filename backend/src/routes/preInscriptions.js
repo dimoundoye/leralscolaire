@@ -1,7 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
-const fs = require('fs');
 const preInscriptionController = require('../controllers/preInscriptionController');
 const auth = require('../middleware/authMiddleware');
 const { requireOwnRecord } = require('../middleware/access');

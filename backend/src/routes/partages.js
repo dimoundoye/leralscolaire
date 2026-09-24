@@ -1,7 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
-const fs = require('fs');
 const partageController = require('../controllers/partageController');
 const auth = require('../middleware/authMiddleware');
 const { requireOwnRecord } = require('../middleware/access');

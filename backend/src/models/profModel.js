@@ -448,15 +448,6 @@ const ProfModel = {
         pendingExams
       }
     };
-  },
-
-  async toggleMessagePermission(profId, etablissementId, permissionValue) {
-    await db.query(`
-      UPDATE professeurs_etablissements 
-      SET droit_envoi_message = $1 
-      WHERE professeur_id = $2 AND etablissement_id = $3
-    `, [permissionValue, profId, etablissementId]);
-    return true;
   }
 };
 

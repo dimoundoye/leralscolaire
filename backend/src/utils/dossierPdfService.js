@@ -58,7 +58,7 @@ async function generateDossierScolairePdf(eleveData, signalementsList, etablisse
     doc.fillColor('#166534').font('Helvetica').fontSize(10).text('Aucune remarque négative ni convocation enregistrée. Dossier disciplinaire vierge.', 55, doc.y - 20);
     doc.moveDown(1.5);
   } else {
-    signalementsList.forEach((item, index) => {
+    signalementsList.forEach((item) => {
       if (doc.y > 700) {
         doc.addPage();
       }

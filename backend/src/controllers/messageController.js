@@ -73,21 +73,7 @@ const messageController = {
     }
   },
 
-  async uploadFile(req, res, next) {
-    try {
-      if (!req.file) {
-        return response.error(res, 'Aucun fichier sélectionné.', 400);
-      }
-      const fichierUrl = `/uploads/messages/${req.file.filename}`;
-      return res.json({
-        fichier_url: fichierUrl,
-        fichier_nom: req.file.originalname
-      });
-    } catch (err) {
-      console.error('Erreur upload fichier message:', err);
-      return response.error(res, 'Erreur lors du téléchargement du fichier.', 500);
-    }
-  },
+
 
   async getInbox(req, res, next) {
     try {

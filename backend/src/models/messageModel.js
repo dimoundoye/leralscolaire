@@ -193,9 +193,13 @@ const MessageModel = {
       UPDATE messages 
       SET lu = TRUE 
       WHERE expediteur_id = $1
-        AND (destinataire_id = $2 OR destinataire_type IN ('PROFESSEUR', 'ADMIN_ETABLISSEMENT', 'ELEVE'))
+        AND (
+          destinataire_id = $2
+          -- Messages adressés à l'établissement : destinataire_id est l'identifiant de l'établissement
+          OR (destinataire_type = 'ADMIN_ETABLISSEMENT' AND destinataire_id = $3)
+        )
         AND lu = FALSE
-    `, [expediteurId, destinataireId]);
+    `, [expediteurId, destinataireId, etablissementId]);
     return true;
   },
 

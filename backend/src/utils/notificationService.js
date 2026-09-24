@@ -11,7 +11,7 @@ async function sendParentNotification({ type_action, eleve_nom, eleve_prenom, pa
   const formattedDate = date_rendez_vous ? new Date(date_rendez_vous).toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'short' }) : null;
 
   // 1. Simulation / Envoi Email Parent
-  if (parent_email || true) {
+  if (parent_email) {
     console.log(`\n📧 [NOTIFICATION EMAIL PARENT]`);
     console.log(`   À : ${parent_email || 'parent.famille@gmail.com'}`);
     console.log(`   Établissement : ${etablissement_nom || 'LeralScolaire'}`);
@@ -25,7 +25,7 @@ async function sendParentNotification({ type_action, eleve_nom, eleve_prenom, pa
   }
 
   // 2. Simulation / Envoi SMS Parent
-  if (parent_telephone || true) {
+  if (parent_telephone) {
     let smsContent = `[${etablissement_nom || 'LeralScolaire'}] `;
     if (type_action === 'CONVOCATION') {
       smsContent += `Convocation pour l'élève ${eleve_prenom} ${eleve_nom} le ${formattedDate} (${lieu_rendez_vous || 'Administration'}). Motif: ${motif}.`;

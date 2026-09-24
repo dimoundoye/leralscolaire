@@ -493,19 +493,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleNotesAnneeChange = (newYear) => {
-    setNotesAnneeScolaire(newYear);
-    setSelectedClasse('');
-    setDecisionsClasseId('');
-    setDecisions([]);
-    setAuditClasseFilter('');
-    
-    if (notesSubTab === 'audit') {
-      fetchAuditLog('', auditTrimestreFilter, newYear);
-    } else if (notesSubTab === 'suivi') {
-      fetchSuiviRemplissage(suiviSemestre, newYear);
-    }
-  };
 
   const fetchAbsencesLog = async (classeId = '', justifiee = '', date = '', q = '') => {
     setAbsLoading(true);

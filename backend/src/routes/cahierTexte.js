@@ -3,7 +3,6 @@ const router = express.Router();
 const cahierTexteController = require('../controllers/cahierTexteController');
 const auth = require('../middleware/authMiddleware');
 const { requireOwnRecord } = require('../middleware/access');
-const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 

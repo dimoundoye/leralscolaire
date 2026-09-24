@@ -311,7 +311,12 @@ const EmargementController = {
 
       if (discipline) {
         params.push(discipline);
-        sql += ` AND p.matiere_principale = $${params.length}`;
+        sql += ` AND p.matiere_principale = ${params.length}`;
+      }
+
+      if (region) {
+        params.push(region);
+        sql += ` AND p.region = ${params.length}`;
       }
 
       sql += ` ORDER BY p.nom ASC, p.prenom ASC LIMIT 50`;
