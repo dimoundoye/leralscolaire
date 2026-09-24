@@ -5,7 +5,7 @@ const fs = require('fs');
 const studentController = require('../controllers/studentController');
 const auth = require('../middleware/authMiddleware');
 
-const { isCloudinaryConfigured, cloudinary } = require('../config/cloudinary');
+const { isCloudinaryConfigured, cloudinary, randomFileId, safeFileName } = require('../config/cloudinary');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const upload = multer({ dest: 'uploads/' });
@@ -20,7 +20,7 @@ if (isCloudinaryConfigured) {
       return {
         folder: `leralscolaire/${subFolder}`,
         resource_type: isPdf ? 'raw' : 'auto',
-        public_id: `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9_-]/g, '_')}`
+        public_id: randomFileId()
       };
     }
   });
@@ -39,7 +39,7 @@ if (isCloudinaryConfigured) {
       cb(null, dir);
     },
     filename: (req, file, cb) => {
-      cb(null, Date.now() + '-' + file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_'));
+      cb(null, safeFileName(file.originalname));
     }
   });
 }

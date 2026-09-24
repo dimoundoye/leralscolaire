@@ -4,12 +4,11 @@ const db = require('../config/db');
 const auth = require('../middleware/authMiddleware');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const fs = require('fs');
-const path = require('path');
 const { generateConvocationPDF } = require('../utils/convocationPdfService');
 const { generateIUP } = require('../utils/iupGenerator');
 const emailService = require('../services/emailService');
-const { cloudinary, isCloudinaryConfigured } = require('../config/cloudinary');
+const { saveJustificatifs, JustificatifError } = require('../utils/justificatifService');
+const { publicFormLimiter } = require('../middleware/rateLimit');
 
 // Middleware : réservé au rôle OFFICE_BAC
 const checkOfficeBac = (req, res, next) => {
@@ -859,7 +858,7 @@ router.post('/professeurs', auth, checkOfficeBac, async (req, res) => {
 // ─────────────────────────────────────────────
 
 // Route publique (sans auth) : formulaire d'inscription pour Établissement ou Professeur
-router.post('/demande-public', async (req, res) => {
+router.post('/demande-public', publicFormLimiter, async (req, res) => {
   const {
     type_demande, nom, prenom, email, telephone, region, ville,
     specialite_ou_code, documents_fournis, cni_numero, autorisation_numero, matricule_solde, sexe, ia_nom, ief_nom
@@ -878,52 +877,15 @@ router.post('/demande-public', async (req, res) => {
       return res.status(400).json({ message: 'Une demande d\'inscription est déjà en cours de validation pour cet email.' });
     }
 
-    // Traitement et sauvegarde des fichiers justificatifs (Cloudinary ou local)
-    const processedDocs = {};
-    if (documents_fournis && typeof documents_fournis === 'object') {
-      const uploadsDir = path.join(__dirname, '../../uploads');
-      const publicUploadsDir = path.join(__dirname, '../../../frontend/public/uploads');
-
-      for (const [key, item] of Object.entries(documents_fournis)) {
-        if (!item) continue;
-        if (typeof item === 'object' && item.data && item.name) {
-          let uploadedUrl = null;
-
-          // 1. Tenter l'envoi sur Cloudinary si configuré
-          if (isCloudinaryConfigured) {
-            try {
-              const isPdf = item.name.toLowerCase().endsWith('.pdf');
-              const resUpload = await cloudinary.uploader.upload(item.data, {
-                folder: 'leralscolaire/justificatifs',
-                resource_type: isPdf ? 'raw' : 'auto',
-                public_id: `${Date.now()}_${key}`
-              });
-              if (resUpload && resUpload.secure_url) {
-                uploadedUrl = resUpload.secure_url;
-                processedDocs[key] = uploadedUrl;
-              }
-            } catch (cloudErr) {
-              console.warn(`⚠️ Échec upload Cloudinary pour ${key}, repli local :`, cloudErr.message);
-            }
-          }
-
-          // 2. Sauvegarde locale en secours ou si Cloudinary non configuré
-          if (!uploadedUrl) {
-            if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-            const fileExt = path.extname(item.name) || '.png';
-            const safeName = `${Date.now()}_${key}${fileExt}`;
-            const base64Data = item.data.replace(/^data:([A-Za-z-+\/]+);base64,/, '');
-            const buffer = Buffer.from(base64Data, 'base64');
-            fs.writeFileSync(path.join(uploadsDir, safeName), buffer);
-            if (fs.existsSync(publicUploadsDir)) {
-              fs.writeFileSync(path.join(publicUploadsDir, safeName), buffer);
-            }
-            processedDocs[key] = safeName;
-          }
-        } else if (typeof item === 'string') {
-          processedDocs[key] = item;
-        }
+    // Validation et sauvegarde des pièces justificatives (types, taille et noms contrôlés)
+    let processedDocs;
+    try {
+      processedDocs = await saveJustificatifs(documents_fournis);
+    } catch (docErr) {
+      if (docErr instanceof JustificatifError) {
+        return res.status(400).json({ message: docErr.message });
       }
+      throw docErr;
     }
 
     const result = await db.query(`

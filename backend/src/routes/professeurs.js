@@ -1,7 +1,11 @@
 const express = require('express');
-const router = Router = express.Router();
+const router = express.Router();
 const profController = require('../controllers/profController');
 const auth = require('../middleware/authMiddleware');
+const { requireRole } = require('../middleware/access');
+
+// Gestion des professeurs : réservée à l'administration de l'établissement
+router.use(auth, requireRole('ADMIN_ETABLISSEMENT'));
 
 // List professors
 router.get('/', auth, profController.listProfesseurs);
@@ -9,7 +13,7 @@ router.get('/', auth, profController.listProfesseurs);
 // Create professor
 router.post('/', auth, profController.createProfesseur);
 
-// Modify professor
+// Modify professor (email / mot de passe d'un professeur rattaché à l'établissement)
 router.put('/:id', auth, profController.updateProfesseur);
 
 // Delete/unlink professor

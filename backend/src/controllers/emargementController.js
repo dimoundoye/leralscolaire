@@ -1,5 +1,6 @@
 const EmargementModel = require('../models/emargementModel');
 const db = require('../config/db');
+const { getAdminEtablissementId } = require('../middleware/access');
 
 const EmargementController = {
   // 1. Obtenir le flux QR Code Live 20s (pour le surveillant)
@@ -193,8 +194,13 @@ const EmargementController = {
   // 6. Approuver un cours de rattrapage (Censeur)
   async approveRattrapage(req, res) {
     try {
-      const { seanceId, etablissementId } = req.body;
-      const approved = await EmargementModel.approveRattrapage(seanceId, etablissementId);
+      const { seanceId } = req.body;
+      // L'établissement est celui de l'administrateur connecté, jamais celui envoyé par le client
+      const etablissementId = await getAdminEtablissementId(req.user.id);
+      const approved = etablissementId && await EmargementModel.approveRattrapage(seanceId, etablissementId);
+      if (!approved) {
+        return res.status(404).json({ success: false, error: 'Séance introuvable dans votre établissement.' });
+      }
 
       return res.json({
         success: true,

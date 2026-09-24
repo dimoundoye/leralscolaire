@@ -52,7 +52,7 @@ class DisciplineModel {
       LEFT JOIN inscription_classes ic ON e.id = ic.eleve_id
       LEFT JOIN classes c ON ic.classe_id = c.id
       LEFT JOIN users u ON s.auteur_id = u.id
-      LEFT JOIN professeurs p ON p.id = u.id OR p.user_id = u.id
+      LEFT JOIN professeurs p ON p.id = u.id
       WHERE s.etablissement_id = $1
     `;
     const params = [etablissementId];
@@ -81,7 +81,7 @@ class DisciplineModel {
       JOIN eleves e ON s.eleve_id = e.id
       LEFT JOIN inscription_classes ic ON e.id = ic.eleve_id
       LEFT JOIN classes c ON ic.classe_id = c.id
-      WHERE s.auteur_id = $1 AND s.etablissement_id = $2
+      WHERE s.auteur_id = $1 AND ($2::uuid IS NULL OR s.etablissement_id = $2)
       ORDER BY s.created_at DESC
     `;
     const { rows } = await db.query(query, [auteurId, etablissementId]);
@@ -96,7 +96,7 @@ class DisciplineModel {
       FROM signalements_discipline s
       JOIN eleves e ON s.eleve_id = e.id
       LEFT JOIN users u ON s.auteur_id = u.id
-      LEFT JOIN professeurs p ON p.id = u.id OR p.user_id = u.id
+      LEFT JOIN professeurs p ON p.id = u.id
       WHERE s.eleve_id = $1
       ORDER BY s.created_at DESC
     `;

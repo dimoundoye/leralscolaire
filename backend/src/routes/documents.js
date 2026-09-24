@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const auth = require('../middleware/authMiddleware');
+const { requireEleveAccess, requireClasseAccess } = require('../middleware/access');
+
+// Livret consultable par l'élève, son établissement et l'établissement d'accueil d'un transfert en attente
+const livretEleve = requireEleveAccess('eleveId', { allowIncomingTransfer: true });
 const PDFDocument = require('pdfkit');
 const QRCode = require('qrcode');
 const fs = require('fs');
@@ -10,7 +14,7 @@ const path = require('path');
 const { generateSenegalBulletinPdf } = require('../utils/senegalBulletinPdfService');
 
 // --- GÉNÉRATION BULLETIN PDF (MODELE SÉNÉGALISÉ 1ER & 2ÈME SEMESTRE) ---
-router.get('/bulletin/:eleveId', auth, async (req, res) => {
+router.get('/bulletin/:eleveId', auth, livretEleve, async (req, res) => {
   const { eleveId } = req.params;
   const { semestre } = req.query;
 
@@ -258,7 +262,7 @@ router.get('/attestation/:eleveId', auth, async (req, res) => {
 });
 
 // --- DOSSIER DE TRANSFERT ---
-router.get('/dossier-transfert/:eleveId', auth, async (req, res) => {
+router.get('/dossier-transfert/:eleveId', auth, livretEleve, async (req, res) => {
   const { eleveId } = req.params;
   try {
     if (req.user.role === 'ELEVE') {
@@ -661,9 +665,9 @@ router.post('/attestations/requests/:id/refuse', auth, async (req, res) => {
 });
 
 // --- CLASSEMENT PDF DE LA CLASSE ---
-router.get('/classe/:classeId/classement-pdf', auth, async (req, res) => {
+router.get('/classe/:classeId/classement-pdf', auth, requireClasseAccess('classeId'), async (req, res) => {
   const { classeId } = req.params;
-  const { period } = req.query; // ex: 'Semestre 1', 'Semestre 2', etc.
+  const period = String(req.query.period || 'Annuel'); // ex: 'Semestre 1', 'Semestre 2', etc.
 
   try {
     // 1. Fetch class and establishment info

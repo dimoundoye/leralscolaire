@@ -19,5 +19,5 @@ jobs:
           script: |
             cd ~/leralscolaire
             git pull origin main
-            sudo docker compose up -d --build
-            sudo docker compose exec -T backend npm run migrate
+            sudo docker compose --env-file backend/.env up -d --build
+            sudo docker compose --env-file backend/.env exec -T backend npm run migrate

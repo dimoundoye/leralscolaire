@@ -26,40 +26,28 @@ async function migrate() {
     `);
     console.log('  ✓ Rôle OFFICE_BAC ajouté à la contrainte');
 
-    // 2. Vérifier si le compte existe déjà
+    // 2. Créer le compte Office du BAC s'il n'existe pas encore.
+    // Un compte existant n'est jamais modifié : son mot de passe appartient à son titulaire.
     const existing = await db.query(
       "SELECT id FROM users WHERE email = 'OFFICE-BAC-SN'",
     );
 
     if (existing.rows.length > 0) {
-      console.log('  ℹ️  Compte OFFICE-BAC-SN existe déjà, mise à jour du mot de passe...');
-      const salt = await bcrypt.genSalt(10);
-      const hash = await bcrypt.hash('OfficeBAC@2026', salt);
-      await db.query(
-        "UPDATE users SET password_hash = $1, role = 'OFFICE_BAC' WHERE email = 'OFFICE-BAC-SN'",
-        [hash]
-      );
-      console.log('  ✓ Mot de passe mis à jour');
+      console.log('  ℹ️  Compte OFFICE-BAC-SN déjà présent, aucune modification.');
+    } else if (!process.env.OFFICE_BAC_INITIAL_PASSWORD) {
+      console.warn('  ⚠️ Compte OFFICE-BAC-SN absent : définissez OFFICE_BAC_INITIAL_PASSWORD puis relancez les migrations.');
     } else {
-      // 3. Créer le compte Office du BAC
       const salt = await bcrypt.genSalt(10);
-      const hash = await bcrypt.hash('OfficeBAC@2026', salt);
+      const hash = await bcrypt.hash(process.env.OFFICE_BAC_INITIAL_PASSWORD, salt);
 
       await db.query(
         "INSERT INTO users (email, password_hash, role) VALUES ('OFFICE-BAC-SN', $1, 'OFFICE_BAC')",
         [hash]
       );
-      console.log('  ✓ Compte OFFICE-BAC-SN créé avec succès');
+      console.log('  ✓ Compte OFFICE-BAC-SN créé avec le mot de passe défini dans OFFICE_BAC_INITIAL_PASSWORD');
     }
 
-    console.log('\n✅ Migration v23 terminée !');
-    console.log('   ┌─────────────────────────────────────┐');
-    console.log('   │  IDENTIFIANTS OFFICE DU BAC         │');
-    console.log('   │  Login    : OFFICE-BAC-SN            │');
-    console.log('   │  Password : OfficeBAC@2026           │');
-    console.log('   │  Rôle     : OFFICE_BAC               │');
-    console.log('   │  URL      : /office/dashboard        │');
-    console.log('   └─────────────────────────────────────┘');
+    console.log('✅ Migration v23 terminée !');
   } catch (err) {
     console.error('❌ Erreur migration v23:', err);
   } finally {

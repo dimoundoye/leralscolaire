@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const StudentModel = require('../models/studentModel');
 const db = require('../config/db'); // For transaction connection
 const response = require('../utils/response');
+const { canAccessClasse } = require('../middleware/access');
 
 const { generateIUP } = require('../utils/iupGenerator');
 const emailService = require('../services/emailService');
@@ -72,6 +73,10 @@ const studentController = {
       }
       const etablissementId = etab.id;
       const etabRegion = etab.region || 'Dakar';
+
+      if (classe_id && !(await canAccessClasse(req.user, classe_id))) {
+        return response.error(res, 'Accès refusé. Cette classe ne relève pas de votre établissement.', 403);
+      }
 
       // Use a database transaction
       const client = await db.pool.connect();
@@ -284,6 +289,9 @@ const studentController = {
       if (student.etablissement_id !== adminEtablissementId) {
         return response.error(res, "Accès refusé. Vous n'avez plus les droits d'édition sur cet élève (élève transféré).", 403);
       }
+      if (classe_id && !(await canAccessClasse(req.user, classe_id))) {
+        return response.error(res, 'Accès refusé. Cette classe ne relève pas de votre établissement.', 403);
+      }
 
       const updatedStudent = await StudentModel.updateStudent(req.params.id, {
         nom, prenom, sexe, date_naissance, lieu_naissance, nationalite, telephone, coordonnees_parent, statut, email
@@ -322,6 +330,9 @@ const studentController = {
       }
       if (student.etablissement_id !== adminEtablissementId) {
         return response.error(res, "Accès refusé. Cet élève n'appartient pas à votre établissement.", 403);
+      }
+      if (!(await canAccessClasse(req.user, classe_id))) {
+        return response.error(res, 'Accès refusé. Cette classe ne relève pas de votre établissement.', 403);
       }
 
       await StudentModel.clearStudentClassEnrollments(id);

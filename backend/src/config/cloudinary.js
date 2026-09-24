@@ -3,8 +3,18 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 const isCloudinaryConfigured = Boolean(process.env.CLOUDINARY_URL);
+
+// Identifiant de fichier aléatoire (non devinable) : le nom d'origine n'est jamais réutilisé
+const randomFileId = () => `${Date.now()}-${crypto.randomBytes(12).toString('hex')}`;
+
+// Nom de fichier local sûr : identifiant aléatoire + extension d'origine nettoyée
+function safeFileName(originalname) {
+  const ext = path.extname(String(originalname || '')).toLowerCase().replace(/[^a-z0-9.]/g, '').slice(0, 10);
+  return randomFileId() + ext;
+}
 
 if (isCloudinaryConfigured) {
   console.log('☁️  Cloudinary configuré pour le stockage des fichiers');
@@ -25,7 +35,7 @@ function createUploadMiddleware(subFolder = 'uploads') {
         return {
           folder: `leralscolaire/${subFolder}`,
           resource_type: isPdf ? 'raw' : 'auto',
-          public_id: `${Date.now()}-${path.parse(file.originalname).name.replace(/[^a-zA-Z0-9_-]/g, '_')}`,
+          public_id: randomFileId(),
         };
       },
     });
@@ -46,8 +56,7 @@ function createUploadMiddleware(subFolder = 'uploads') {
       cb(null, dir);
     },
     filename: (req, file, cb) => {
-      const sanitizedName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
-      cb(null, `${Date.now()}-${sanitizedName}`);
+      cb(null, safeFileName(file.originalname));
     }
   });
 
@@ -73,5 +82,7 @@ module.exports = {
   cloudinary,
   isCloudinaryConfigured,
   createUploadMiddleware,
-  getUploadedFileUrl
+  getUploadedFileUrl,
+  randomFileId,
+  safeFileName
 };

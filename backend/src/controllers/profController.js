@@ -84,6 +84,21 @@ const profController = {
   async updateProfesseur(req, res, next) {
     const { email, password } = req.body;
     try {
+      const etablissementId = await ProfModel.getEtablissementIdByAdminId(req.user.id);
+      if (!etablissementId) {
+        return response.error(res, 'Établissement non trouvé.', 404);
+      }
+      // Seul un compte PROFESSEUR rattaché à l'établissement de l'administrateur peut être modifié
+      const { rows: cible } = await db.query(
+        `SELECT 1 FROM users u
+         JOIN professeurs_etablissements pe ON pe.professeur_id = u.id
+         WHERE u.id = $1 AND u.role = 'PROFESSEUR' AND pe.etablissement_id = $2 AND pe.statut = 'ACCEPTE'`,
+        [req.params.id, etablissementId]
+      );
+      if (cible.length === 0) {
+        return response.error(res, 'Accès refusé. Ce professeur n\'est pas rattaché à votre établissement.', 403);
+      }
+
       let passwordHash = null;
       if (password) {
         const salt = await bcrypt.genSalt(10);
@@ -170,6 +185,19 @@ const profController = {
   async createAssignment(req, res) {
     const { professeur_id, classe_id, matiere_id } = req.body;
     try {
+      // La classe doit appartenir à l'établissement et le professeur y être rattaché
+      const etablissementId = await ProfModel.getEtablissementIdByAdminId(req.user.id);
+      const { rows: valid } = await db.query(
+        `SELECT 1 FROM classes c
+         JOIN professeurs_etablissements pe
+           ON pe.etablissement_id = c.etablissement_id AND pe.professeur_id = $2 AND pe.statut = 'ACCEPTE'
+         WHERE c.id = $1 AND c.etablissement_id = $3`,
+        [classe_id, professeur_id, etablissementId]
+      );
+      if (!etablissementId || valid.length === 0) {
+        return response.error(res, 'Accès refusé. Classe ou professeur hors de votre établissement.', 403);
+      }
+
       const { rows } = await db.query(
         `INSERT INTO professeur_matieres (professeur_id, classe_id, matiere_id)
          VALUES ($1, $2, $3)
@@ -187,7 +215,16 @@ const profController = {
   async deleteAssignment(req, res) {
     const { id } = req.params;
     try {
-      await db.query('DELETE FROM professeur_matieres WHERE id = $1', [id]);
+      const etablissementId = await ProfModel.getEtablissementIdByAdminId(req.user.id);
+      const { rowCount } = await db.query(
+        `DELETE FROM professeur_matieres pm
+         USING classes c
+         WHERE pm.id = $1 AND pm.classe_id = c.id AND c.etablissement_id = $2`,
+        [id, etablissementId]
+      );
+      if (rowCount === 0) {
+        return response.error(res, 'Affectation introuvable dans votre établissement.', 404);
+      }
       return res.json({ message: 'Affectation retirée avec succès.' });
     } catch (err) {
       console.error(err);

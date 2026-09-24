@@ -53,22 +53,6 @@ const ProfModel = {
     return true;
   },
 
-  async updateProfUser(profId, email, passwordHash = null) {
-    let query = 'UPDATE users SET email = $1';
-    let params = [email];
-    
-    if (passwordHash) {
-      query += ', password_hash = $2 WHERE id = $3';
-      params.push(passwordHash, profId);
-    } else {
-      query += ' WHERE id = $2';
-      params.push(profId);
-    }
-    
-    const { rows } = await db.query(query + ' RETURNING id, email', params);
-    return rows[0];
-  },
-
   async unlinkProfFromEtablissement(profId, etablissementId) {
     await db.query(
       'DELETE FROM professeurs_etablissements WHERE professeur_id = $1 AND etablissement_id = $2',
@@ -231,6 +215,23 @@ const ProfModel = {
     });
 
     return freeSlots.map(s => s.label);
+  },
+
+  // À n'appeler qu'après avoir vérifié que profId est un professeur de l'établissement
+  async updateProfUser(profId, email, passwordHash = null) {
+    let query = "UPDATE users SET email = $1";
+    const params = [email];
+
+    if (passwordHash) {
+      query += ', password_hash = $2 WHERE id = $3';
+      params.push(passwordHash, profId);
+    } else {
+      query += ' WHERE id = $2';
+      params.push(profId);
+    }
+
+    const { rows } = await db.query(query + " AND role = 'PROFESSEUR' RETURNING id, email", params);
+    return rows[0];
   },
 
   async getTeacherClasses(profId) {

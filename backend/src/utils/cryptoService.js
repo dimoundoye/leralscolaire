@@ -3,6 +3,7 @@
  * Génère et vérifie l'empreinte numérique SHA-256 des livrets scolaires scellés
  */
 const crypto = require('crypto');
+const { JWT_SECRET } = require('../config/secrets');
 
 /**
  * Calcule l'empreinte cryptographique HMAC-SHA256 d'un livret scolaire avant transmission
@@ -10,7 +11,7 @@ const crypto = require('crypto');
  * @param {String} secretKey - Clé secrète de l'établissement ou master secret de l'Office du Bac
  * @returns {String} Empreinte hexadécimale SHA-256 de 64 caractères
  */
-function computeLivretHash(payload, secretKey = process.env.JWT_SECRET || 'leralscolaire_master_key_2026') {
+function computeLivretHash(payload, secretKey = JWT_SECRET) {
   const dataString = JSON.stringify({
     iup: payload.iup || payload.identifiant_national,
     notes: payload.historique_notes || payload.notes,

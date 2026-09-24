@@ -4,6 +4,7 @@ const multer = require('multer');
 const fs = require('fs');
 const partageController = require('../controllers/partageController');
 const auth = require('../middleware/authMiddleware');
+const { requireOwnRecord } = require('../middleware/access');
 
 const { createUploadMiddleware } = require('../config/cloudinary');
 
@@ -25,6 +26,6 @@ router.get('/:id/download', auth, partageController.downloadDocument);
 router.delete('/:id', auth, partageController.deleteDocument);
 
 // Mark as read
-router.put('/:id/read', auth, partageController.markAsRead);
+router.put('/:id/read', auth, requireOwnRecord('documents_partages_recu'), partageController.markAsRead);
 
 module.exports = router;

@@ -1,6 +1,44 @@
 const NoteModel = require('../models/noteModel');
 const db = require('../config/db'); // For pool transactions
 const response = require('../utils/response');
+const { canAccessClasse } = require('../middleware/access');
+
+// Les matières sont partagées par tous les établissements : un administrateur ne peut
+// renommer ou supprimer qu'une matière utilisée uniquement par son établissement.
+async function isMatiereUsedElsewhere(matiereId, etablissementId) {
+  const { rows } = await db.query(
+    `SELECT 1 FROM classes c
+     WHERE c.etablissement_id IS DISTINCT FROM $2
+       AND (
+         EXISTS (SELECT 1 FROM classe_matieres cm WHERE cm.classe_id = c.id AND cm.matiere_id = $1)
+         OR EXISTS (SELECT 1 FROM professeur_matieres pm WHERE pm.classe_id = c.id AND pm.matiere_id = $1)
+         OR EXISTS (SELECT 1 FROM emplois_du_temps edt WHERE edt.classe_id = c.id AND edt.matiere_id = $1)
+       )
+     LIMIT 1`,
+    [matiereId, etablissementId]
+  );
+  return rows.length > 0;
+}
+
+async function canEditMatiere(user, matiereId) {
+  if (user.role === 'OFFICE_BAC') return true;
+  const etablissementId = await NoteModel.getEtablissementIdByAdminId(user.id);
+  return Boolean(etablissementId) && !(await isMatiereUsedElsewhere(matiereId, etablissementId));
+}
+
+// Vérifie que tous les élèves listés appartiennent à l'établissement
+async function allElevesInEtablissement(eleveIds, etablissementId) {
+  const ids = [...new Set(eleveIds)];
+  const { rows } = await db.query(
+    'SELECT COUNT(*)::int AS total FROM eleves WHERE id = ANY($1::uuid[]) AND etablissement_id = $2',
+    [ids, etablissementId]
+  );
+  return rows[0].total === ids.length;
+}
+
+const ELEVES_HORS_ETABLISSEMENT = 'Accès refusé. Certains élèves ne relèvent pas de votre établissement.';
+
+const MATIERE_PARTAGEE = "Cette matière est utilisée par d'autres établissements : elle ne peut pas être modifiée ou supprimée.";
 
 function getClasseSuivante(niveau, decision) {
   if (decision === 'REDOUBLEMENT') return niveau;
@@ -47,6 +85,9 @@ const noteController = {
   async updateMatiere(req, res, next) {
     const { nom, code } = req.body;
     try {
+      if (!(await canEditMatiere(req.user, req.params.id))) {
+        return response.error(res, MATIERE_PARTAGEE, 403);
+      }
       const updated = await NoteModel.updateMatiere(req.params.id, nom, code);
       return res.json(updated);
     } catch (err) {
@@ -57,6 +98,9 @@ const noteController = {
 
   async deleteMatiere(req, res, next) {
     try {
+      if (!(await canEditMatiere(req.user, req.params.id))) {
+        return response.error(res, MATIERE_PARTAGEE, 403);
+      }
       await NoteModel.deleteMatiere(req.params.id);
       return res.json({ message: 'Matière supprimée.' });
     } catch (err) {
@@ -92,6 +136,12 @@ const noteController = {
       const etablissementId = await NoteModel.getEtablissementIdByAdminId(req.user.id);
       if (!etablissementId) {
         return response.error(res, 'Établissement non trouvé.', 404);
+      }
+      if (!Array.isArray(notes)) {
+        return response.error(res, 'Liste de notes invalide.', 400);
+      }
+      if (!(await allElevesInEtablissement(notes.map(n => n.eleve_id), etablissementId))) {
+        return response.error(res, ELEVES_HORS_ETABLISSEMENT, 403);
       }
 
       const client = await db.pool.connect();
@@ -296,6 +346,9 @@ const noteController = {
       const etablissementId = await NoteModel.getEtablissementIdByAdminId(req.user.id);
       if (!etablissementId) {
         return response.error(res, 'Établissement non trouvé.', 404);
+      }
+      if (!(await allElevesInEtablissement(decisions.map(d => d.eleve_id), etablissementId))) {
+        return response.error(res, ELEVES_HORS_ETABLISSEMENT, 403);
       }
 
       const client = await db.pool.connect();
@@ -527,6 +580,9 @@ const noteController = {
     const { classeId, anneeScolaire, moyenneGenerale, decision, decisionDetail, observationsJury, appreciationsConseil } = req.body;
 
     try {
+      if (!(await canAccessClasse(req.user, classeId))) {
+        return response.error(res, 'Accès refusé. Cette classe ne relève pas de votre établissement.', 403);
+      }
       const client = await db.pool.connect();
       try {
         await client.query('BEGIN');

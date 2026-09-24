@@ -1,3 +1,4 @@
+const PDFDocument = require('pdfkit');
 const { getBulletinData, drawSenegalBulletin } = require('./senegalBulletinPdfService');
 
 async function generateDossierScolairePdf(eleveData, signalementsList, etablissementData, res) {

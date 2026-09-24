@@ -62,15 +62,17 @@ async function cleanDatabase() {
       WHERE role = 'OFFICE_BAC';
     `);
 
-    if (officeCheck.rows.length === 0) {
+    if (officeCheck.rows.length === 0 && !process.env.OFFICE_BAC_INITIAL_PASSWORD) {
+      console.warn('  ⚠️ Aucun compte OFFICE_BAC : définissez OFFICE_BAC_INITIAL_PASSWORD pour le créer automatiquement.');
+    } else if (officeCheck.rows.length === 0) {
       console.log('  ⚠️ Aucun compte OFFICE_BAC trouvé ! Création automatique du compte officiel...');
       const salt = await bcrypt.genSalt(10);
-      const hash = await bcrypt.hash('OfficeBAC@2026', salt);
+      const hash = await bcrypt.hash(process.env.OFFICE_BAC_INITIAL_PASSWORD, salt);
       await client.query(`
         INSERT INTO users (email, password_hash, role, identifiant_national)
         VALUES ('OFFICE-BAC-SN', $1, 'OFFICE_BAC', 'OFFICE-BAC-SN');
       `, [hash]);
-      console.log('  ✓ Compte OFFICE-BAC-SN créé par défaut (Login: OFFICE-BAC-SN / Mdp: OfficeBAC@2026)');
+      console.log('  ✓ Compte OFFICE-BAC-SN créé (mot de passe : OFFICE_BAC_INITIAL_PASSWORD)');
     }
 
     // 5. Assurer les matières de base si la table est vide

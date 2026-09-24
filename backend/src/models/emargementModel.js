@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const crypto = require('crypto');
+const { JWT_SECRET } = require('../config/secrets');
 
 function isValidUuid(val) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(val));
@@ -8,7 +9,7 @@ function isValidUuid(val) {
 const EmargementModel = {
   // 1. Secret unique d'établissement pour TOTP 20s
   getEtablissementSecret(etablissementId) {
-    const masterSecret = process.env.JWT_SECRET || 'leralscolaire_secret_key_2026';
+    const masterSecret = JWT_SECRET;
     return crypto.createHmac('sha256', masterSecret).update(String(etablissementId)).digest('hex');
   },
 

@@ -543,10 +543,11 @@ const emailService = {
             <div class="credential-label">Identifiant Unique (IUP ${isEtab ? 'Établissement' : 'Enseignant'})</div>
             <div class="credential-value">${iup}</div>
           </div>
+          ${tempPassword ? `
           <div class="credential-item">
             <div class="credential-label">Mot de passe temporaire</div>
             <div class="credential-value" style="letter-spacing: 2px;">${tempPassword}</div>
-          </div>
+          </div>` : ''}
         </div>
 
         <div class="alert-box">

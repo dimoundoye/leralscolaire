@@ -6,7 +6,11 @@ const response = require('../utils/response');
 const { generateIUP } = require('../utils/iupGenerator');
 const emailService = require('../services/emailService');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'votre_secret_tres_prive';
+const { JWT_SECRET } = require('../config/secrets');
+const crypto = require('crypto');
+
+const MAX_RESET_ATTEMPTS = 5;
+const RESET_CODE_SENT_MESSAGE = "Si un compte correspond à cet IUP et à cette adresse email, un code de vérification à 6 chiffres vient d'y être envoyé.";
 
 const authController = {
   /**
@@ -275,12 +279,13 @@ const authController = {
         }
       }
 
+      // Même réponse que le compte existe ou non : on ne révèle pas quels couples IUP/email sont valides
       if (!matchedUserId) {
-        return response.error(res, "Aucun compte ne correspond à cette combinaison d'Identifiant Unique (IUP) et d'adresse email.", 404);
+        return response.success(res, null, RESET_CODE_SENT_MESSAGE);
       }
 
-      // 4. Générer un code à 6 chiffres
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      // 4. Générer un code à 6 chiffres (générateur cryptographique)
+      const code = crypto.randomInt(100000, 1000000).toString();
 
       // 5. Enregistrer le code dans password_resets (valable 15 minutes)
       await db.query('DELETE FROM password_resets WHERE user_id = $1', [matchedUserId]);
@@ -297,7 +302,7 @@ const authController = {
         code
       });
 
-      return response.success(res, null, "Un code de vérification à 6 chiffres a été envoyé sur votre adresse email.");
+      return response.success(res, null, RESET_CODE_SENT_MESSAGE);
     } catch (err) {
       console.error(err);
       return response.error(res, "Erreur lors de l'envoi du code de réinitialisation.", 500);
@@ -358,16 +363,18 @@ const authController = {
       }
 
       if (!matchedUserId) {
-        return response.error(res, "Informations de compte introuvables.", 404);
+        return response.error(res, "Code de vérification incorrect ou expiré.", 400);
       }
 
-      // Vérifier le code dans password_resets
+      // Vérifier le code dans password_resets (invalidé après MAX_RESET_ATTEMPTS essais erronés)
       const resetRes = await db.query(
-        'SELECT * FROM password_resets WHERE user_id = $1 AND code = $2 AND expires_at > NOW()',
-        [matchedUserId, cleanCode]
+        'SELECT * FROM password_resets WHERE user_id = $1 AND code = $2 AND expires_at > NOW() AND tentatives < $3',
+        [matchedUserId, cleanCode, MAX_RESET_ATTEMPTS]
       );
 
       if (resetRes.rows.length === 0) {
+        await db.query('UPDATE password_resets SET tentatives = tentatives + 1 WHERE user_id = $1', [matchedUserId]);
+        await db.query('DELETE FROM password_resets WHERE user_id = $1 AND tentatives >= $2', [matchedUserId, MAX_RESET_ATTEMPTS]);
         return response.error(res, "Code de vérification incorrect ou expiré.", 400);
       }
 

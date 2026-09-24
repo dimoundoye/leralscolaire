@@ -6,6 +6,8 @@ import './PublicOfficeRegistration.css';
 import { REFERENTIEL_IA_IEF, getIasByRegion, getIefsByIa } from '../utils/referentielIaIef';
 
 const API = '/api';
+// Doit rester cohérent avec la limite de taille des requêtes du backend (src/app.js)
+const MAX_DOC_SIZE = 4 * 1024 * 1024;
 
 const PublicOfficeRegistration = () => {
   const navigate = useNavigate();
@@ -57,6 +59,10 @@ const PublicOfficeRegistration = () => {
 
   const handleFileChange = (field, file) => {
     if (file) {
+      if (file.size > MAX_DOC_SIZE) {
+        setErrorMsg(`Le fichier « ${file.name} » dépasse la taille maximale de 4 Mo.`);
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         setDocs(d => ({

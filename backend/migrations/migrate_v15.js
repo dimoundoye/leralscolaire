@@ -39,44 +39,6 @@ async function migrate() {
     `);
     console.log('✅ Colonnes type_presence, duree_retard, matiere_id, classe_id, professeur_id, motif ajoutées à la table absences.');
 
-    // 4. Seeder d'enseignants d'exemples
-    // On crée quelques comptes professeurs si ils n'existent pas encore
-    const bcrypt = require('bcryptjs');
-    const salt = await bcrypt.genSalt(10);
-    const defaultPasswordHash = await bcrypt.hash('prof123', salt);
-
-    const checkProfs = await db.query("SELECT id FROM users WHERE role = 'PROFESSEUR' LIMIT 3");
-    if (checkProfs.rows.length === 0) {
-      console.log('Création d\'enseignants d\'exemple...');
-      
-      const teacherAccounts = [
-        { email: 'saliou.diop@leral.sn', identifiant: 'ENS-2026-DKR-000101', prenom: 'Saliou', nom: 'Diop', matiere: 'Mathématiques' },
-        { email: 'fatou.ndiaye@leral.sn', identifiant: 'ENS-2026-THS-000102', prenom: 'Fatou', nom: 'Ndiaye', matiere: 'Sciences Physiques' },
-        { email: 'amadou.diallo@leral.sn', identifiant: 'ENS-2026-SL-000103', prenom: 'Amadou', nom: 'Diallo', matiere: 'Français' }
-      ];
-
-      for (const t of teacherAccounts) {
-        // Insérer dans users
-        const userRes = await db.query(`
-          INSERT INTO users (email, password_hash, role, identifiant_national)
-          VALUES ($1, $2, 'PROFESSEUR', $3)
-          ON CONFLICT (email) DO NOTHING
-          RETURNING id
-        `, [t.email, defaultPasswordHash, t.identifiant]);
-
-        if (userRes.rows.length > 0) {
-          const userId = userRes.rows[0].id;
-          // Insérer dans professeurs
-          await db.query(`
-            INSERT INTO professeurs (id, prenom, nom, matiere_principale, telephone)
-            VALUES ($1, $2, $3, $4, $5)
-            ON CONFLICT (id) DO NOTHING
-          `, [userId, t.prenom, t.nom, t.matiere, '+221 77 123 45 67']);
-        }
-      }
-      console.log('✅ Enseignants d\'exemple créés avec succès (Mot de passe: prof123).');
-    }
-
     console.log('--- Migration v15 terminée avec succès ---');
   } catch (err) {
     console.error('❌ Erreur de migration v15:', err);

@@ -1,6 +1,7 @@
 const db = require('../config/db');
 const ProfModel = require('../models/profModel');
 const response = require('../utils/response');
+const { isProfOfEleve } = require('../middleware/access');
 
 const profPortalController = {
   // 1. Profil de l'enseignant
@@ -134,6 +135,19 @@ const profPortalController = {
         return response.error(res, 'Accès refusé. Vous n\'enseignez pas dans cette classe.', 403);
       }
 
+      // Tous les élèves de l'appel doivent être inscrits dans la classe
+      if (!Array.isArray(roster)) {
+        return response.error(res, 'Liste d\'appel invalide.', 400);
+      }
+      const eleveIds = [...new Set(roster.map(item => item.eleve_id))];
+      const { rows: inscrits } = await db.query(
+        'SELECT COUNT(DISTINCT eleve_id)::int AS total FROM inscription_classes WHERE classe_id = $1 AND eleve_id = ANY($2::uuid[])',
+        [classeId, eleveIds]
+      );
+      if (inscrits[0].total !== eleveIds.length) {
+        return response.error(res, 'Accès refusé. Certains élèves ne sont pas inscrits dans cette classe.', 403);
+      }
+
       const client = await db.pool.connect();
       try {
         await client.query('BEGIN');
@@ -261,14 +275,19 @@ const profPortalController = {
         return response.error(res, 'Accès refusé. Vous n\'enseignez pas cette matière dans cette classe.', 403);
       }
 
+      const inscription = await db.query(
+        'SELECT 1 FROM inscription_classes WHERE eleve_id = $1 AND classe_id = $2',
+        [eleve_id, classe_id]
+      );
+      if (inscription.rows.length === 0) {
+        return response.error(res, 'Accès refusé. Cet élève n\'est pas inscrit dans cette classe.', 403);
+      }
+
       // Convert "Trimestre X" / "Semestre X" to integer
       let periodeNum = 1;
       if (periode && periode.includes('1')) periodeNum = 1;
       if (periode && periode.includes('2')) periodeNum = 2;
       if (periode && periode.includes('3')) periodeNum = 3;
-
-      // Ensure constraint allows both DEVOIR and COMPOSITION for the period
-      await db.query(`ALTER TABLE notes DROP CONSTRAINT IF EXISTS unique_note_per_period;`);
 
       // 2. Insérer ou mettre à jour la note (valeur)
       const exist = await db.query(
@@ -319,29 +338,17 @@ const profPortalController = {
         // Fetch old note values
         const oldNoteRes = await client.query('SELECT * FROM notes WHERE id = $1', [noteId]);
         if (oldNoteRes.rows.length === 0) {
-          client.release();
+          await client.query('ROLLBACK');
           return response.error(res, 'Note introuvable.', 404);
         }
         const oldNote = oldNoteRes.rows[0];
 
-        // Record history log (Audit Trail / pending request)
-        await client.query(`
-          CREATE TABLE IF NOT EXISTS historique_notes (
-            id SERIAL PRIMARY KEY,
-            note_id UUID REFERENCES notes(id) ON DELETE CASCADE,
-            ancienne_valeur NUMERIC,
-            nouvelle_valeur NUMERIC,
-            ancienne_appreciation TEXT,
-            nouvelle_appreciation TEXT,
-            motif TEXT,
-            auteur_id UUID REFERENCES users(id) ON DELETE SET NULL,
-            date_modification TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            statut VARCHAR(20) DEFAULT 'EN_ATTENTE'
-          );
-          ALTER TABLE historique_notes ADD COLUMN IF NOT EXISTS motif TEXT;
-          ALTER TABLE historique_notes ADD COLUMN IF NOT EXISTS statut VARCHAR(20) DEFAULT 'EN_ATTENTE';
-        `);
+        if (!(await isProfOfEleve(req.user.id, oldNote.eleve_id, oldNote.matiere_id))) {
+          await client.query('ROLLBACK');
+          return response.error(res, 'Accès refusé. Vous n\'enseignez pas cette matière à cet élève.', 403);
+        }
 
+        // Record history log (Audit Trail / pending request)
         await client.query(
           `INSERT INTO historique_notes (note_id, ancienne_valeur, nouvelle_valeur, ancienne_appreciation, nouvelle_appreciation, motif, auteur_id, statut)
            VALUES ($1, $2, $3, $4, $5, $6, $7, 'EN_ATTENTE')`,

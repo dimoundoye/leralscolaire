@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const profPortalController = require('../controllers/profPortalController');
 const auth = require('../middleware/authMiddleware');
+const { requireProfOfClasse, requireProfAffiliation } = require('../middleware/access');
 
 // Security middleware to ensure role is PROFESSEUR
 const checkProfRole = (req, res, next) => {
@@ -28,15 +29,15 @@ router.get('/classes/:classeId/students', auth, checkProfRole, profPortalControl
 
 // --- 4. ASSIDUITÉ (ABSENCES & RETARDS) ---
 router.post('/attendance/:classeId', auth, checkProfRole, profPortalController.saveAttendance);
-router.get('/attendance-history/:classeId', auth, checkProfRole, profPortalController.getAttendanceHistory);
+router.get('/attendance-history/:classeId', auth, checkProfRole, requireProfOfClasse('classeId'), profPortalController.getAttendanceHistory);
 
 // --- 5. GRILLES DE NOTES ---
-router.get('/grades/:classeId/:matiereId', auth, checkProfRole, profPortalController.getClassGrades);
+router.get('/grades/:classeId/:matiereId', auth, checkProfRole, requireProfOfClasse('classeId', 'matiereId'), profPortalController.getClassGrades);
 router.post('/grades', auth, checkProfRole, profPortalController.saveGrade);
 router.put('/grades/:noteId', auth, checkProfRole, profPortalController.updateGrade);
 
 // --- 6. BAREMES D'APPRECIATION ---
-router.get('/baremes/:etablissementId', auth, checkProfRole, profPortalController.getBaremes);
+router.get('/baremes/:etablissementId', auth, checkProfRole, requireProfAffiliation('etablissementId'), profPortalController.getBaremes);
 
 // --- 7. NOTIFICATIONS ---
 router.get('/notifications', auth, checkProfRole, profPortalController.getNotifications);
@@ -47,7 +48,7 @@ router.get('/schedule/pdf', auth, checkProfRole, profPortalController.exportSche
 router.get('/public-schedule/ical/:profId', profPortalController.exportScheduleICal);
 
 // --- 9. SUIVI PEDAGOGIQUE ---
-router.get('/pedagogie/:classeId/:matiereId', auth, checkProfRole, profPortalController.getPedagogyStats);
+router.get('/pedagogie/:classeId/:matiereId', auth, checkProfRole, requireProfOfClasse('classeId', 'matiereId'), profPortalController.getPedagogyStats);
 
 // --- 10. PLANIFICATION ET CALENDRIER ---
 router.get('/planning', auth, checkProfRole, profPortalController.getPlanning);

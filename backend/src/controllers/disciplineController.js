@@ -3,6 +3,7 @@ const { sendParentNotification } = require('../utils/notificationService');
 const { generateDossierScolairePdf } = require('../utils/dossierPdfService');
 const response = require('../utils/response');
 const db = require('../config/db');
+const { canAccessEleve, getAdminEtablissementId } = require('../middleware/access');
 
 // Helper pour trouver l'etablissement_id de l'utilisateur
 async function resolveEtablissementId(user, eleveId = null) {
@@ -11,11 +12,10 @@ async function resolveEtablissementId(user, eleveId = null) {
   if (user.role === 'ADMIN_ETABLISSEMENT') {
     const res = await db.query('SELECT id FROM etablissements WHERE admin_id = $1', [user.id]);
     if (res.rows[0]) return res.rows[0].id;
-  } else if (user.role === 'PROFESSEUR') {
-    const res = await db.query('SELECT etablissement_id FROM professeurs WHERE user_id = $1 OR id = $1', [user.id]);
-    if (res.rows[0]?.etablissement_id) return res.rows[0].etablissement_id;
   }
-  
+
+  // Un professeur peut enseigner dans plusieurs établissements (professeurs_etablissements) :
+  // l'établissement est donc déduit de l'élève concerné.
   if (eleveId) {
     const res = await db.query('SELECT etablissement_id FROM eleves WHERE id = $1', [eleveId]);
     if (res.rows[0]?.etablissement_id) return res.rows[0].etablissement_id;
@@ -40,6 +40,10 @@ exports.createSignalement = async (req, res) => {
 
     if (!eleve_id || !type_action || !motif) {
       return response.error(res, 'Veuillez fournir l\'élève, le type d\'action et le motif.', 400);
+    }
+
+    if (!(await canAccessEleve(req.user, eleve_id, { allowProf: true }))) {
+      return response.error(res, 'Accès refusé. Cet élève ne relève pas de votre établissement.', 403);
     }
 
     const etablissement_id = await resolveEtablissementId(req.user, eleve_id);
@@ -159,6 +163,19 @@ exports.updateStatut = async (req, res) => {
 
     if (!statut) {
       return response.error(res, 'Veuillez préciser le nouveau statut.', 400);
+    }
+
+    // Seuls l'établissement concerné et l'auteur du signalement peuvent en changer le statut
+    const { rows } = await db.query('SELECT etablissement_id, auteur_id FROM signalements_discipline WHERE id = $1', [id]);
+    const signalement = rows[0];
+    if (!signalement) {
+      return response.error(res, 'Signalement introuvable.', 404);
+    }
+    const isAuteur = signalement.auteur_id === req.user.id;
+    const isEtablissement = req.user.role === 'ADMIN_ETABLISSEMENT'
+      && signalement.etablissement_id === (await getAdminEtablissementId(req.user.id));
+    if (!isAuteur && !isEtablissement) {
+      return response.error(res, 'Accès refusé. Ce signalement ne relève pas de votre établissement.', 403);
     }
 
     const updated = await DisciplineModel.updateStatut(id, statut, compte_rendu_rdv);

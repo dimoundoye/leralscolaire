@@ -1,24 +1,9 @@
 const db = require('../config/db');
 const response = require('../utils/response');
+const { getAdminEtablissementId, isProfOfClasse } = require('../middleware/access');
+const { getUploadedFileUrl } = require('../config/cloudinary');
 
 const cahierTexteController = {
-  async uploadFile(req, res, next) {
-    try {
-      if (!req.file) {
-        return response.error(res, 'Aucun fichier fourni.', 400);
-      }
-      const { getUploadedFileUrl } = require('../config/cloudinary');
-      const fichier_url = getUploadedFileUrl(req.file, 'cahier_texte');
-      return res.json({
-        fichier_url,
-        fichier_nom: req.file.originalname
-      });
-    } catch (err) {
-      console.error(err);
-      return response.error(res, "Erreur lors de l'envoi du support de cours.", 500);
-    }
-  },
-
   // 1. Saisie d'une fiche de cours / séance par le professeur
   async createEntry(req, res) {
     const {
@@ -40,6 +25,10 @@ const cahierTexteController = {
     }
 
     try {
+      if (req.user.role !== 'PROFESSEUR' || !(await isProfOfClasse(req.user.id, classe_id, matiere_id))) {
+        return response.error(res, 'Accès refusé. Vous n\'enseignez pas cette matière dans cette classe.', 403);
+      }
+
       // Fetch etablissement_id from class
       const classRes = await db.query('SELECT etablissement_id FROM classes WHERE id = $1', [classe_id]);
       if (classRes.rows.length === 0) {
@@ -88,9 +77,9 @@ const cahierTexteController = {
       if (!req.file) {
         return response.error(res, 'Aucun fichier sélectionné.', 400);
       }
-      const fichierUrl = `/uploads/cahier_texte/${req.file.filename}`;
+      // URL Cloudinary si configuré, sinon chemin local /uploads/cahier_texte/...
       return res.json({
-        fichier_url: fichierUrl,
+        fichier_url: getUploadedFileUrl(req.file, 'cahier_texte'),
         fichier_nom: req.file.originalname
       });
     } catch (err) {
@@ -147,19 +136,8 @@ const cahierTexteController = {
       const classIds = classRes.rows.map(r => r.classe_id);
 
       if (classIds.length === 0) {
-        // Fallback : renvoyer les séances récentes de l'établissement
-        const { rows: fallbackRows } = await db.query(
-          `SELECT ct.*, c.nom as classe_nom, c.annee_scolaire, m.nom as matiere_nom, m.code_matiere,
-                  COALESCE(p.prenom || ' ' || p.nom, u.email) as professeur_nom
-           FROM cahier_de_texte ct
-           JOIN classes c ON ct.classe_id = c.id
-           JOIN matieres m ON ct.matiere_id = m.id
-           JOIN users u ON ct.professeur_id = u.id
-           LEFT JOIN professeurs p ON p.id = u.id
-           ORDER BY ct.date_seance DESC, ct.created_at DESC
-           LIMIT 50`
-        );
-        return res.json(fallbackRows);
+        // Élève sans classe : aucune séance à afficher
+        return res.json([]);
       }
 
       const { rows } = await db.query(
@@ -265,8 +243,12 @@ const cahierTexteController = {
       }
 
       const entry = entryRes.rows[0];
-      if (req.user.role === 'PROFESSEUR' && entry.professeur_id !== req.user.id) {
-        return response.error(res, 'Seul l\'auteur de la séance peut la supprimer.', 403);
+      // Suppression réservée à l'auteur de la séance ou à l'administration de son établissement
+      const isAuteur = req.user.role === 'PROFESSEUR' && entry.professeur_id === req.user.id;
+      const isEtablissement = req.user.role === 'ADMIN_ETABLISSEMENT'
+        && entry.etablissement_id === (await getAdminEtablissementId(req.user.id));
+      if (!isAuteur && !isEtablissement) {
+        return response.error(res, 'Seul l\'auteur de la séance ou son établissement peut la supprimer.', 403);
       }
 
       await db.query('DELETE FROM cahier_de_texte WHERE id = $1', [id]);

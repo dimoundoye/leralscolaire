@@ -5,10 +5,10 @@ services:
     restart: always
     environment:
       POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASS:-Passer@2026#}
+      POSTGRES_PASSWORD: ${DB_PASS:?DB_PASS doit être défini (docker compose --env-file backend/.env)}
       POSTGRES_DB: ${DB_NAME:-leralscolaire}
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - leral_pgdata:/var/lib/postgresql/data
       - ./backend/scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro

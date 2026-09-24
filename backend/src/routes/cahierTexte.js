@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const cahierTexteController = require('../controllers/cahierTexteController');
 const auth = require('../middleware/authMiddleware');
+const { requireOwnRecord } = require('../middleware/access');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -26,7 +27,7 @@ router.get('/eleve', auth, cahierTexteController.getEleveEntries);
 
 // Admin routes
 router.get('/admin', auth, cahierTexteController.getAdminEntries);
-router.put('/:id/visa', auth, cahierTexteController.toggleAdminVisa);
+router.put('/:id/visa', auth, requireOwnRecord('cahier_de_texte'), cahierTexteController.toggleAdminVisa);
 
 // Delete route
 router.delete('/:id', auth, cahierTexteController.deleteEntry);

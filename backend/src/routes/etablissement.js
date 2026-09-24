@@ -4,6 +4,8 @@ const multer = require('multer');
 const fs = require('fs');
 const etablissementController = require('../controllers/etablissementController');
 const auth = require('../middleware/authMiddleware');
+const { requireOwnRecord } = require('../middleware/access');
+const { safeFileName } = require('../config/cloudinary');
 
 const upload = multer({
   storage: multer.diskStorage({
@@ -13,9 +15,17 @@ const upload = multer({
       cb(null, dir);
     },
     filename: (req, file, cb) => {
-      cb(null, Date.now() + '-' + file.originalname);
+      cb(null, safeFileName(file.originalname));
     }
-  })
+  }),
+  // Signature et cachet : images uniquement
+  fileFilter: (req, file, cb) => {
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.mimetype)) {
+      return cb(new Error('La signature et le cachet doivent être des images (PNG, JPEG ou WebP).'));
+    }
+    cb(null, true);
+  },
+  limits: { fileSize: 5 * 1024 * 1024 }
 });
 
 // Get profile details
@@ -46,7 +56,7 @@ router.get('/planning/propositions', auth, etablissementController.getProposedDe
 router.put('/planning/propositions/:id/decider', auth, etablissementController.decideProposedDevoir);
 
 // Confirmer ou rejeter la modification de note
-router.post('/audit/:id/confirm', auth, etablissementController.confirmAuditLog);
-router.post('/audit/:id/reject', auth, etablissementController.rejectAuditLog);
+router.post('/audit/:id/confirm', auth, requireOwnRecord('historique_notes'), etablissementController.confirmAuditLog);
+router.post('/audit/:id/reject', auth, requireOwnRecord('historique_notes'), etablissementController.rejectAuditLog);
 
 module.exports = router;
