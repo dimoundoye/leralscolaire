@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Loader2, Users, User, QrCode, ExternalLink } from 'lucide-react';
 
 const AdminAttendanceTab = ({
-  selectedYear,
   absSearchQuery,
   setAbsSearchQuery,
   fetchAbsencesLog,
@@ -495,16 +494,8 @@ const AdminAttendanceTab = ({
 
             <button
               onClick={() => {
-                let etabId = classes?.[0]?.etablissement_id;
-                if (!etabId) {
-                  try {
-                    const u = JSON.parse(localStorage.getItem('user') || '{}');
-                    etabId = u.etablissement_id || u.id;
-                  } catch (e) {}
-                }
-                const targetId = etabId || 'default';
                 const popWindow = window.open(
-                  `/emargement/live-qr/${targetId}`,
+                  '/emargement/live-qr',
                   'QREmargementLiveKiosque',
                   'width=1024,height=768,menubar=no,toolbar=no,location=no,status=no,resizable=yes'
                 );

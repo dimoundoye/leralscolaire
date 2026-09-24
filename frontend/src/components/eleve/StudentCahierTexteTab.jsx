@@ -1,16 +1,4 @@
-import React from 'react';
-import {
-  BookMarked,
-  Calendar,
-  BookOpen,
-  ClipboardList,
-  Clock,
-  User,
-  Paperclip,
-  Download,
-  CheckCircle,
-  ShieldCheck,
-} from 'lucide-react';
+import { BookOpen, ClipboardList, Clock, User, Paperclip, Download, CheckCircle, ShieldCheck } from 'lucide-react';
 
 const StudentCahierTexteTab = ({ cahierEntries, cahierSubTab, setCahierSubTab, cahierLoading, API_BASE_URL }) => {
   const devoirsAfaire = cahierEntries.filter((e) => e.travail_a_faire && e.travail_a_faire.trim() !== '');

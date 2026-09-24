@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Brain,
   FileUp,
@@ -12,8 +11,6 @@ import {
   MoveHorizontal,
   Trash2,
   Loader2,
-  Venus,
-  Mars,
 } from 'lucide-react';
 
 const AdminElevesTab = ({

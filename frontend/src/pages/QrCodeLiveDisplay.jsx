@@ -1,12 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { ShieldCheck, Clock, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Clock, RefreshCw, AlertCircle } from 'lucide-react';
 
 export default function QrCodeLiveDisplay() {
-  const { etablissementId } = useParams();
-  const targetEtabId = etablissementId || 'default';
-
   const [qrToken, setQrToken] = useState('');
   const [secondsRemaining, setSecondsRemaining] = useState(20);
   const [loading, setLoading] = useState(true);
@@ -15,7 +11,11 @@ export default function QrCodeLiveDisplay() {
 
   const fetchLiveToken = async () => {
     try {
-      const res = await fetch(`/api/emargement/live-qr/${targetEtabId}`);
+      const res = await fetch('/api/emargement/live-qr');
+      if (res.status === 401 || res.status === 403) {
+        setError("Ouvrez la borne depuis la session d'un administrateur d'établissement.");
+        return;
+      }
       const data = await res.json();
       if (data.success) {
         setQrToken(data.token);
@@ -44,7 +44,7 @@ export default function QrCodeLiveDisplay() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [targetEtabId]);
+  }, []);
 
   useEffect(() => {
     const clockInterval = setInterval(() => {

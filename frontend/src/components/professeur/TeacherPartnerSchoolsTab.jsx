@@ -1,4 +1,3 @@
-import React from 'react';
 import { Building, Search } from 'lucide-react';
 
 const TeacherPartnerSchoolsTab = ({ dashboardDetails, searchTermSchools, setSearchTermSchools }) => {

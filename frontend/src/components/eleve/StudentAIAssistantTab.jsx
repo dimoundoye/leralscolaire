@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrainCircuit, Send } from 'lucide-react';
 
 const StudentAIAssistantTab = ({ aiChat, handleSendAi, aiInput, setAiInput }) => {

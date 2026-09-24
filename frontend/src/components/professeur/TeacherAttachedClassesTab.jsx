@@ -1,4 +1,3 @@
-import React from 'react';
 import { Users, Search, ArrowRight } from 'lucide-react';
 
 const TeacherAttachedClassesTab = ({

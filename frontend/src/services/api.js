@@ -128,7 +128,9 @@ export async function offlineFetch(url, options = {}, label = 'Action') {
       if (typeof options.body === 'string') {
         parsedBody = JSON.parse(options.body);
       }
-    } catch {}
+    } catch {
+      // Corps non JSON : conservé tel quel
+    }
 
     const item = await syncEngine.enqueue({
       endpoint: url,

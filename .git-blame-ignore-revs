@@ -1,0 +1,5 @@
+# Commits de pure mise en forme, ignorés par git blame.
+# Activer localement : git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# formatage Prettier
+808a7c78d44c1e53bc158caecb6d86c326721941

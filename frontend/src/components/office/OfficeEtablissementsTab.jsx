@@ -1,4 +1,3 @@
-import React from 'react';
 import { Plus, School } from 'lucide-react';
 
 export const OfficeEtablissementsTab = ({ etablissements = [], setShowAddEtabModal }) => {

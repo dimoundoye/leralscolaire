@@ -1,16 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import {
-  X,
-  FileText,
-  User,
-  Calendar,
-  ShieldCheck,
-  Scale,
-  Award,
-  AlertTriangle,
-  MessageSquare,
-  Download,
-} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { X, FileText, Calendar, Scale, Award, AlertTriangle, MessageSquare, Download } from 'lucide-react';
 import { api } from '../../services/api';
 
 const DossierScolaireModal = ({ eleveId, onClose }) => {

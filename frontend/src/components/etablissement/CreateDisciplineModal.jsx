@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Send, Calendar, AlertTriangle, MessageSquare, Award, Scale } from 'lucide-react';
+import { useState } from 'react';
+import { X, Send, Calendar, AlertTriangle, Award, Scale } from 'lucide-react';
 import { api } from '../../services/api';
 import './CreateDisciplineModal.css';
 

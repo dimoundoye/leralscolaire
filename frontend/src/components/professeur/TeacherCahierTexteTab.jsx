@@ -1,4 +1,3 @@
-import React from 'react';
 import { BookMarked, Paperclip, X, CheckCircle2, RefreshCw, Clock, ShieldCheck, Trash2, Download } from 'lucide-react';
 
 const TeacherCahierTexteTab = ({

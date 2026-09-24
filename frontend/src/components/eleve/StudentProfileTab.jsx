@@ -1,4 +1,3 @@
-import React from 'react';
 import { CheckCircle2, Phone, Mail, User, GraduationCap, BookOpen } from 'lucide-react';
 
 const StudentProfileTab = ({ profile }) => {

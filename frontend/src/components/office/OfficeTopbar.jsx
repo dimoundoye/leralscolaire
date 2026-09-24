@@ -1,4 +1,3 @@
-import React from 'react';
 import { GraduationCap, Copy } from 'lucide-react';
 
 export const OfficeTopbar = ({ examenMode, copyPublicLink }) => {

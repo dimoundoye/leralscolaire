@@ -1,4 +1,3 @@
-import React from 'react';
 import { GraduationCap, CheckCircle, AlertCircle, XCircle, Clock, Award, Activity } from 'lucide-react';
 
 const StudentExamsTab = ({ examResults, profile }) => {

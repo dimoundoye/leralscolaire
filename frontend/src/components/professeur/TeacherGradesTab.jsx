@@ -1,4 +1,3 @@
-import React from 'react';
 import { Edit, Check } from 'lucide-react';
 
 const TeacherGradesTab = ({

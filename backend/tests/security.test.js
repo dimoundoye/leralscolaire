@@ -204,6 +204,17 @@ test('émargement : réservé aux professeurs, QR invalide et terrain manquant r
   assert.strictEqual(sansTerrain.status, 400);
 });
 
+test("borne QR : réservée à l'administration, QR de son propre établissement", async (t) => {
+  assert.strictEqual((await request('GET', '/api/emargement/live-qr')).status, 401);
+  assert.strictEqual((await request('GET', '/api/emargement/live-qr', tokens.profAutre)).status, 403);
+  if (needsData(t)) return;
+  // L'ancien identifiant « default » est ignoré : c'est l'établissement de l'admin qui est utilisé
+  const res = await request('GET', '/api/emargement/live-qr/default', tokens.admin);
+  assert.strictEqual(res.status, 200);
+  const { rows } = await db.query('SELECT etablissement_id FROM classes WHERE id = $1', [ids.classe]);
+  assert.strictEqual((await res.json()).etablissementId, rows[0].etablissement_id);
+});
+
 test("inscription directe d'un établissement désactivée", async () => {
   const res = await request('POST', '/api/auth/register-etablissement', null, {
     nom: 'X',

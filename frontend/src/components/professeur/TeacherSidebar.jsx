@@ -1,4 +1,3 @@
-import React from 'react';
 import ReactDOM from 'react-dom';
 import {
   LayoutDashboard,
@@ -14,13 +13,10 @@ import {
   Settings,
   LogOut,
   X,
-  ShieldCheck,
   BookMarked,
   Scale,
   Award,
   ClipboardList,
-  ChevronLeft,
-  ChevronRight,
   QrCode,
 } from 'lucide-react';
 

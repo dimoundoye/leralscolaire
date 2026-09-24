@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
-  Award,
   GraduationCap,
   Users,
   BookOpen,
@@ -15,14 +14,10 @@ import {
   Lock,
   Save,
   FileText,
-  Check,
   ShieldCheck,
   Scale,
-  FileCheck,
   Eye,
   LogOut,
-  AlertOctagon,
-  HelpCircle,
   X,
   Printer,
   Send,

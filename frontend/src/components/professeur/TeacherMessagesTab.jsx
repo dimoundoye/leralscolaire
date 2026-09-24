@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   MessageSquare,
   GraduationCap,
@@ -11,7 +11,6 @@ import {
   X,
   Mail,
   Send,
-  User,
   Users,
 } from 'lucide-react';
 

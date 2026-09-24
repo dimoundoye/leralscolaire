@@ -7,25 +7,20 @@ const isValidUuid = (val) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[
 
 const EmargementController = {
   // 1. Obtenir le flux QR Code Live 20s (pour le surveillant)
+  // L'établissement est celui de l'administrateur connecté (borne ouverte depuis sa session) :
+  // jamais un identifiant lu dans l'URL, ni un établissement choisi par défaut.
   async getLiveQrToken(req, res) {
     try {
-      let { etablissementId } = req.params;
-
-      if (!etablissementId || !isValidUuid(etablissementId)) {
-        // Résoudre l'établissement actif ou le premier en base
-        const { rows: anyEtab } = await db.query('SELECT id FROM etablissements ORDER BY created_at ASC LIMIT 1');
-        if (anyEtab.length > 0) {
-          etablissementId = anyEtab[0].id;
-        } else {
-          return res.status(400).json({ success: false, error: 'Aucun établissement configuré.' });
-        }
+      const etablissementId = await getAdminEtablissementId(req.user.id);
+      if (!etablissementId) {
+        return res.status(404).json({ success: false, error: 'Établissement introuvable pour ce compte.' });
       }
 
       const qrData = EmargementModel.generateLiveQrToken(etablissementId);
       return res.json({ success: true, etablissementId, ...qrData });
     } catch (err) {
       console.error('Erreur getLiveQrToken:', err);
-      return res.status(500).json({ success: false, error: err.message });
+      return res.status(500).json({ success: false, error: 'Erreur lors de la génération du QR Code.' });
     }
   },
 

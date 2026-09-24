@@ -1,4 +1,3 @@
-import React from 'react';
 import { Plus, School, Calendar, Users, Edit, BookMarked, Copy } from 'lucide-react';
 
 const AdminClassesTab = ({

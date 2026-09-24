@@ -1,4 +1,3 @@
-import React from 'react';
 import { FileText, RefreshCw, AlertTriangle, Building } from 'lucide-react';
 
 const TeacherScheduleTab = ({

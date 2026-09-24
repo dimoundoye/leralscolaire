@@ -1,4 +1,3 @@
-import React from 'react';
 import { useOffline } from '../../contexts/OfflineContext';
 import { WifiOff, RefreshCw, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
 

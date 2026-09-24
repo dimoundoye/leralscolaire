@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   LogIn,
   Sparkles,
@@ -7,29 +7,11 @@ import {
   ArrowRight,
   ChevronRight,
   ShieldCheck,
-  WifiOff,
-  Lock,
-  GraduationCap,
   Building2,
   Users,
-  Award,
-  QrCode,
-  FileText,
   CheckCircle2,
-  Cpu,
-  Database,
-  Smartphone,
-  School,
   FileCheck,
-  TrendingUp,
-  Download,
-  Calendar,
-  Layers,
-  Key,
-  Flame,
   Check,
-  HelpCircle,
-  AlertTriangle,
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -40,7 +22,6 @@ export const LandingPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [terminalCopied, setTerminalCopied] = useState(false);
 
   // Redirection automatique des crawlers IA vers la page À Propos
   useEffect(() => {

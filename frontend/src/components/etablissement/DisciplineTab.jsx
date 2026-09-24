@@ -1,15 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Scale,
-  Calendar,
-  AlertTriangle,
-  MessageSquare,
-  Plus,
-  Search,
-  Award,
-  FileText,
-  CheckCircle,
-} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Scale, Calendar, AlertTriangle, Plus, Search, Award, FileText } from 'lucide-react';
 import { api } from '../../services/api';
 import DossierScolaireModal from './DossierScolaireModal';
 import CreateDisciplineModal from './CreateDisciplineModal';
@@ -273,6 +263,26 @@ const DisciplineTab = ({ elevesList = [] }) => {
             Remarques
           </button>
         </div>
+
+        {/* Filtre par statut */}
+        <select
+          value={filterStatut}
+          onChange={(e) => setFilterStatut(e.target.value)}
+          aria-label="Filtrer par statut"
+          style={{
+            padding: '8px 12px',
+            borderRadius: '8px',
+            border: '1px solid #e2e8f0',
+            fontSize: '13px',
+            color: '#334155',
+            background: '#ffffff',
+          }}
+        >
+          <option value="">Tous les statuts</option>
+          <option value="EN_ATTENTE">En attente</option>
+          <option value="HONORE">Honoré</option>
+          <option value="RESOLU">Résolu</option>
+        </select>
 
         {/* Search */}
         <div style={{ position: 'relative', width: '280px' }}>

@@ -1,4 +1,3 @@
-import React from 'react';
 import { ArrowRightLeft, User, FileText, CheckCircle, XCircle } from 'lucide-react';
 
 const AdminTransfertsTab = ({

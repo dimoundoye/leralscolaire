@@ -1,4 +1,3 @@
-import React from 'react';
 import { Menu, Bell, User, LogOut, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const TeacherTopbar = ({

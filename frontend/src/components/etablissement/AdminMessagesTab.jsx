@@ -1,4 +1,3 @@
-import React from 'react';
 import { Loader2, Paperclip, Download, Mail, Send } from 'lucide-react';
 
 const AdminMessagesTab = ({

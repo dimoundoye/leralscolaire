@@ -1,4 +1,3 @@
-import React from 'react';
 import { LogOut, Bell, Shield, Calendar, Monitor } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -62,9 +61,8 @@ const EtabTopbar = ({ profile, notificationsCount, onShowMessages, selectedYear,
         {/* Bouton Borne Émargement QR Code Externe */}
         <button
           onClick={() => {
-            const targetId = profile?.id || profile?.etablissement_id || 'default';
             const popWindow = window.open(
-              `/emargement/live-qr/${targetId}`,
+              '/emargement/live-qr',
               'QREmargementLiveKiosque',
               'width=1024,height=768,menubar=no,toolbar=no,location=no,status=no,resizable=yes'
             );

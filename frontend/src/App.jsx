@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import AboutPage from './pages/AboutPage';
@@ -33,7 +32,11 @@ function App() {
               <Route path="/auth" element={<Auth />} />
               <Route path="/inscription-nationale" element={<PublicOfficeRegistration />} />
               <Route path="/register/class/:classId" element={<PublicRegistration />} />
-              <Route path="/emargement/live-qr/:etablissementId" element={<QrCodeLiveDisplay />} />
+              <Route path="/emargement/live-qr" element={<QrCodeLiveDisplay />} />
+              <Route
+                path="/emargement/live-qr/:ancienIdentifiant"
+                element={<Navigate to="/emargement/live-qr" replace />}
+              />
               <Route path="/office/professeurs/carte-identite" element={<ProfCarteIdentiteOfficeBac />} />
               <Route
                 path="/professeur/emargement"

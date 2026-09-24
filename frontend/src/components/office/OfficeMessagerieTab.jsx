@@ -1,4 +1,3 @@
-import React from 'react';
 import { RefreshCw, UserCheck, School, Users, Check, Send, Inbox } from 'lucide-react';
 
 export const OfficeMessagerieTab = ({

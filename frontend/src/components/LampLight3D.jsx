@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
 export const LampLight3D = ({ className = '', interactive = true }) => {
@@ -63,8 +63,6 @@ export const LampLight3D = ({ className = '', interactive = true }) => {
     };
 
     // Interaction souris douce
-    let mouseX = 0;
-    let mouseY = 0;
     let targetRotationX = 0;
     let targetRotationY = 0;
 
@@ -87,7 +85,7 @@ export const LampLight3D = ({ className = '', interactive = true }) => {
       animationFrameId = requestAnimationFrame(animate);
 
       const time = clock.getElapsedTime();
-      const { spread, reach, haze, flicker, warmth, drift } = PARAMS;
+      const { spread, reach, haze, flicker, drift } = PARAMS;
       const apexY = 16; // Le lustre (sommet entier) se place 100% en dessous de la navbar
       const floorY = -48; // Le faisceau s'étend jusqu'en bas
 

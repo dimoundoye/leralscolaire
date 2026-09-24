@@ -1,76 +1,29 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
-  LayoutDashboard,
-  Users,
-  BookOpenCheck,
-  Settings,
-  LogOut,
-  Search,
-  Bell,
-  Activity,
   GraduationCap,
-  TrendingUp,
-  School,
-  Plus,
   Loader2,
-  ChevronRight,
-  ChevronLeft,
-  Calendar,
   User,
   FileDown,
   FileUp,
-  Paperclip,
-  Brain,
-  Send,
-  Mail,
   Printer,
-  History,
-  Edit,
   Trash2,
-  MoveHorizontal,
   Copy,
   Check,
   Camera,
   SearchIcon,
-  BookMarked,
-  Book,
-  Clock,
-  CalendarDays,
-  Share2,
-  Download,
-  UserPlus,
   RefreshCw,
   X,
   CheckCircle2,
   AlertTriangle,
-  Lock,
-  ArrowRightLeft,
   CheckCircle,
-  XCircle,
-  Unlock,
   FileText,
-  ShieldCheck,
-  Mars,
-  Venus,
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts';
+
 import { useAuth } from '../contexts/AuthContext';
 import EtabSidebar from '../components/etablissement/EtabSidebar';
 import EtabTopbar from '../components/etablissement/EtabTopbar';
 import DisciplineTab from '../components/etablissement/DisciplineTab';
-import DossierScolaireModal from '../components/etablissement/DossierScolaireModal';
 import AdminOverviewTab from '../components/etablissement/AdminOverviewTab';
 import AdminTransfertsTab from '../components/etablissement/AdminTransfertsTab';
 import AdminPreInscriptionsTab from '../components/etablissement/AdminPreInscriptionsTab';
@@ -243,7 +196,6 @@ const Dashboard = () => {
 
   // Pre-inscription states
   const [preInscriptions, setPreInscriptions] = useState([]);
-  const [loadingPreInscriptions, setLoadingPreInscriptions] = useState(false);
   const [editingPreInscription, setEditingPreInscription] = useState(null);
   const [showPreModal, setShowPreModal] = useState(false);
   const [showCredsModal, setShowCredsModal] = useState(false);
@@ -316,7 +268,6 @@ const Dashboard = () => {
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [selectedExam, setSelectedExam] = useState(null);
   const [scheduleMatieres, setScheduleMatieres] = useState([]);
-  const [scheduleProfs, setScheduleProfs] = useState([]);
   const [proposedDevoirs, setProposedDevoirs] = useState([]);
 
   // Décisions states
@@ -1460,7 +1411,6 @@ const Dashboard = () => {
   };
 
   const fetchPreInscriptions = async () => {
-    setLoadingPreInscriptions(true);
     try {
       const res = await fetch('/api/pre-inscriptions', {
         headers: {},
@@ -1472,8 +1422,6 @@ const Dashboard = () => {
     } catch (err) {
       console.error(err);
       showNotification('Erreur de chargement des pré-inscriptions.', 'error');
-    } finally {
-      setLoadingPreInscriptions(false);
     }
   };
 
@@ -2409,8 +2357,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleLogout = () => logout();
-
   const availableYears = Array.from(new Set(classes.map((c) => c.annee_scolaire))).filter(Boolean);
   if (availableYears.length === 0) {
     availableYears.push('2025-2026');
@@ -2439,8 +2385,6 @@ const Dashboard = () => {
   };
 
   if (!user) return null;
-
-  const firstLetter = (user.email || profile.nom || 'A')[0].toUpperCase();
 
   return (
     <div className="dashboard-layout">
@@ -5061,7 +5005,8 @@ const Dashboard = () => {
                   onChange={(e) => setNewSchedule({ ...newSchedule, matiere_id: e.target.value })}
                 >
                   <option value="">Sélectionner</option>
-                  {matieres.map((m) => (
+                  {/* Matières de la classe choisie ; toutes les matières si aucune n'est encore affectée */}
+                  {(scheduleMatieres.length > 0 ? scheduleMatieres : matieres).map((m) => (
                     <option key={m.id} value={m.id}>
                       {m.nom}
                     </option>

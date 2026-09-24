@@ -1,4 +1,3 @@
-import React from 'react';
 import { Users, School, User, CheckCircle2, BookOpenCheck } from 'lucide-react';
 import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, Cell } from 'recharts';
 

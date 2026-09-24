@@ -1,4 +1,3 @@
-import React from 'react';
 import { Share2, FileDown, Download, Trash2 } from 'lucide-react';
 
 const AdminPartagesTab = ({

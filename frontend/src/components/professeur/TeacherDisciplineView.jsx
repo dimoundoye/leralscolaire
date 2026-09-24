@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Scale, Plus, Calendar, AlertTriangle, Award, FileText, CheckCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Scale, Plus } from 'lucide-react';
 import { api } from '../../services/api';
 import CreateDisciplineModal from '../etablissement/CreateDisciplineModal';
 import DossierScolaireModal from '../etablissement/DossierScolaireModal';

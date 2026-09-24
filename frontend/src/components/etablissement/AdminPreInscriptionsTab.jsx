@@ -1,4 +1,3 @@
-import React from 'react';
 import { Edit, Check, X } from 'lucide-react';
 
 const AdminPreInscriptionsTab = ({

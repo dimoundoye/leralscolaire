@@ -1,55 +1,37 @@
-import React, { useState } from 'react';
-import {
-  Search,
-  ShieldCheck,
-  Award,
-  Star,
-  CheckCircle,
-  Clock,
-  BookOpen,
-  User,
-  Download,
-  FileText,
-  Building,
-  MapPin,
-} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Search, Award, User, Download } from 'lucide-react';
 
 export default function ProfCarteIdentiteOfficeBac() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDiscipline, setSelectedDiscipline] = useState('');
   const [selectedProfId, setSelectedProfId] = useState(null);
   const [profCarte, setProfCarte] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [searchResults, setSearchResults] = useState([
-    {
-      id: 'prof-demo-1',
-      nom: 'NDOYE',
-      prenom: 'Rassoul',
-      matricule_national: 'MEN-784920-SN',
-      matiere_principale: 'Mathématiques',
-      diplome_eleve: 'Master 2 & CAPES Mathématiques',
-      note_inspection: 18.5,
-      scoreInfo: {
-        totalScore: 920,
-        gradeTier: 'OR',
-        badgeLabel: 'Professeur Émérite (Prioritaire Président de Jury)',
-      },
-    },
-    {
-      id: 'prof-demo-2',
-      nom: 'DIOP',
-      prenom: 'Moussa',
-      matricule_national: 'MEN-452109-SN',
-      matiere_principale: 'Sciences de la Vie et de la Terre (SVT)',
-      diplome_eleve: 'Doctorat Biologie / Agrégation',
-      note_inspection: 17.0,
-      scoreInfo: {
-        totalScore: 840,
-        gradeTier: 'ARGENT',
-        badgeLabel: 'Professeur Senior (Éligible Correcteur Principal)',
-      },
-    },
-  ]);
+  const [searchResults, setSearchResults] = useState([]);
+  const [error, setError] = useState(null);
+
+  // Recherche nationale des enseignants (nom, prénom, matricule)
+  const handleSearch = async (e) => {
+    if (e) e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/emargement/office/search?query=${encodeURIComponent(searchQuery.trim())}`);
+      const data = await res.json();
+      if (data.success) {
+        setSearchResults(data.professeurs || []);
+      } else {
+        setError(data.error || 'Recherche impossible.');
+      }
+    } catch {
+      setError('Erreur de connexion au serveur.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    handleSearch();
+  }, []);
 
   const handleFetchCarte = async (profId) => {
     setSelectedProfId(profId);
@@ -62,63 +44,13 @@ export default function ProfCarteIdentiteOfficeBac() {
       if (data.success) {
         setProfCarte(data.carte);
       } else {
-        // Fallback demo data
-        setProfCarte({
-          professeur: {
-            nom: 'NDOYE',
-            prenom: 'Rassoul',
-            matricule_national: 'MEN-784920-SN',
-            email: 'rassoul.ndoye@education.sn',
-            telephone: '+221 77 849 20 00',
-            matiere_principale: 'Mathématiques',
-            diplome_eleve: 'Master 2 Mathématiques Pures & CAPES (UCAD)',
-            note_inspection: 18.5,
-            nombre_participations_bac: 5,
-            photo_url: null,
-          },
-          score1000: {
-            totalScore: 920,
-            gradeTier: 'OR',
-            badgeLabel: 'Professeur Émérite • Prioritaire Président de Jury BAC',
-            breakdown: {
-              ptsAssiduite: 340,
-              ptsCahier: 245,
-              ptsInspection: 185,
-              ptsEleves: 92,
-              ptsExperience: 90,
-              avgGlobalScore: '4.7',
-            },
-          },
-          classesEnseignees: [
-            {
-              id: '1',
-              classe_nom: 'Terminale S2',
-              niveau: 'Terminale',
-              nom_etablissement: 'Lycée Lamine Guèye',
-              ville: 'Dakar',
-            },
-            {
-              id: '2',
-              classe_nom: 'Terminale S1',
-              niveau: 'Terminale',
-              nom_etablissement: 'Lycée Lamine Guèye',
-              ville: 'Dakar',
-            },
-            { id: '3', classe_nom: '1ère S2', niveau: '1ère', nom_etablissement: 'Lycée Delafosse', ville: 'Dakar' },
-            { id: '4', classe_nom: '3ème A', niveau: '3ème', nom_etablissement: 'Collège Sacré-Cœur', ville: 'Dakar' },
-          ],
-          evaluationsElevesDetail: {
-            q1: 4.8,
-            q2: 4.9,
-            q3: 4.5,
-            q4: 4.6,
-            q5: 4.7,
-            total_votes: 142,
-          },
-        });
+        setProfCarte(null);
+        setError(data.error || "Impossible de charger la carte de l'enseignant.");
       }
     } catch (err) {
       console.error(err);
+      setProfCarte(null);
+      setError('Erreur de connexion au serveur.');
     } finally {
       setLoading(false);
     }
@@ -181,7 +113,7 @@ export default function ProfCarteIdentiteOfficeBac() {
           alignItems: 'center',
         }}
       >
-        <div style={{ flex: 2, minWidth: '240px', display: 'flex', gap: '10px' }}>
+        <form onSubmit={handleSearch} style={{ flex: 2, minWidth: '240px', display: 'flex', gap: '10px' }}>
           <input
             type="text"
             placeholder="Rechercher un prof (Nom, Prénom, Matricule MEN...)"
@@ -197,6 +129,8 @@ export default function ProfCarteIdentiteOfficeBac() {
             }}
           />
           <button
+            type="submit"
+            disabled={loading}
             style={{
               padding: '10px 20px',
               background: '#131e6c',
@@ -211,9 +145,9 @@ export default function ProfCarteIdentiteOfficeBac() {
               gap: '8px',
             }}
           >
-            <Search size={16} /> Rechercher
+            <Search size={16} /> {loading ? 'Recherche…' : 'Rechercher'}
           </button>
-        </div>
+        </form>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px' }}>
@@ -230,6 +164,13 @@ export default function ProfCarteIdentiteOfficeBac() {
           <h3 style={{ margin: '0 0 16px', fontSize: '15px', fontWeight: 800, color: '#131e6c' }}>
             Professeurs Référencés ({searchResults.length})
           </h3>
+
+          {error && (
+            <p style={{ margin: '0 0 12px', fontSize: '12.5px', fontWeight: 600, color: '#b91c1c' }}>{error}</p>
+          )}
+          {!error && !loading && searchResults.length === 0 && (
+            <p style={{ margin: '0 0 12px', fontSize: '12.5px', color: '#64748b' }}>Aucun enseignant trouvé.</p>
+          )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {searchResults.map((p) => (

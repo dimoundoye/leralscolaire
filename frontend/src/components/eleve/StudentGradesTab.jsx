@@ -1,4 +1,3 @@
-import React from 'react';
 import { Calendar, BookOpen, Award, Lock, CheckCircle, Download, AlertCircle, ShieldCheck } from 'lucide-react';
 
 const StudentGradesTab = ({

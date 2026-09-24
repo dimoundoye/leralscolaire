@@ -1,11 +1,9 @@
-import React from 'react';
 import { ExternalLink, ShieldCheck } from 'lucide-react';
 
-export default function SurveillantEmargementPanel({ etablissementId }) {
+export default function SurveillantEmargementPanel() {
   const handleOpenLiveKiosk = () => {
-    const targetId = etablissementId || 'default';
     const popWindow = window.open(
-      `/emargement/live-qr/${targetId}`,
+      '/emargement/live-qr',
       'QREmargementLiveKiosque',
       'width=1024,height=768,menubar=no,toolbar=no,location=no,status=no,resizable=yes'
     );

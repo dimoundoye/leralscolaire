@@ -1,5 +1,3 @@
-import React from 'react';
-
 const TeacherProfileTab = ({ editProfileData, setEditProfileData, handleUpdateProfile }) => {
   return (
     <div className="tab-pane">

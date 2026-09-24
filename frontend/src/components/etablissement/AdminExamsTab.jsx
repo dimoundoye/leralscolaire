@@ -1,4 +1,3 @@
-import React from 'react';
 import { Plus, Send, AlertTriangle, Edit, Trash2 } from 'lucide-react';
 
 const AdminExamsTab = ({

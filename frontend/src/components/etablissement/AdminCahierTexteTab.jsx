@@ -1,4 +1,3 @@
-import React from 'react';
 import { BookMarked, RefreshCw, Clock, ShieldCheck, Paperclip, Download } from 'lucide-react';
 
 const AdminCahierTexteTab = ({

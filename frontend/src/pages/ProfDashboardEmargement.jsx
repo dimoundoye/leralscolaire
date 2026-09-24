@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
-  QrCode,
   Camera,
   CameraOff,
   RefreshCw,
@@ -15,11 +14,8 @@ import {
   Award,
   Star,
   Compass,
-  Calendar,
   History,
   Sparkles,
-  UserCheck,
-  ChevronRight,
 } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { offlineFetch, api } from '../services/api';
@@ -28,7 +24,6 @@ import { getCurrentPosition } from '../utils/geolocation';
 export default function ProfDashboardEmargement({
   classes: propClasses = [],
   schedule: propSchedule = [],
-  profile: propProfile = null,
   onNavigateTab = null,
 }) {
   const [activeTab, setActiveTab] = useState('scanne');
@@ -261,7 +256,9 @@ export default function ProfDashboardEmargement({
         if (navigator.vibrate) {
           try {
             navigator.vibrate([100, 50, 100]);
-          } catch (e) {}
+          } catch {
+            // Vibration non disponible sur cet appareil : sans conséquence
+          }
         }
         setQrTokenInput(decodedText);
         stopCamera();
@@ -358,7 +355,9 @@ export default function ProfDashboardEmargement({
       if (navigator.vibrate) {
         try {
           navigator.vibrate([100, 50, 100]);
-        } catch (err) {}
+        } catch {
+          // Vibration non disponible sur cet appareil : sans conséquence
+        }
       }
       setQrTokenInput(decodedText);
       setMessage("✅ QR Code scanné depuis la photo avec succès ! Cliquez sur « Valider l'Émargement » ci-dessous.");

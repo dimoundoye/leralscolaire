@@ -1,4 +1,3 @@
-import React from 'react';
 import { Plus, UserCheck, Users } from 'lucide-react';
 
 export const OfficeProfesseursTab = ({ professeursList = [], setShowAddProfModal }) => {

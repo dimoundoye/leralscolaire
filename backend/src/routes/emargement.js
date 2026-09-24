@@ -4,8 +4,14 @@ const EmargementController = require('../controllers/emargementController');
 const authenticateToken = require('../middleware/authMiddleware');
 const { requireRole, requireProfAffiliation } = require('../middleware/access');
 
-// 1. Borne QR Code Live 20s (Accès public ou surveillant)
-router.get('/live-qr/:etablissementId', EmargementController.getLiveQrToken);
+// 1. Borne QR Code Live 20s : réservée à l'administration, QR de son propre établissement
+// L'ancienne adresse avec identifiant reste acceptée, mais l'identifiant est ignoré
+router.get(
+  ['/live-qr', '/live-qr/:ancienIdentifiant'],
+  authenticateToken,
+  requireRole('ADMIN_ETABLISSEMENT'),
+  EmargementController.getLiveQrToken
+);
 
 // 2. Émargement Professeur (QR Code 20s)
 router.post('/scan', authenticateToken, requireRole('PROFESSEUR'), EmargementController.scanEmargement);

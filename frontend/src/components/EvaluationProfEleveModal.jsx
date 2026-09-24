@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Star, CheckCircle, X, ShieldCheck } from 'lucide-react';
 
 export default function EvaluationProfEleveModal({ isOpen, onClose, professeur, etablissementId }) {

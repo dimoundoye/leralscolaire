@@ -1,4 +1,3 @@
-import React from 'react';
 import { Loader2, FileText, Sparkles, User } from 'lucide-react';
 
 const TeacherPedagogyTab = ({

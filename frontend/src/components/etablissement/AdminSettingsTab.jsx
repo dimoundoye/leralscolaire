@@ -1,4 +1,3 @@
-import React from 'react';
 import { Edit, Camera, Loader2 } from 'lucide-react';
 import EmargementGeoSettings from './EmargementGeoSettings';
 

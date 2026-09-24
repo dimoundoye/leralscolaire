@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Scale, Award, Calendar, AlertTriangle, MessageSquare, Download, FileText, CheckCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Scale, Award, Calendar, AlertTriangle, MessageSquare, Download } from 'lucide-react';
 import { api } from '../../services/api';
 
 const StudentDisciplineView = () => {

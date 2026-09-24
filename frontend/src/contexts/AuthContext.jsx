@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../services/db';
 
@@ -12,6 +12,7 @@ const AuthContext = createContext({
   logout: () => {},
 });
 
+// eslint-disable-next-line react-refresh/only-export-components -- le hook accompagne son contexte
 export const useAuth = () => {
   return useContext(AuthContext);
 };

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Check, X, Download } from 'lucide-react';
 
 const AdminAttestationsTab = ({

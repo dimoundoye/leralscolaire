@@ -10,13 +10,10 @@ import {
   Bell,
   AlertTriangle,
   ArrowRight,
-  CheckCircle2,
   PlayCircle,
-  Sparkles,
   BookMarked,
   UserCheck,
   QrCode,
-  PenTool,
 } from 'lucide-react';
 import {
   ResponsiveContainer,

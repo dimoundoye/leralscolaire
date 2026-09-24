@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { syncEngine } from '../services/syncEngine';
 
 const OfflineContext = createContext(null);
@@ -80,6 +80,7 @@ export function OfflineProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- le hook accompagne son contexte
 export function useOffline() {
   const context = useContext(OfflineContext);
   if (!context) {

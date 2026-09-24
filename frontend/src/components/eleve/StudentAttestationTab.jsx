@@ -1,4 +1,3 @@
-import React from 'react';
 import { Award, Clock, Lock, CheckCircle, Download, XCircle, Send } from 'lucide-react';
 
 const StudentAttestationTab = ({

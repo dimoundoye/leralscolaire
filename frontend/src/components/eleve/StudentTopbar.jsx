@@ -1,5 +1,4 @@
-import React from 'react';
-import { Menu, ShieldCheck, Bell, User, LogOut } from 'lucide-react';
+import { Menu, Bell, User, LogOut } from 'lucide-react';
 
 const StudentTopbar = ({ setIsMobileMenuOpen, navigate, notifications, profile, logout }) => {
   return (

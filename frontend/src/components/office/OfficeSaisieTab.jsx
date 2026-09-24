@@ -1,4 +1,3 @@
-import React from 'react';
 import { Loader2, ClipboardList, Lock, Unlock, Edit3 } from 'lucide-react';
 
 export const OfficeSaisieTab = ({

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   LogIn,
   Sparkles,
@@ -7,23 +7,10 @@ import {
   ArrowRight,
   ChevronRight,
   ShieldCheck,
-  Lock,
-  GraduationCap,
-  Building2,
-  Users,
-  Award,
-  QrCode,
-  CheckCircle2,
-  School,
-  HelpCircle,
   ChevronDown,
-  BookOpen,
   Lightbulb,
-  Target,
-  Layers,
   Check,
   Clock,
-  Compass,
   HeartHandshake,
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';

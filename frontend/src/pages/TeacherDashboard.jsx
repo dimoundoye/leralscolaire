@@ -1,49 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useParams } from 'react-router-dom';
 import { offlineFetch } from '../services/api';
-import {
-  LayoutDashboard,
-  Calendar,
-  Users,
-  FileText,
-  CheckCircle2,
-  Clock,
-  Settings,
-  LogOut,
-  Menu,
-  X,
-  Bell,
-  Sparkles,
-  Plus,
-  Edit,
-  Trash2,
-  Loader2,
-  Building,
-  Check,
-  Send,
-  Search,
-  ShieldCheck,
-  BookOpen,
-  BookOpenCheck,
-  Info,
-  AlertTriangle,
-  User,
-  RefreshCw,
-  XCircle,
-  ArrowRight,
-  ClipboardList,
-  Mail,
-  MessageSquare,
-  ChevronLeft,
-  Paperclip,
-  Download,
-  BookMarked,
-  Scale,
-  GraduationCap,
-  Award,
-} from 'lucide-react';
+import { CheckCircle2, X, Bell, Loader2, AlertTriangle, XCircle } from 'lucide-react';
 import TeacherDisciplineView from '../components/professeur/TeacherDisciplineView';
 import TeacherOverviewTab from '../components/professeur/TeacherOverviewTab';
 import TeacherPartnerSchoolsTab from '../components/professeur/TeacherPartnerSchoolsTab';
@@ -71,7 +30,6 @@ const TeacherDashboard = () => {
   // State variables
   const [profile, setProfile] = useState(null);
   const [invitations, setInvitations] = useState([]);
-  const [affiliations, setAffiliations] = useState([]);
   const [classes, setClasses] = useState([]);
   const [schedule, setSchedule] = useState([]);
   const [summary, setSummary] = useState({ schoolsCount: 0, classesCount: 0, studentsCount: 0 });
@@ -141,15 +99,12 @@ const TeacherDashboard = () => {
   });
 
   // Grades Tab State
-  const [selectedEtab, setSelectedEtab] = useState('');
-  const [selectedEtabId, setSelectedEtabId] = useState(''); // UUID of selected etablissement
   const [selectedClasse, setSelectedClasse] = useState('');
   const [selectedMatiere, setSelectedMatiere] = useState('');
   const [selectedPeriode, setSelectedPeriode] = useState('Semestre 1');
   const [selectedTypeNote, setSelectedTypeNote] = useState('DEVOIR');
   const [gradesData, setGradesData] = useState({ students: [], grades: [] });
   const [draftGrades, setDraftGrades] = useState({}); // eleve_id -> { note: '', appreciation: '' }
-  const [originalGrades, setOriginalGrades] = useState({}); // noteId -> note
   const [auditMotif, setAuditMotif] = useState('');
   const [modifyingGradeId, setModifyingGradeId] = useState(null);
   const [modifyingGradeValue, setModifyingGradeValue] = useState('');
@@ -157,9 +112,7 @@ const TeacherDashboard = () => {
   const [baremes, setBaremes] = useState([]); // appreciation scales from school
 
   // Audit modifications states
-  const [gradesSubTab, setGradesSubTab] = useState('saisie'); // 'saisie' | 'suivi'
   const [auditLog, setAuditLog] = useState([]);
-  const [auditLoading, setAuditLoading] = useState(false);
   const [activeMotifText, setActiveMotifText] = useState('');
 
   // Academic Years dynamically extracted from classes & schedule (no hardcoding)
@@ -285,9 +238,6 @@ const TeacherDashboard = () => {
   const [cahierFile, setCahierFile] = useState(null);
   const [cahierUploading, setCahierUploading] = useState(false);
   const [cahierFilterClasse, setCahierFilterClasse] = useState('');
-
-  // Timetable display variables
-  const joursSemaine = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 
   // Schedule view mode & sync & notifications states
   const [scheduleViewMode, setScheduleViewMode] = useState('weekly'); // 'weekly' | 'etablissement'
@@ -904,7 +854,6 @@ const TeacherDashboard = () => {
       setGradesData(data);
       // Prepare draft values — pre-fill with existing grades from DB (including those entered by school admin)
       const drafts = {};
-      const originals = {};
       if (Array.isArray(data.students)) {
         data.students.forEach((stud) => {
           const g = (data.grades || []).find((gr) => gr.eleve_id === stud.id && gr.type_note === selectedTypeNote);
@@ -915,13 +864,9 @@ const TeacherDashboard = () => {
             note: noteVal,
             appreciation: g ? g.appreciation || autoApprec : '',
           };
-          if (g) {
-            originals[g.id] = g.note;
-          }
         });
       }
       setDraftGrades(drafts);
-      setOriginalGrades(originals);
 
       // Also load audit log for this class to check if there are pending/rejected modifications
       try {
@@ -948,7 +893,6 @@ const TeacherDashboard = () => {
     if (!selectedClasse) return;
     const found = classes.find((cl) => (cl.classe_id || cl.id) === selectedClasse);
     if (!found || !found.etablissement_id) return;
-    setSelectedEtabId(found.etablissement_id);
     offlineFetch(`/api/professeurs-portal/baremes/${found.etablissement_id}`, { headers: getHeaders() })
       .then((r) => r.json())
       .then((data) => {
@@ -1161,10 +1105,6 @@ const TeacherDashboard = () => {
     } finally {
       setAttLoading(false);
     }
-  };
-
-  const getDaySchedule = (day) => {
-    return schedule.filter((item) => item.jour_semaine === day);
   };
 
   // Find if there is a conflict between slots

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   GraduationCap,
   School,
@@ -10,7 +10,6 @@ import {
   FileText,
   Upload,
   ShieldCheck,
-  AlertOctagon,
   Scale,
   Home,
   Mail,
