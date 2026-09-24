@@ -6,7 +6,7 @@ const db = require('../src/config/db');
 // - terrains d'EPS déclarés par l'établissement (peuvent être éloignés de l'établissement)
 async function migrate() {
   try {
-    console.log('🚀 Migration v42 : position GPS des établissements et terrains d\'EPS...');
+    console.log("🚀 Migration v42 : position GPS des établissements et terrains d'EPS...");
     await db.query(`
       ALTER TABLE etablissements
         ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION,

@@ -1,11 +1,23 @@
 const db = require('../config/db');
 
 const MessageModel = {
-  async sendMessage(expediteurId, destinataireType, destinataireId, sujet, contenu, etablissementId = null, fichierUrl = null, fichierNom = null) {
-    const { rows } = await db.query(`
+  async sendMessage(
+    expediteurId,
+    destinataireType,
+    destinataireId,
+    sujet,
+    contenu,
+    etablissementId = null,
+    fichierUrl = null,
+    fichierNom = null
+  ) {
+    const { rows } = await db.query(
+      `
       INSERT INTO messages (expediteur_id, destinataire_type, destinataire_id, sujet, contenu, etablissement_id, fichier_url, fichier_nom)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *
-    `, [expediteurId, destinataireType, destinataireId, sujet, contenu, etablissementId, fichierUrl, fichierNom]);
+    `,
+      [expediteurId, destinataireType, destinataireId, sujet, contenu, etablissementId, fichierUrl, fichierNom]
+    );
     return rows[0];
   },
 
@@ -25,19 +37,22 @@ const MessageModel = {
   },
 
   async getTeacherEtablissements(profUserId) {
-    const { rows } = await db.query(`
+    const { rows } = await db.query(
+      `
       SELECT e.id as etablissement_id, e.nom as etablissement_nom, e.ville, e.region,
              pe.droit_envoi_message, e.admin_id
       FROM etablissements e
       JOIN professeurs_etablissements pe ON e.id = pe.etablissement_id
       WHERE pe.professeur_id = $1 AND pe.statut = 'ACCEPTE'
-    `, [profUserId]);
+    `,
+      [profUserId]
+    );
     return rows;
   },
 
-
   async getTeacherClasses(profUserId) {
-    const { rows } = await db.query(`
+    const { rows } = await db.query(
+      `
       SELECT DISTINCT c2.id as classe_id, c2.nom as classe_nom, c2.niveau, c2.annee_scolaire, c2.etablissement_id, et.nom as etablissement_nom, pe.droit_envoi_message
       FROM (
         SELECT classe_id FROM professeur_matieres WHERE professeur_id = $1
@@ -50,12 +65,15 @@ const MessageModel = {
       JOIN professeurs_etablissements pe ON c2.etablissement_id = pe.etablissement_id AND pe.professeur_id = $1
       WHERE pe.statut = 'ACCEPTE'
       ORDER BY c2.annee_scolaire DESC, c2.nom ASC
-    `, [profUserId]);
+    `,
+      [profUserId]
+    );
     return rows;
   },
 
   async getTeacherStudents(profUserId) {
-    const { rows } = await db.query(`
+    const { rows } = await db.query(
+      `
       SELECT DISTINCT 
         u.id as user_id, 
         e.id as eleve_id, 
@@ -104,44 +122,56 @@ const MessageModel = {
       WHERE (m.destinataire_id = $1 AND m.destinataire_type = 'PROFESSEUR')
          OR (m.expediteur_id = $1 AND m.destinataire_type = 'ELEVE')
       ORDER BY classe_nom ASC, nom ASC, prenom ASC
-    `, [profUserId]);
+    `,
+      [profUserId]
+    );
     return rows;
   },
 
   async getEtablissementAdminDetails(userId) {
-    const { rows } = await db.query(`
+    const { rows } = await db.query(
+      `
       SELECT et.id as etablissement_id, et.nom as etablissement_nom, u.id as admin_user_id
       FROM eleves e
       JOIN etablissements et ON e.etablissement_id = et.id
       JOIN users u ON et.admin_id = u.id
       WHERE e.user_id = $1
-    `, [userId]);
+    `,
+      [userId]
+    );
     return rows[0];
   },
 
   async getAdminEtablissementTeachers(etablissementId) {
-    const { rows } = await db.query(`
+    const { rows } = await db.query(
+      `
       SELECT u.id, u.email, p.prenom, p.nom, 'PROFESSEUR' as type
       FROM users u
       JOIN professeurs p ON u.id = p.id
       JOIN professeurs_etablissements pe ON u.id = pe.professeur_id
       WHERE pe.etablissement_id = $1 AND pe.statut = 'ACCEPTE'
-    `, [etablissementId]);
+    `,
+      [etablissementId]
+    );
     return rows;
   },
 
   async getAdminEtablissementStudents(etablissementId) {
-    const { rows } = await db.query(`
+    const { rows } = await db.query(
+      `
       SELECT u.id, u.email, e.prenom, e.nom, 'ELEVE' as type
       FROM users u
       JOIN eleves e ON u.id = e.user_id
       WHERE e.etablissement_id = $1
-    `, [etablissementId]);
+    `,
+      [etablissementId]
+    );
     return rows;
   },
 
   async getDirectChatHistory(etablissementId, userId1, userId2) {
-    const { rows } = await db.query(`
+    const { rows } = await db.query(
+      `
       SELECT m.*, u.email as expediteur_nom, u.role as expediteur_role,
              COALESCE(p.prenom || ' ' || p.nom, el.prenom || ' ' || el.nom, 'Admin') as expediteur_nom_complet
       FROM messages m
@@ -151,12 +181,15 @@ const MessageModel = {
       WHERE ($1::uuid IS NULL OR m.etablissement_id = $1)
         AND ((m.expediteur_id = $2 AND m.destinataire_id = $3) OR (m.expediteur_id = $3 AND m.destinataire_id = $2))
       ORDER BY m.date_envoi ASC
-    `, [etablissementId || null, userId1, userId2]);
+    `,
+      [etablissementId || null, userId1, userId2]
+    );
     return rows;
   },
 
   async getClassGroupChatHistory(classeId) {
-    const { rows } = await db.query(`
+    const { rows } = await db.query(
+      `
       SELECT m.*, u.email as expediteur_nom, u.role as expediteur_role,
              COALESCE(p.prenom || ' ' || p.nom, el.prenom || ' ' || el.nom, u.email, 'Administration') as expediteur_nom_complet
       FROM messages m
@@ -165,7 +198,9 @@ const MessageModel = {
       LEFT JOIN eleves el ON el.user_id = u.id
       WHERE m.destinataire_type = 'CLASSE' AND m.destinataire_id = $1
       ORDER BY m.date_envoi ASC
-    `, [classeId]);
+    `,
+      [classeId]
+    );
     return rows;
   },
 
@@ -189,7 +224,8 @@ const MessageModel = {
   },
 
   async markMessagesAsRead(expediteurId, destinataireId, etablissementId = null) {
-    await db.query(`
+    await db.query(
+      `
       UPDATE messages 
       SET lu = TRUE 
       WHERE expediteur_id = $1
@@ -199,19 +235,24 @@ const MessageModel = {
           OR (destinataire_type = 'ADMIN_ETABLISSEMENT' AND destinataire_id = $3)
         )
         AND lu = FALSE
-    `, [expediteurId, destinataireId, etablissementId]);
+    `,
+      [expediteurId, destinataireId, etablissementId]
+    );
     return true;
   },
 
   async markClassMessagesAsRead(classeId, userId) {
-    await db.query(`
+    await db.query(
+      `
       UPDATE messages 
       SET lu = TRUE 
       WHERE destinataire_type = 'CLASSE' 
         AND destinataire_id = $1 
         AND expediteur_id != $2 
         AND lu = FALSE
-    `, [classeId, userId]);
+    `,
+      [classeId, userId]
+    );
     return true;
   },
 
@@ -294,13 +335,16 @@ const MessageModel = {
     // Enrichir dynamiquement avec le badge temporaire "🎖️ Président du Jury N° X" (valide & non expiré)
     for (let msg of rows) {
       if (msg.expediteur_id) {
-        const jBadge = await db.query(`
+        const jBadge = await db.query(
+          `
           SELECT numero_jury FROM jurys_bac 
           WHERE president_prof_id = $1 
             AND statut = 'ACTIF' 
             AND (date_expiration_acces IS NULL OR date_expiration_acces >= NOW()) 
           LIMIT 1
-        `, [msg.expediteur_id]);
+        `,
+          [msg.expediteur_id]
+        );
 
         if (jBadge.rows.length > 0) {
           msg.president_jury_badge = `🎖️ Président du Jury ${jBadge.rows[0].numero_jury}`;
@@ -311,7 +355,7 @@ const MessageModel = {
     }
 
     return rows;
-  }
+  },
 };
 
 module.exports = MessageModel;

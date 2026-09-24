@@ -3,7 +3,7 @@ const db = require('../src/config/db');
 
 async function migrate() {
   try {
-    console.log('🚀 Migration v33 : Création des tables d\'émargement, d\'évaluation élèves et de profilage prof...');
+    console.log("🚀 Migration v33 : Création des tables d'émargement, d'évaluation élèves et de profilage prof...");
 
     // 1. Table seances_cours (Planification et suivi des cours)
     await db.query(`

@@ -11,7 +11,11 @@ const randomFileId = () => `${Date.now()}-${crypto.randomBytes(12).toString('hex
 
 // Nom de fichier local sûr : identifiant aléatoire + extension d'origine nettoyée
 function safeFileName(originalname) {
-  const ext = path.extname(String(originalname || '')).toLowerCase().replace(/[^a-z0-9.]/g, '').slice(0, 10);
+  const ext = path
+    .extname(String(originalname || ''))
+    .toLowerCase()
+    .replace(/[^a-z0-9.]/g, '')
+    .slice(0, 10);
   return randomFileId() + ext;
 }
 
@@ -64,7 +68,7 @@ function createUploadMiddleware(subFolder = 'uploads') {
 
     return multer({
       storage,
-      limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
     });
   }
 
@@ -79,12 +83,12 @@ function createUploadMiddleware(subFolder = 'uploads') {
     },
     filename: (req, file, cb) => {
       cb(null, safeFileName(file.originalname));
-    }
+    },
   });
 
   return multer({
     storage: diskStorage,
-    limits: { fileSize: 10 * 1024 * 1024 }
+    limits: { fileSize: 10 * 1024 * 1024 },
   });
 }
 
@@ -108,5 +112,5 @@ module.exports = {
   randomFileId,
   safeFileName,
   cloudinaryStorage,
-  cloudinaryParams
+  cloudinaryParams,
 };

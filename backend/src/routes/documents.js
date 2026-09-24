@@ -26,7 +26,8 @@ router.get('/bulletin/:eleveId', auth, livretEleve, async (req, res) => {
       }
     }
     // 1. Récupérer les infos de l'élève et établissement (classe la plus récente)
-    const infoRes = await db.query(`
+    const infoRes = await db.query(
+      `
       SELECT e.*, et.nom as etablissement_nom, et.ville, et.region, et.signature_url, et.cachet_url,
         c.nom as classe_nom, c.id as classe_id, c.annee_scolaire
       FROM eleves e
@@ -40,7 +41,9 @@ router.get('/bulletin/:eleveId', auth, livretEleve, async (req, res) => {
         LIMIT 1
       ) c ON true
       WHERE e.id = $1
-    `, [eleveId]);
+    `,
+      [eleveId]
+    );
 
     if (infoRes.rows.length === 0) return res.status(404).json({ message: 'Élève non trouvé.' });
     const eleve = infoRes.rows[0];
@@ -51,37 +54,51 @@ router.get('/bulletin/:eleveId', auth, livretEleve, async (req, res) => {
       if (!eleve.classe_id) {
         return res.status(400).json({ message: "Vous n'êtes inscrit dans aucune classe active actuellement." });
       }
-      
-      const pubCheck = await db.query(`
+
+      const pubCheck = await db.query(
+        `
         SELECT autorise FROM bulletins_autorises
         WHERE classe_id = $1 AND semestre = $2 AND annee_scolaire = $3
-      `, [eleve.classe_id, sem, eleve.annee_scolaire]);
-      
+      `,
+        [eleve.classe_id, sem, eleve.annee_scolaire]
+      );
+
       const autorise = pubCheck.rows.length > 0 ? pubCheck.rows[0].autorise : false;
       if (!autorise) {
-        return res.status(403).json({ message: "Le téléchargement du bulletin officiel pour ce semestre n'est pas encore autorisé par l'administration de votre établissement." });
+        return res.status(403).json({
+          message:
+            "Le téléchargement du bulletin officiel pour ce semestre n'est pas encore autorisé par l'administration de votre établissement.",
+        });
       }
 
       // Check if already downloaded
-      const dlCheck = await db.query(`
+      const dlCheck = await db.query(
+        `
         SELECT id FROM bulletins_telechargements
         WHERE eleve_id = $1 AND classe_id = $2 AND semestre = $3 AND annee_scolaire = $4
-      `, [eleveId, eleve.classe_id, sem, eleve.annee_scolaire]);
+      `,
+        [eleveId, eleve.classe_id, sem, eleve.annee_scolaire]
+      );
 
       if (dlCheck.rows.length > 0) {
-        return res.status(403).json({ message: "Ce bulletin a déjà été téléchargé. Conformément à la réglementation, il ne peut être téléchargé qu'une seule fois. Si vous l'avez égaré, veuillez contacter l'administration de votre établissement." });
+        return res.status(403).json({
+          message:
+            "Ce bulletin a déjà été téléchargé. Conformément à la réglementation, il ne peut être téléchargé qu'une seule fois. Si vous l'avez égaré, veuillez contacter l'administration de votre établissement.",
+        });
       }
 
       // Log download
-      await db.query(`
+      await db.query(
+        `
         INSERT INTO bulletins_telechargements (eleve_id, classe_id, semestre, annee_scolaire)
         VALUES ($1, $2, $3, $4)
-      `, [eleveId, eleve.classe_id, sem, eleve.annee_scolaire]);
+      `,
+        [eleveId, eleve.classe_id, sem, eleve.annee_scolaire]
+      );
     }
 
     // Génération du bulletin conforme au modèle officiel sénégalais
     await generateSenegalBulletinPdf(eleveId, parseInt(semestre) || 1, res);
-
   } catch (err) {
     console.error(err);
     if (!res.headersSent) {
@@ -95,7 +112,9 @@ router.get('/attestation/:eleveId', auth, async (req, res) => {
   try {
     // 1. Role validation: Teachers cannot download registration certificates
     if (req.user.role === 'PROFESSEUR') {
-      return res.status(403).json({ message: 'Accès refusé. Les enseignants ne sont pas autorisés à télécharger ce document.' });
+      return res
+        .status(403)
+        .json({ message: 'Accès refusé. Les enseignants ne sont pas autorisés à télécharger ce document.' });
     }
 
     // 2. Student validation: Students can only download their own certificate
@@ -106,18 +125,25 @@ router.get('/attestation/:eleveId', auth, async (req, res) => {
       }
     } else {
       // 3. Admin validation: Admins must be the administrator of the student's establishment
-      const adminCheck = await db.query(`
+      const adminCheck = await db.query(
+        `
         SELECT 1 
         FROM eleves e
         JOIN etablissements et ON e.etablissement_id = et.id
         WHERE e.id = $1 AND et.admin_id = $2
-      `, [eleveId, req.user.id]);
+      `,
+        [eleveId, req.user.id]
+      );
       if (adminCheck.rows.length === 0) {
-        return res.status(403).json({ message: 'Accès refusé. Seul l\'établissement d\'inscription de cet élève est autorisé à télécharger ce document.' });
+        return res.status(403).json({
+          message:
+            "Accès refusé. Seul l'établissement d'inscription de cet élève est autorisé à télécharger ce document.",
+        });
       }
     }
 
-    const infoRes = await db.query(`
+    const infoRes = await db.query(
+      `
       SELECT e.*, et.nom as etablissement_nom, et.ville as etablissement_ville, et.region as etablissement_region,
              et.signature_url, et.cachet_url, et.code_etablissement, et.nom_directeur, c.nom as classe_nom, c.id as classe_id, c.niveau, c.annee_scolaire
       FROM eleves e
@@ -127,7 +153,9 @@ router.get('/attestation/:eleveId', auth, async (req, res) => {
       WHERE e.id = $1
       ORDER BY ic.date_inscription DESC
       LIMIT 1
-    `, [eleveId]);
+    `,
+      [eleveId]
+    );
 
     if (infoRes.rows.length === 0) return res.status(404).json({ message: 'Élève non trouvé.' });
     const eleve = infoRes.rows[0];
@@ -135,31 +163,42 @@ router.get('/attestation/:eleveId', auth, async (req, res) => {
     // 4. Download-once logic: Only applies when downloaded by the student
     let requestRecord = null;
     if (req.user.role === 'ELEVE') {
-      const requestCheck = await db.query(`
+      const requestCheck = await db.query(
+        `
         SELECT id, deja_telecharge 
         FROM demandes_attestation 
         WHERE eleve_id = $1 AND classe_id = $2 AND statut = 'ACCEPTE'
         ORDER BY date_demande DESC
         LIMIT 1
-      `, [eleveId, eleve.classe_id]);
+      `,
+        [eleveId, eleve.classe_id]
+      );
 
       if (requestCheck.rows.length === 0) {
-        return res.status(403).json({ message: 'Accès refusé. Aucune demande d\'attestation acceptée n\'a été trouvée pour votre classe actuelle.' });
+        return res.status(403).json({
+          message: "Accès refusé. Aucune demande d'attestation acceptée n'a été trouvée pour votre classe actuelle.",
+        });
       }
 
       requestRecord = requestCheck.rows[0];
       if (requestRecord.deja_telecharge) {
-        return res.status(403).json({ message: 'Cette attestation a déjà été téléchargée. Conformément à la réglementation, elle ne peut être téléchargée qu\'une seule fois. Si vous l\'avez égarée, veuillez contacter l\'administration de votre établissement.' });
+        return res.status(403).json({
+          message:
+            "Cette attestation a déjà été téléchargée. Conformément à la réglementation, elle ne peut être téléchargée qu'une seule fois. Si vous l'avez égarée, veuillez contacter l'administration de votre établissement.",
+        });
       }
     }
 
     // Mark as downloaded if requested by the student
     if (requestRecord) {
-      await db.query(`
+      await db.query(
+        `
         UPDATE demandes_attestation 
         SET deja_telecharge = TRUE, date_telechargement = CURRENT_TIMESTAMP 
         WHERE id = $1
-      `, [requestRecord.id]);
+      `,
+        [requestRecord.id]
+      );
     }
 
     const doc = new PDFDocument({ margin: 50 });
@@ -178,23 +217,43 @@ router.get('/attestation/:eleveId', auth, async (req, res) => {
       doc.image(logoPath, 475, 35, { width: 75 });
     }
 
-    doc.font('Helvetica-Bold').fontSize(10).text("RÉPUBLIQUE DU SÉNÉGAL", 130, 45, { align: 'center', width: 340 });
-    doc.font('Helvetica-Oblique').fontSize(8).text("Un Peuple - Un But - Une Foi", 130, 58, { align: 'center', width: 340 });
-    doc.font('Helvetica').fontSize(9).text("MINISTÈRE DE L'ÉDUCATION NATIONALE", 130, 72, { align: 'center', width: 340 });
+    doc.font('Helvetica-Bold').fontSize(10).text('RÉPUBLIQUE DU SÉNÉGAL', 130, 45, { align: 'center', width: 340 });
+    doc
+      .font('Helvetica-Oblique')
+      .fontSize(8)
+      .text('Un Peuple - Un But - Une Foi', 130, 58, { align: 'center', width: 340 });
+    doc
+      .font('Helvetica')
+      .fontSize(9)
+      .text("MINISTÈRE DE L'ÉDUCATION NATIONALE", 130, 72, { align: 'center', width: 340 });
 
     // Title box
     doc.rect(50, 115, 500, 45).stroke();
     doc.fontSize(15).font('Helvetica-Bold').text("ATTESTATION D'INSCRIPTION", 50, 130, { align: 'center', width: 500 });
 
     doc.font('Helvetica').fontSize(12);
-    doc.text(`Je soussigné ${eleve.nom_directeur || 'Le Directeur'} de l'établissement ${eleve.etablissement_nom} (Code : ${eleve.code_etablissement}), atteste que :`, 50, 190);
+    doc.text(
+      `Je soussigné ${eleve.nom_directeur || 'Le Directeur'} de l'établissement ${eleve.etablissement_nom} (Code : ${eleve.code_etablissement}), atteste que :`,
+      50,
+      190
+    );
     doc.moveDown(1.5);
 
     // Student details
     doc.font('Helvetica-Bold').fontSize(14).text(`Mme, M. ${eleve.prenom} ${eleve.nom}`, { align: 'center' });
-    const dob = new Date(eleve.date_naissance).toLocaleDateString('fr-SN', { day: 'numeric', month: 'long', year: 'numeric' });
-    doc.font('Helvetica').fontSize(12).text(`né(e) le ${dob} à ${eleve.lieu_naissance || '-'}`, { align: 'center' });
-    doc.font('Helvetica-Oblique').fontSize(11).text(`Identifiant National : ${eleve.identifiant_national || '-'}`, { align: 'center' });
+    const dob = new Date(eleve.date_naissance).toLocaleDateString('fr-SN', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+    doc
+      .font('Helvetica')
+      .fontSize(12)
+      .text(`né(e) le ${dob} à ${eleve.lieu_naissance || '-'}`, { align: 'center' });
+    doc
+      .font('Helvetica-Oblique')
+      .fontSize(11)
+      .text(`Identifiant National : ${eleve.identifiant_national || '-'}`, { align: 'center' });
     doc.moveDown(1.5);
 
     // Inscription text
@@ -204,7 +263,9 @@ router.get('/attestation/:eleveId', auth, async (req, res) => {
     doc.font('Helvetica-Bold').text(`${eleve.annee_scolaire || '2025-2026'}.`);
     doc.moveDown(1.5);
 
-    doc.text(`En foi de quoi, la présente attestation lui est délivrée sur sa demande pour servir et valoir ce que de droit.`);
+    doc.text(
+      `En foi de quoi, la présente attestation lui est délivrée sur sa demande pour servir et valoir ce que de droit.`
+    );
     doc.moveDown(2);
 
     // City and Date
@@ -219,11 +280,11 @@ router.get('/attestation/:eleveId', auth, async (req, res) => {
     // On place les deux images au même endroit (colonne droite)
     // Le cachet est positionné en premier (couche du bas)
     // La signature est dessinée par-dessus, centrée sur le cachet
-    const signatureX = 340;  // position X colonne droite
-    const cachetX    = 330;  // légèrement décalé pour l'aspect naturel
-    const cachetY    = ySign - 45;
+    const signatureX = 340; // position X colonne droite
+    const cachetX = 330; // légèrement décalé pour l'aspect naturel
+    const cachetY = ySign - 45;
     const signatureY = ySign - 25;
-    const cachetWidth    = 190;
+    const cachetWidth = 190;
     const signatureWidth = 170;
 
     if (eleve.cachet_url) {
@@ -246,13 +307,33 @@ router.get('/attestation/:eleveId', auth, async (req, res) => {
 
     // Footnotes and branding footer
     doc.font('Helvetica-Oblique').fontSize(8);
-    doc.text(`1. Cette pièce administrative est délivrée une seule fois, il vous appartient d'en faire des copies certifiées.`, 50, 680);
+    doc.text(
+      `1. Cette pièce administrative est délivrée une seule fois, il vous appartient d'en faire des copies certifiées.`,
+      50,
+      680
+    );
     doc.text(`2. Rayer la mention inutile.`, 50, 692);
 
     doc.moveTo(50, 710).lineTo(550, 710).stroke();
 
-    doc.font('Helvetica-Bold').fontSize(8).text(`${eleve.etablissement_nom.toUpperCase()} - VILLE : ${eleve.etablissement_ville.toUpperCase()} - REGION : ${eleve.etablissement_region?.toUpperCase() || '-'}`, 50, 720, { align: 'center', width: 500 });
-    doc.font('Helvetica').fontSize(8).text(`Code Établissement : ${eleve.code_etablissement} | Document généré numériquement de manière authentique`, 50, 732, { align: 'center', width: 500 });
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(8)
+      .text(
+        `${eleve.etablissement_nom.toUpperCase()} - VILLE : ${eleve.etablissement_ville.toUpperCase()} - REGION : ${eleve.etablissement_region?.toUpperCase() || '-'}`,
+        50,
+        720,
+        { align: 'center', width: 500 }
+      );
+    doc
+      .font('Helvetica')
+      .fontSize(8)
+      .text(
+        `Code Établissement : ${eleve.code_etablissement} | Document généré numériquement de manière authentique`,
+        50,
+        732,
+        { align: 'center', width: 500 }
+      );
 
     doc.end();
   } catch (err) {
@@ -268,31 +349,40 @@ router.get('/dossier-transfert/:eleveId', auth, livretEleve, async (req, res) =>
     if (req.user.role === 'ELEVE') {
       const eleveCheck = await db.query('SELECT user_id FROM eleves WHERE id = $1', [eleveId]);
       if (eleveCheck.rows.length === 0 || eleveCheck.rows[0].user_id !== req.user.id) {
-        return res.status(403).json({ message: 'Accès refusé. Vous ne pouvez télécharger que votre propre dossier de transfert.' });
+        return res
+          .status(403)
+          .json({ message: 'Accès refusé. Vous ne pouvez télécharger que votre propre dossier de transfert.' });
       }
     }
     // 1. Infos élève + établissement
-    const infoRes = await db.query(`
+    const infoRes = await db.query(
+      `
       SELECT e.*, et.nom as etablissement_nom, et.ville, et.region, et.code_etablissement,
         et.signature_url, et.cachet_url
       FROM eleves e
       JOIN etablissements et ON e.etablissement_id = et.id
       WHERE e.id = $1
-    `, [eleveId]);
+    `,
+      [eleveId]
+    );
     if (infoRes.rows.length === 0) return res.status(404).json({ message: 'Élève non trouvé.' });
     const eleve = infoRes.rows[0];
 
     // 2. Historique des classes
-    const classesRes = await db.query(`
+    const classesRes = await db.query(
+      `
       SELECT c.nom as classe_nom, c.niveau, c.annee_scolaire, ic.date_inscription
       FROM inscription_classes ic
       JOIN classes c ON ic.classe_id = c.id
       WHERE ic.eleve_id = $1
       ORDER BY ic.date_inscription DESC
-    `, [eleveId]);
+    `,
+      [eleveId]
+    );
 
     // 3. Notes par classe et semestre
-    const notesRes = await db.query(`
+    const notesRes = await db.query(
+      `
       SELECT 
         m.nom as matiere_nom, n.valeur, COALESCE(n.coefficient, 1) as coefficient,
         n.appreciation, n.type_note, n.semestre,
@@ -302,28 +392,36 @@ router.get('/dossier-transfert/:eleveId', auth, livretEleve, async (req, res) =>
       LEFT JOIN users u ON n.professeur_id = u.id
       WHERE n.eleve_id = $1
       ORDER BY n.semestre, m.nom
-    `, [eleveId]);
+    `,
+      [eleveId]
+    );
 
     // 3b. Récupérer la classe actuelle
-    const classeActuelleRes = await db.query(`
+    const classeActuelleRes = await db.query(
+      `
       SELECT c.nom as classe_nom, c.niveau, c.annee_scolaire
       FROM inscription_classes ic
       JOIN classes c ON ic.classe_id = c.id
       WHERE ic.eleve_id = $1
       ORDER BY ic.date_inscription DESC
       LIMIT 1
-    `, [eleveId]);
+    `,
+      [eleveId]
+    );
     const classeActuelle = classeActuelleRes.rows[0] || null;
 
     // 4. Transferts
-    const transferRes = await db.query(`
+    const transferRes = await db.query(
+      `
       SELECT t.*, et.nom as ancien_etablissement_nom, et2.nom as nouveau_etablissement_nom
       FROM transferts_eleves t
       LEFT JOIN etablissements et ON t.ancien_etablissement_id = et.id
       LEFT JOIN etablissements et2 ON t.nouveau_etablissement_id = et2.id
       WHERE t.eleve_id = $1
       ORDER BY t.date_transfert DESC
-    `, [eleveId]);
+    `,
+      [eleveId]
+    );
 
     // 5. QR Code
     const qrData = `LeralScolaire - Dossier Transfert - ${eleve.nom} ${eleve.prenom} - ID: ${eleve.identifiant_national}`;
@@ -349,16 +447,25 @@ router.get('/dossier-transfert/:eleveId', auth, livretEleve, async (req, res) =>
 
     // Établissement
     doc.rect(50, doc.y, 495, 45).fill('#eff6ff');
-    doc.fillColor(blue).fontSize(13).text(eleve.etablissement_nom, 60, doc.y + 5);
-    doc.fillColor(gray).fontSize(10).text(`${eleve.ville}, ${eleve.region} - Code: ${eleve.code_etablissement}`, 60, doc.y + 5);
-    doc.fillColor(gray).fontSize(9).text(`Date d'émission : ${new Date().toLocaleDateString('fr-SN')}`, 60, doc.y + 5);
+    doc
+      .fillColor(blue)
+      .fontSize(13)
+      .text(eleve.etablissement_nom, 60, doc.y + 5);
+    doc
+      .fillColor(gray)
+      .fontSize(10)
+      .text(`${eleve.ville}, ${eleve.region} - Code: ${eleve.code_etablissement}`, 60, doc.y + 5);
+    doc
+      .fillColor(gray)
+      .fontSize(9)
+      .text(`Date d'émission : ${new Date().toLocaleDateString('fr-SN')}`, 60, doc.y + 5);
     doc.moveDown(1.5);
 
     // QR Code
     doc.image(qrCodeImage, 460, 55, { width: 70 });
 
     // --- IDENTITÉ DE L'ÉLÈVE ---
-    doc.fillColor(blue).fontSize(14).text('IDENTITÉ DE L\'ÉLÈVE', 50, doc.y);
+    doc.fillColor(blue).fontSize(14).text("IDENTITÉ DE L'ÉLÈVE", 50, doc.y);
     doc.moveDown(0.5);
     doc.rect(50, doc.y - 5, 495, 1).fill(blue);
     doc.moveDown(0.8);
@@ -384,7 +491,10 @@ router.get('/dossier-transfert/:eleveId', auth, livretEleve, async (req, res) =>
       const x = col === 0 ? labelX : labelX + 260;
       const yy = y + row * 18;
       doc.fillColor(gray).fontSize(9).text(item.label, x, yy);
-      doc.fillColor('#111827').fontSize(10).text(item.value, x + 90, yy);
+      doc
+        .fillColor('#111827')
+        .fontSize(10)
+        .text(item.value, x + 90, yy);
     });
 
     doc.moveDown(infoLines.length % 2 === 0 ? 1.5 : 2);
@@ -401,11 +511,24 @@ router.get('/dossier-transfert/:eleveId', auth, livretEleve, async (req, res) =>
         if (i > 0) y += 18;
         if (i === 0) {
           doc.rect(50, y, 495, 18).fill('#f0fdf4');
-          doc.fillColor('#16a34a').fontSize(10).font('Helvetica-Bold').text(`${c.classe_nom} (${c.niveau})`, 60, y + 4);
-          doc.fillColor('#16a34a').fontSize(10).text(`${c.annee_scolaire}`, 350, y + 4);
+          doc
+            .fillColor('#16a34a')
+            .fontSize(10)
+            .font('Helvetica-Bold')
+            .text(`${c.classe_nom} (${c.niveau})`, 60, y + 4);
+          doc
+            .fillColor('#16a34a')
+            .fontSize(10)
+            .text(`${c.annee_scolaire}`, 350, y + 4);
         } else {
-          doc.fillColor('#111827').fontSize(10).text(`${c.classe_nom} (${c.niveau})`, 60, y + 4);
-          doc.fillColor(gray).fontSize(10).text(`${c.annee_scolaire}`, 350, y + 4);
+          doc
+            .fillColor('#111827')
+            .fontSize(10)
+            .text(`${c.classe_nom} (${c.niveau})`, 60, y + 4);
+          doc
+            .fillColor(gray)
+            .fontSize(10)
+            .text(`${c.annee_scolaire}`, 350, y + 4);
         }
       });
       doc.moveDown(2);
@@ -420,13 +543,18 @@ router.get('/dossier-transfert/:eleveId', auth, livretEleve, async (req, res) =>
 
       // Grouper par semestre puis par matière
       const semestreGroups = {};
-      notesRes.rows.forEach(n => {
+      notesRes.rows.forEach((n) => {
         const key = `S${n.semestre}`;
         if (!semestreGroups[key]) {
           semestreGroups[key] = { semestre: n.semestre, matieres: {} };
         }
         if (!semestreGroups[key].matieres[n.matiere_nom]) {
-          semestreGroups[key].matieres[n.matiere_nom] = { devoir: null, examen: null, appreciation: '', coeff: n.coefficient };
+          semestreGroups[key].matieres[n.matiere_nom] = {
+            devoir: null,
+            examen: null,
+            appreciation: '',
+            coeff: n.coefficient,
+          };
         }
         if (n.type_note === 'DEVOIR') {
           semestreGroups[key].matieres[n.matiere_nom].devoir = parseFloat(n.valeur);
@@ -437,15 +565,23 @@ router.get('/dossier-transfert/:eleveId', auth, livretEleve, async (req, res) =>
         }
       });
 
-      const classLabel = classeActuelle ? `${classeActuelle.classe_nom} (${classeActuelle.niveau}) - ${classeActuelle.annee_scolaire}` : '';
+      const classLabel = classeActuelle
+        ? `${classeActuelle.classe_nom} (${classeActuelle.niveau}) - ${classeActuelle.annee_scolaire}`
+        : '';
 
-      Object.keys(semestreGroups).forEach(key => {
+      Object.keys(semestreGroups).forEach((key) => {
         const group = semestreGroups[key];
         y = doc.y;
-        if (y > 650) { doc.addPage(); y = 50; }
+        if (y > 650) {
+          doc.addPage();
+          y = 50;
+        }
 
         doc.rect(50, y, 495, 20).fill(lightGray);
-        doc.fillColor(blue).fontSize(11).font('Helvetica-Bold')
+        doc
+          .fillColor(blue)
+          .fontSize(11)
+          .font('Helvetica-Bold')
           .text(`${classLabel} - Semestre ${group.semestre}`, 60, y + 4);
         doc.moveDown(2);
 
@@ -472,14 +608,17 @@ router.get('/dossier-transfert/:eleveId', auth, livretEleve, async (req, res) =>
         let totalPoints = 0;
         let totalCoeff = 0;
 
-        Object.keys(group.matieres).forEach(matiereNom => {
+        Object.keys(group.matieres).forEach((matiereNom) => {
           const m = group.matieres[matiereNom];
           y = doc.y;
-          if (y > 700) { doc.addPage(); y = 50; }
+          if (y > 700) {
+            doc.addPage();
+            y = 50;
+          }
 
           const devoirVal = m.devoir !== null ? m.devoir : null;
           const examenVal = m.examen !== null ? m.examen : null;
-          const notesArr = [devoirVal, examenVal].filter(v => v !== null);
+          const notesArr = [devoirVal, examenVal].filter((v) => v !== null);
           const moyenne = notesArr.length > 0 ? notesArr.reduce((a, b) => a + b, 0) / notesArr.length : null;
 
           doc.fillColor('#111827').text(matiereNom, colM, y);
@@ -509,7 +648,10 @@ router.get('/dossier-transfert/:eleveId', auth, livretEleve, async (req, res) =>
         doc.rect(50, doc.y, 495, 1).fill(gray);
         doc.moveDown(0.5);
         const moyGenerale = totalCoeff > 0 ? (totalPoints / totalCoeff).toFixed(2) : '--';
-        doc.fillColor(blue).fontSize(11).font('Helvetica-Bold')
+        doc
+          .fillColor(blue)
+          .fontSize(11)
+          .font('Helvetica-Bold')
           .text(`Moyenne Générale : ${moyGenerale} / 20`, colM, doc.y);
         doc.moveDown(1.5);
       });
@@ -522,11 +664,19 @@ router.get('/dossier-transfert/:eleveId', auth, livretEleve, async (req, res) =>
       doc.rect(50, doc.y - 5, 495, 1).fill(blue);
       doc.moveDown(0.8);
 
-      transferRes.rows.forEach(t => {
-        doc.fontSize(10).fillColor('#111827')
+      transferRes.rows.forEach((t) => {
+        doc
+          .fontSize(10)
+          .fillColor('#111827')
           .text(`De: ${t.ancien_etablissement_nom || '--'} → ${t.nouveau_etablissement_nom || '--'}`, 60, doc.y);
-        doc.fillColor(gray).fontSize(9)
-          .text(`Date: ${new Date(t.date_transfert).toLocaleDateString('fr-SN')} - Motif: ${t.motif || '--'}`, 60, doc.y);
+        doc
+          .fillColor(gray)
+          .fontSize(9)
+          .text(
+            `Date: ${new Date(t.date_transfert).toLocaleDateString('fr-SN')} - Motif: ${t.motif || '--'}`,
+            60,
+            doc.y
+          );
         doc.moveDown(0.8);
       });
       doc.moveDown(1);
@@ -536,14 +686,20 @@ router.get('/dossier-transfert/:eleveId', auth, livretEleve, async (req, res) =>
     doc.moveDown(2);
     doc.rect(50, doc.y, 495, 1).fill(gray);
     doc.moveDown(1.5);
-    doc.fontSize(11).fillColor('#111827').text(`Fait à ${eleve.ville}, le ${new Date().toLocaleDateString('fr-SN')}`, { align: 'right' });
+    doc
+      .fontSize(11)
+      .fillColor('#111827')
+      .text(`Fait à ${eleve.ville}, le ${new Date().toLocaleDateString('fr-SN')}`, { align: 'right' });
     doc.moveDown(0.5);
     doc.text("Cachet et signature de l'établissement", { align: 'right' });
     doc.moveDown(1);
 
     // Espace cachet
     doc.rect(400, doc.y, 100, 80).stroke(gray);
-    doc.fillColor(gray).fontSize(9).text('Cachet officiel', 420, doc.y + 30);
+    doc
+      .fillColor(gray)
+      .fontSize(9)
+      .text('Cachet officiel', 420, doc.y + 30);
 
     // --- ANNEXES : BULLETINS OFFICIELS SÉNÉGALAIS ---
     try {
@@ -563,7 +719,6 @@ router.get('/dossier-transfert/:eleveId', auth, livretEleve, async (req, res) =>
     }
 
     doc.end();
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Erreur lors de la génération du dossier.' });
@@ -670,12 +825,15 @@ router.get('/classe/:classeId/classement-pdf', auth, requireClasseAccess('classe
 
   try {
     // 1. Fetch class and establishment info
-    const classeRes = await db.query(`
+    const classeRes = await db.query(
+      `
       SELECT c.*, et.nom as etablissement_nom, et.ville, et.region
       FROM classes c
       JOIN etablissements et ON c.etablissement_id = et.id
       WHERE c.id = $1
-    `, [classeId]);
+    `,
+      [classeId]
+    );
 
     if (classeRes.rows.length === 0) {
       return res.status(404).json({ message: 'Classe non trouvée.' });
@@ -683,13 +841,16 @@ router.get('/classe/:classeId/classement-pdf', auth, requireClasseAccess('classe
     const classe = classeRes.rows[0];
 
     // 2. Fetch all students in the class
-    const studentsRes = await db.query(`
+    const studentsRes = await db.query(
+      `
       SELECT e.id, e.nom, e.prenom, e.identifiant_national
       FROM eleves e
       JOIN inscription_classes ic ON e.id = ic.eleve_id
       WHERE ic.classe_id = $1
       ORDER BY e.nom, e.prenom
-    `, [classeId]);
+    `,
+      [classeId]
+    );
 
     const students = studentsRes.rows;
 
@@ -729,23 +890,26 @@ router.get('/classe/:classeId/classement-pdf', auth, requireClasseAccess('classe
     const allNotes = notesRes.rows;
 
     // 4. Fetch saved bulletins to get decisions if any
-    const bulletinsRes = await db.query(`
+    const bulletinsRes = await db.query(
+      `
       SELECT eleve_id, decision, decision_detail
       FROM bulletins
       WHERE classe_id = $1 AND annee_scolaire = $2
-    `, [classeId, classe.annee_scolaire]);
+    `,
+      [classeId, classe.annee_scolaire]
+    );
     const bulletins = bulletinsRes.rows;
 
     // 5. Compute general averages
-    const studentAverages = students.map(student => {
-      const studentNotes = allNotes.filter(n => n.eleve_id === student.id);
-      
+    const studentAverages = students.map((student) => {
+      const studentNotes = allNotes.filter((n) => n.eleve_id === student.id);
+
       const matieres = {};
-      studentNotes.forEach(n => {
+      studentNotes.forEach((n) => {
         if (!matieres[n.code_matiere]) {
           matieres[n.code_matiere] = {
             coefficient: n.coefficient,
-            notes: []
+            notes: [],
           };
         }
         matieres[n.code_matiere].notes.push(parseFloat(n.valeur));
@@ -764,18 +928,16 @@ router.get('/classe/:classeId/classement-pdf', auth, requireClasseAccess('classe
         }
       }
 
-      const average = totalCoefficients > 0 
-        ? parseFloat((totalPoints / totalCoefficients).toFixed(2)) 
-        : null;
+      const average = totalCoefficients > 0 ? parseFloat((totalPoints / totalCoefficients).toFixed(2)) : null;
 
-      const savedB = bulletins.find(b => b.eleve_id === student.id);
+      const savedB = bulletins.find((b) => b.eleve_id === student.id);
 
       return {
         nom: student.nom,
         prenom: student.prenom,
         identifiant_national: student.identifiant_national,
         moyenne_generale: average,
-        decision_detail: savedB ? savedB.decision_detail : ''
+        decision_detail: savedB ? savedB.decision_detail : '',
       };
     });
 
@@ -813,13 +975,20 @@ router.get('/classe/:classeId/classement-pdf', auth, requireClasseAccess('classe
 
     // Header styling
     doc.font('Helvetica-Bold').fontSize(14).text(classe.etablissement_nom.toUpperCase(), { align: 'center' });
-    doc.font('Helvetica').fontSize(10).text(`${classe.ville || ''} - ${classe.region || ''}`, { align: 'center' });
+    doc
+      .font('Helvetica')
+      .fontSize(10)
+      .text(`${classe.ville || ''} - ${classe.region || ''}`, { align: 'center' });
     doc.moveDown(0.5);
     doc.font('Helvetica-Oblique').fontSize(9).text(`Année Scolaire : ${classe.annee_scolaire}`, { align: 'center' });
     doc.moveDown(1.5);
 
     // Document Title
-    doc.font('Helvetica-Bold').fontSize(14).fillColor('#1e3a8a').text(`PALMARÈS & CLASSEMENT GÉNÉRAL`, { align: 'center' });
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(14)
+      .fillColor('#1e3a8a')
+      .text(`PALMARÈS & CLASSEMENT GÉNÉRAL`, { align: 'center' });
     doc.fontSize(12).text(`Classe : ${classe.nom}   |   Période : ${period}`, { align: 'center' });
     doc.fillColor('black');
     doc.moveDown(1.5);
@@ -841,7 +1010,10 @@ router.get('/classe/:classeId/classement-pdf', auth, requireClasseAccess('classe
     doc.text('Décision', colDec + 10, tableTop + 5);
 
     doc.strokeColor('#cbd5e1').lineWidth(0.5);
-    doc.moveTo(colRang, tableTop + 20).lineTo(colRang + 515, tableTop + 20).stroke();
+    doc
+      .moveTo(colRang, tableTop + 20)
+      .lineTo(colRang + 515, tableTop + 20)
+      .stroke();
 
     let currentY = tableTop + 20;
 
@@ -859,12 +1031,15 @@ router.get('/classe/:classeId/classement-pdf', auth, requireClasseAccess('classe
         doc.text('Moyenne', colMoy + 10, currentY + 5);
         doc.text('Décision', colDec + 10, currentY + 5);
         doc.strokeColor('#cbd5e1').lineWidth(0.5);
-        doc.moveTo(colRang, currentY + 20).lineTo(colRang + 515, currentY + 20).stroke();
+        doc
+          .moveTo(colRang, currentY + 20)
+          .lineTo(colRang + 515, currentY + 20)
+          .stroke();
         currentY += 20;
       }
 
       doc.fillColor('black').font('Helvetica').fontSize(9);
-      
+
       // Zebra striping background
       if (student.rang && student.rang % 2 === 0) {
         doc.rect(colRang, currentY, 515, 20).fill('#f8fafc');
@@ -886,10 +1061,10 @@ router.get('/classe/:classeId/classement-pdf', auth, requireClasseAccess('classe
       doc.text(rangText, colRang + 10, currentY + 6);
       doc.font('Helvetica'); // Reset font style for names
       doc.text(student.identifiant_national || '--', colID + 10, currentY + 6);
-      
+
       const fullName = `${student.nom.toUpperCase()} ${student.prenom}`;
       doc.text(fullName, colNom + 10, currentY + 6, { width: 180, ellipsis: true });
-      
+
       // Bold only the average
       doc.font('Helvetica-Bold');
       doc.text(avgText, colMoy + 10, currentY + 6);
@@ -907,8 +1082,11 @@ router.get('/classe/:classeId/classement-pdf', auth, requireClasseAccess('classe
       doc.fillColor(decColor).text(student.decision_detail || '--', colDec + 10, currentY + 6);
 
       doc.strokeColor('#e2e8f0').lineWidth(0.5);
-      doc.moveTo(colRang, currentY + 20).lineTo(colRang + 515, currentY + 20).stroke();
-      
+      doc
+        .moveTo(colRang, currentY + 20)
+        .lineTo(colRang + 515, currentY + 20)
+        .stroke();
+
       currentY += 20;
     });
 
@@ -917,7 +1095,7 @@ router.get('/classe/:classeId/classement-pdf', auth, requireClasseAccess('classe
     const signatureY = doc.y;
     if (signatureY < 700) {
       doc.fontSize(9).font('Helvetica-Bold');
-      doc.text("Le Secrétaire Général", 60, signatureY);
+      doc.text('Le Secrétaire Général', 60, signatureY);
       doc.text("Le Chef d'Établissement", 380, signatureY);
     }
 

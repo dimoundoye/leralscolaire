@@ -3,7 +3,7 @@ const db = require('../src/config/db');
 
 async function migrate() {
   try {
-    console.log('🚀 Migration v26 : Table des demandes d\'inscription publiques (Établissements & Profs)...');
+    console.log("🚀 Migration v26 : Table des demandes d'inscription publiques (Établissements & Profs)...");
 
     await db.query(`
       CREATE TABLE IF NOT EXISTS demandes_inscription_office (

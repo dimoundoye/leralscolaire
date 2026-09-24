@@ -3,7 +3,7 @@ const db = require('../src/config/db');
 
 async function migrate() {
   try {
-    console.log("🚀 Migration v36 : Synchronisation pre_inscriptions, demandes_attestation et bulletins...");
+    console.log('🚀 Migration v36 : Synchronisation pre_inscriptions, demandes_attestation et bulletins...');
 
     // 1. Table pre_inscriptions et colonnes
     await db.query(`

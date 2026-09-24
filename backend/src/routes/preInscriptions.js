@@ -13,7 +13,12 @@ const photoUpload = createUploadMiddleware('photos');
 router.get('/public/class/:classId', preInscriptionController.getPublicClassDetails);
 
 // PUBLIC: Submit pre-inscription form (with photo)
-router.post('/public/register', publicFormLimiter, photoUpload.single('photo'), preInscriptionController.submitPreInscription);
+router.post(
+  '/public/register',
+  publicFormLimiter,
+  photoUpload.single('photo'),
+  preInscriptionController.submitPreInscription
+);
 
 // ADMIN PROTECTED ROUTES
 
@@ -24,7 +29,12 @@ router.get('/', auth, preInscriptionController.listPending);
 router.put('/:id', auth, requireOwnRecord('pre_inscriptions'), preInscriptionController.updatePreInscription);
 
 // Validate pre-inscription (creates account/handles transfer)
-router.post('/:id/validate', auth, requireOwnRecord('pre_inscriptions'), preInscriptionController.validatePreInscription);
+router.post(
+  '/:id/validate',
+  auth,
+  requireOwnRecord('pre_inscriptions'),
+  preInscriptionController.validatePreInscription
+);
 
 // Reject pre-inscription
 router.post('/:id/reject', auth, requireOwnRecord('pre_inscriptions'), preInscriptionController.rejectPreInscription);

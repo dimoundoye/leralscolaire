@@ -2,10 +2,7 @@ const db = require('../config/db');
 
 const StudentModel = {
   async getEtablissementIdByAdminId(adminId) {
-    const { rows } = await db.query(
-      'SELECT id FROM etablissements WHERE admin_id = $1',
-      [adminId]
-    );
+    const { rows } = await db.query('SELECT id FROM etablissements WHERE admin_id = $1', [adminId]);
     return rows[0]?.id;
   },
 
@@ -31,7 +28,8 @@ const StudentModel = {
   },
 
   async listStudents(etablissementId) {
-    const { rows } = await db.query(`
+    const { rows } = await db.query(
+      `
       SELECT DISTINCT ON (e.id) e.*, c.nom as classe_nom, ic.classe_id, u.password_provisoire,
              (SELECT t.statut_transfert FROM transferts_eleves t WHERE t.eleve_id = e.id AND t.statut_transfert = 'EN_ATTENTE' ORDER BY t.date_transfert DESC LIMIT 1) as statut_transfert_en_attente
       FROM eleves e
@@ -40,7 +38,9 @@ const StudentModel = {
       LEFT JOIN classes c ON ic.classe_id = c.id
       WHERE e.etablissement_id = $1
       ORDER BY e.id, ic.date_inscription DESC NULLS LAST
-    `, [etablissementId]);
+    `,
+      [etablissementId]
+    );
     return rows;
   },
 
@@ -54,9 +54,21 @@ const StudentModel = {
 
   async createStudent(data, client = db) {
     const {
-      identifiant_national, user_id, etablissement_id, nom, prenom, sexe,
-      date_naissance, lieu_naissance, nationalite, telephone,
-      coordonnees_parent, photo_url, justificatif_inapte_url, statut, email
+      identifiant_national,
+      user_id,
+      etablissement_id,
+      nom,
+      prenom,
+      sexe,
+      date_naissance,
+      lieu_naissance,
+      nationalite,
+      telephone,
+      coordonnees_parent,
+      photo_url,
+      justificatif_inapte_url,
+      statut,
+      email,
     } = data;
 
     const { rows } = await client.query(
@@ -66,27 +78,36 @@ const StudentModel = {
         coordonnees_parent, photo_url, justificatif_inapte_url, statut, email
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *`,
       [
-        identifiant_national, user_id, etablissement_id, nom, prenom, sexe || 'M',
-        date_naissance, lieu_naissance, nationalite, telephone,
-        coordonnees_parent, photo_url, justificatif_inapte_url || null, statut || 'APTE', email || null
+        identifiant_national,
+        user_id,
+        etablissement_id,
+        nom,
+        prenom,
+        sexe || 'M',
+        date_naissance,
+        lieu_naissance,
+        nationalite,
+        telephone,
+        coordonnees_parent,
+        photo_url,
+        justificatif_inapte_url || null,
+        statut || 'APTE',
+        email || null,
       ]
     );
     return rows[0];
   },
 
   async addInscriptionClass(eleveId, classeId, client = db) {
-    await client.query(
-      'INSERT INTO inscription_classes (eleve_id, classe_id) VALUES ($1, $2)',
-      [eleveId, classeId]
-    );
+    await client.query('INSERT INTO inscription_classes (eleve_id, classe_id) VALUES ($1, $2)', [eleveId, classeId]);
     return true;
   },
 
   async getEtablissementClassByName(classeNom, etablissementId) {
-    const { rows } = await db.query(
-      'SELECT id FROM classes WHERE nom ILIKE $1 AND etablissement_id = $2 LIMIT 1',
-      [classeNom, etablissementId]
-    );
+    const { rows } = await db.query('SELECT id FROM classes WHERE nom ILIKE $1 AND etablissement_id = $2 LIMIT 1', [
+      classeNom,
+      etablissementId,
+    ]);
     return rows[0]?.id;
   },
 
@@ -112,9 +133,31 @@ const StudentModel = {
   },
 
   async updateStudent(id, fields, photoUrl = null, justificatifUrl = undefined) {
-    const { nom, prenom, sexe, date_naissance, lieu_naissance, nationalite, telephone, coordonnees_parent, statut, email } = fields;
+    const {
+      nom,
+      prenom,
+      sexe,
+      date_naissance,
+      lieu_naissance,
+      nationalite,
+      telephone,
+      coordonnees_parent,
+      statut,
+      email,
+    } = fields;
     let query = `UPDATE eleves SET nom = $1, prenom = $2, sexe = $3, date_naissance = $4, lieu_naissance = $5, nationalite = $6, telephone = $7, coordonnees_parent = $8, statut = $9, email = $10`;
-    let params = [nom, prenom, sexe || 'M', date_naissance, lieu_naissance, nationalite, telephone, coordonnees_parent, statut, email || null];
+    let params = [
+      nom,
+      prenom,
+      sexe || 'M',
+      date_naissance,
+      lieu_naissance,
+      nationalite,
+      telephone,
+      coordonnees_parent,
+      statut,
+      email || null,
+    ];
     if (photoUrl !== null && photoUrl !== undefined) {
       query += `, photo_url = $${params.length + 1}`;
       params.push(photoUrl);
@@ -175,26 +218,32 @@ const StudentModel = {
   },
 
   async getIncomingTransfers(etablissementId) {
-    const { rows } = await db.query(`
+    const { rows } = await db.query(
+      `
       SELECT t.*, e.nom as eleve_nom, e.prenom as eleve_prenom, e.identifiant_national, e.photo_url, etab_ancien.nom as ancien_etablissement_nom
       FROM transferts_eleves t
       JOIN eleves e ON t.eleve_id = e.id
       JOIN etablissements etab_ancien ON t.ancien_etablissement_id = etab_ancien.id
       WHERE t.nouveau_etablissement_id = $1 AND t.statut_transfert = 'EN_ATTENTE'
       ORDER BY t.date_transfert DESC
-    `, [etablissementId]);
+    `,
+      [etablissementId]
+    );
     return rows;
   },
 
   async getOutgoingTransfers(etablissementId) {
-    const { rows } = await db.query(`
+    const { rows } = await db.query(
+      `
       SELECT t.*, e.nom as eleve_nom, e.prenom as eleve_prenom, e.identifiant_national, etab_nouveau.nom as nouveau_etablissement_nom
       FROM transferts_eleves t
       JOIN eleves e ON t.eleve_id = e.id
       JOIN etablissements etab_nouveau ON t.nouveau_etablissement_id = etab_nouveau.id
       WHERE t.ancien_etablissement_id = $1
       ORDER BY t.date_transfert DESC
-    `, [etablissementId]);
+    `,
+      [etablissementId]
+    );
     return rows;
   },
 
@@ -212,10 +261,7 @@ const StudentModel = {
       throw new Error('Cette demande de transfert a déjà été traitée.');
     }
 
-    await client.query(
-      `UPDATE transferts_eleves SET statut_transfert = 'VALIDE' WHERE id = $1`,
-      [transferId]
-    );
+    await client.query(`UPDATE transferts_eleves SET statut_transfert = 'VALIDE' WHERE id = $1`, [transferId]);
 
     await this.updateStudentEtablissement(transfer.eleve_id, nouveauEtablissementId, client);
     await this.ensureNullClassInscription(transfer.eleve_id, client);
@@ -231,10 +277,7 @@ const StudentModel = {
       throw new Error('Cette demande de transfert a déjà été traitée.');
     }
 
-    await client.query(
-      `UPDATE transferts_eleves SET statut_transfert = 'REJETE' WHERE id = $1`,
-      [transferId]
-    );
+    await client.query(`UPDATE transferts_eleves SET statut_transfert = 'REJETE' WHERE id = $1`, [transferId]);
     return true;
   },
 
@@ -247,23 +290,26 @@ const StudentModel = {
   },
 
   async updateStudentEtablissement(eleveId, nouveauEtablissementId, client = db) {
-    await client.query(
-      "UPDATE eleves SET etablissement_id = $1, statut = 'TRANSFERE' WHERE id = $2",
-      [nouveauEtablissementId, eleveId]
-    );
+    await client.query("UPDATE eleves SET etablissement_id = $1, statut = 'TRANSFERE' WHERE id = $2", [
+      nouveauEtablissementId,
+      eleveId,
+    ]);
     return true;
   },
 
   async ensureNullClassInscription(eleveId, client = db) {
-    await client.query(`
+    await client.query(
+      `
       INSERT INTO inscription_classes (eleve_id, classe_id, date_inscription)
       SELECT $1, NULL, NOW()
       WHERE NOT EXISTS (
         SELECT 1 FROM inscription_classes WHERE eleve_id = $1 AND classe_id IS NULL
       )
-    `, [eleveId]);
+    `,
+      [eleveId]
+    );
     return true;
-  }
+  },
 };
 
 module.exports = StudentModel;

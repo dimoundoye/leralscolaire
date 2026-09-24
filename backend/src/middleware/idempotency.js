@@ -17,10 +17,12 @@ const idempotencyMiddleware = async (req, res, next) => {
   // 1. Vérification dans le cache d'idempotence
   if (processedMutations.has(mutationId)) {
     const cachedResponse = processedMutations.get(mutationId);
-    console.log(`[Idempotency] Mutation ${mutationId} déjà exécutée. Retour HTTP ${cachedResponse.status} (Replay neutre).`);
+    console.log(
+      `[Idempotency] Mutation ${mutationId} déjà exécutée. Retour HTTP ${cachedResponse.status} (Replay neutre).`
+    );
     return res.status(cachedResponse.status).json({
       ...cachedResponse.data,
-      idempotentReplay: true
+      idempotentReplay: true,
     });
   }
 
@@ -31,7 +33,7 @@ const idempotencyMiddleware = async (req, res, next) => {
       processedMutations.set(mutationId, {
         status: res.statusCode,
         data: body,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
       // Purge automatique du cache après 24 heures pour libérer la mémoire
       setTimeout(() => processedMutations.delete(mutationId), 86400000);

@@ -18,7 +18,7 @@ async function cleanDatabase() {
       ORDER BY tablename ASC;
     `);
 
-    const tablesToTruncate = tablesRes.rows.map(r => r.tablename);
+    const tablesToTruncate = tablesRes.rows.map((r) => r.tablename);
 
     console.log(`📋 ${tablesToTruncate.length} table(s) identifiée(s) pour nettoyage :`);
     for (const table of tablesToTruncate) {
@@ -35,7 +35,9 @@ async function cleanDatabase() {
       DELETE FROM users 
       WHERE role != 'OFFICE_BAC';
     `);
-    console.log(`\n  ✓ ${userDeleteRes.rowCount || 0} utilisateur(s) (élèves, profs, établissements, etc.) supprimé(s).`);
+    console.log(
+      `\n  ✓ ${userDeleteRes.rowCount || 0} utilisateur(s) (élèves, profs, établissements, etc.) supprimé(s).`
+    );
 
     // 3. Réinitialiser les séquences auto-incrémentées (ID auto)
     try {
@@ -63,15 +65,20 @@ async function cleanDatabase() {
     `);
 
     if (officeCheck.rows.length === 0 && !process.env.OFFICE_BAC_INITIAL_PASSWORD) {
-      console.warn('  ⚠️ Aucun compte OFFICE_BAC : définissez OFFICE_BAC_INITIAL_PASSWORD pour le créer automatiquement.');
+      console.warn(
+        '  ⚠️ Aucun compte OFFICE_BAC : définissez OFFICE_BAC_INITIAL_PASSWORD pour le créer automatiquement.'
+      );
     } else if (officeCheck.rows.length === 0) {
       console.log('  ⚠️ Aucun compte OFFICE_BAC trouvé ! Création automatique du compte officiel...');
       const salt = await bcrypt.genSalt(10);
       const hash = await bcrypt.hash(process.env.OFFICE_BAC_INITIAL_PASSWORD, salt);
-      await client.query(`
+      await client.query(
+        `
         INSERT INTO users (email, password_hash, role, identifiant_national)
         VALUES ('OFFICE-BAC-SN', $1, 'OFFICE_BAC', 'OFFICE-BAC-SN');
-      `, [hash]);
+      `,
+        [hash]
+      );
       console.log('  ✓ Compte OFFICE-BAC-SN créé (mot de passe : OFFICE_BAC_INITIAL_PASSWORD)');
     }
 
@@ -86,7 +93,7 @@ async function cleanDatabase() {
         ['Histoire-Géographie', 'HG'],
         ['Anglais', 'ANG'],
         ['Philosophie', 'PHIL'],
-        ['Éducation Physique et Sportive', 'EPS']
+        ['Éducation Physique et Sportive', 'EPS'],
       ];
       for (const [nom, code] of defaultMatieres) {
         await client.query(
@@ -111,7 +118,6 @@ async function cleanDatabase() {
     console.log('Comptes préservés en base :');
     console.table(remainingUsers.rows);
     console.log('======================================================\n');
-
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('\n❌ Erreur critique lors du nettoyage :', err);

@@ -37,9 +37,19 @@ const preInscriptionController = {
    */
   async submitPreInscription(req, res, next) {
     const {
-      nom, prenom, sexe, date_naissance, lieu_naissance, nationalite,
-      telephone, coordonnees_parent, classe_id, etablissement_id, statut,
-      identifiant_existant, email
+      nom,
+      prenom,
+      sexe,
+      date_naissance,
+      lieu_naissance,
+      nationalite,
+      telephone,
+      coordonnees_parent,
+      classe_id,
+      etablissement_id,
+      statut,
+      identifiant_existant,
+      email,
     } = req.body;
 
     if (!telephone || !String(telephone).trim()) {
@@ -47,10 +57,14 @@ const preInscriptionController = {
     }
     const cleanEmail = email ? String(email).trim() : null;
     if (!cleanEmail) {
-      return response.error(res, "L'adresse email (de l'élève ou du parent/tuteur) est obligatoire pour l'envoi des identifiants.", 400);
+      return response.error(
+        res,
+        "L'adresse email (de l'élève ou du parent/tuteur) est obligatoire pour l'envoi des identifiants.",
+        400
+      );
     }
 
-const { getUploadedFileUrl } = require('../config/cloudinary');
+    const { getUploadedFileUrl } = require('../config/cloudinary');
 
     const photo_url = req.file ? getUploadedFileUrl(req.file, 'photos') : null;
 
@@ -59,19 +73,34 @@ const { getUploadedFileUrl } = require('../config/cloudinary');
       if (identifiant_existant) {
         const student = await PreInscriptionModel.checkStudentExists(identifiant_existant);
         if (!student) {
-          return response.error(res, "L'identifiant national fourni n'existe pas. Veuillez vérifier votre saisie.", 404);
+          return response.error(
+            res,
+            "L'identifiant national fourni n'existe pas. Veuillez vérifier votre saisie.",
+            404
+          );
         }
       }
 
       const preInscription = await PreInscriptionModel.createPreInscription({
-        classe_id, etablissement_id, nom, prenom, sexe: sexe || 'M', date_naissance,
-        lieu_naissance, nationalite, telephone: telephone.trim(), coordonnees_parent, statut,
-        identifiant_existant, photo_url, email: cleanEmail
+        classe_id,
+        etablissement_id,
+        nom,
+        prenom,
+        sexe: sexe || 'M',
+        date_naissance,
+        lieu_naissance,
+        nationalite,
+        telephone: telephone.trim(),
+        coordonnees_parent,
+        statut,
+        identifiant_existant,
+        photo_url,
+        email: cleanEmail,
       });
 
       return res.status(201).json({
-        message: 'Votre demande a été soumise avec succès ! L\'établissement va l\'examiner.',
-        preInscription
+        message: "Votre demande a été soumise avec succès ! L'établissement va l'examiner.",
+        preInscription,
       });
     } catch (err) {
       console.error(err);
@@ -103,14 +132,32 @@ const { getUploadedFileUrl } = require('../config/cloudinary');
   async updatePreInscription(req, res, next) {
     const { id } = req.params;
     const {
-      nom, prenom, sexe, date_naissance, lieu_naissance, nationalite,
-      telephone, coordonnees_parent, statut, identifiant_existant, email
+      nom,
+      prenom,
+      sexe,
+      date_naissance,
+      lieu_naissance,
+      nationalite,
+      telephone,
+      coordonnees_parent,
+      statut,
+      identifiant_existant,
+      email,
     } = req.body;
 
     try {
       const preInscription = await PreInscriptionModel.updatePreInscription(id, {
-        nom, prenom, sexe, date_naissance, lieu_naissance,
-        nationalite, telephone, coordonnees_parent, statut, identifiant_existant, email
+        nom,
+        prenom,
+        sexe,
+        date_naissance,
+        lieu_naissance,
+        nationalite,
+        telephone,
+        coordonnees_parent,
+        statut,
+        identifiant_existant,
+        email,
       });
 
       if (!preInscription) {
@@ -146,9 +193,14 @@ const { getUploadedFileUrl } = require('../config/cloudinary');
         await client.query('BEGIN');
 
         // Email effectif (avec possibilité de correction/surcharge transmise)
-        const effectiveEmail = overrideEmail !== undefined 
-          ? (overrideEmail ? overrideEmail.trim().toLowerCase() : null)
-          : (pre.email ? pre.email.trim().toLowerCase() : null);
+        const effectiveEmail =
+          overrideEmail !== undefined
+            ? overrideEmail
+              ? overrideEmail.trim().toLowerCase()
+              : null
+            : pre.email
+              ? pre.email.trim().toLowerCase()
+              : null;
 
         if (pre.identifiant_existant) {
           // --- EXISTING STUDENT TRANSFER ---
@@ -160,20 +212,24 @@ const { getUploadedFileUrl } = require('../config/cloudinary');
           const eleveId = student.id;
 
           // Update student info with pre-inscription data
-          await PreInscriptionModel.updateStudentProfile(eleveId, {
-            etablissement_id: pre.etablissement_id,
-            nom: pre.nom,
-            prenom: pre.prenom,
-            sexe: pre.sexe || 'M',
-            date_naissance: pre.date_naissance,
-            lieu_naissance: pre.lieu_naissance,
-            nationalite: pre.nationalite,
-            telephone: pre.telephone,
-            coordonnees_parent: pre.coordonnees_parent,
-            statut: pre.statut,
-            photo_url: pre.photo_url,
-            email: effectiveEmail || null
-          }, client);
+          await PreInscriptionModel.updateStudentProfile(
+            eleveId,
+            {
+              etablissement_id: pre.etablissement_id,
+              nom: pre.nom,
+              prenom: pre.prenom,
+              sexe: pre.sexe || 'M',
+              date_naissance: pre.date_naissance,
+              lieu_naissance: pre.lieu_naissance,
+              nationalite: pre.nationalite,
+              telephone: pre.telephone,
+              coordonnees_parent: pre.coordonnees_parent,
+              statut: pre.statut,
+              photo_url: pre.photo_url,
+              email: effectiveEmail || null,
+            },
+            client
+          );
 
           // Enroll in the new class
           await PreInscriptionModel.addInscriptionClass(eleveId, pre.classe_id, client);
@@ -184,12 +240,12 @@ const { getUploadedFileUrl } = require('../config/cloudinary');
           await client.query('COMMIT');
 
           return res.json({
-            message: 'Transfert validé avec succès ! L\'élève a été affecté à l\'établissement et à sa nouvelle classe.',
+            message: "Transfert validé avec succès ! L'élève a été affecté à l'établissement et à sa nouvelle classe.",
             transfer: true,
             credentials: {
               identifiant: pre.identifiant_existant,
-              password: 'Conserve son mot de passe existant'
-            }
+              password: 'Conserve son mot de passe existant',
+            },
           });
         } else {
           // --- NEW STUDENT INSCRIPTION ---
@@ -208,7 +264,7 @@ const { getUploadedFileUrl } = require('../config/cloudinary');
                 email: effectiveEmail,
                 eleveNom: `${pre.prenom || ''} ${pre.nom || ''}`.trim(),
                 preInscriptionId: id,
-                message: `L'adresse email "${effectiveEmail}" est déjà enregistrée dans le système LéralScolaire.`
+                message: `L'adresse email "${effectiveEmail}" est déjà enregistrée dans le système LéralScolaire.`,
               });
             }
 
@@ -226,26 +282,36 @@ const { getUploadedFileUrl } = require('../config/cloudinary');
           const passwordHash = await bcrypt.hash(tempPassword, salt);
 
           // 1. Create User account (Role: ELEVE)
-          const user = await PreInscriptionModel.createUser(effectiveEmail || null, identifiant_national, passwordHash, tempPassword, 'ELEVE', client);
+          const user = await PreInscriptionModel.createUser(
+            effectiveEmail || null,
+            identifiant_national,
+            passwordHash,
+            tempPassword,
+            'ELEVE',
+            client
+          );
           const userId = user.id;
 
           // 2. Create student record
-          const eleveId = await PreInscriptionModel.createStudent({
-            identifiant_national,
-            user_id: userId,
-            etablissement_id: pre.etablissement_id,
-            nom: pre.nom,
-            prenom: pre.prenom,
-            sexe: pre.sexe || 'M',
-            date_naissance: pre.date_naissance,
-            lieu_naissance: pre.lieu_naissance,
-            nationalite: pre.nationalite,
-            telephone: pre.telephone,
-            coordonnees_parent: pre.coordonnees_parent,
-            statut: pre.statut,
-            photo_url: pre.photo_url,
-            email: effectiveEmail || null
-          }, client);
+          const eleveId = await PreInscriptionModel.createStudent(
+            {
+              identifiant_national,
+              user_id: userId,
+              etablissement_id: pre.etablissement_id,
+              nom: pre.nom,
+              prenom: pre.prenom,
+              sexe: pre.sexe || 'M',
+              date_naissance: pre.date_naissance,
+              lieu_naissance: pre.lieu_naissance,
+              nationalite: pre.nationalite,
+              telephone: pre.telephone,
+              coordonnees_parent: pre.coordonnees_parent,
+              statut: pre.statut,
+              photo_url: pre.photo_url,
+              email: effectiveEmail || null,
+            },
+            client
+          );
 
           // 3. Enroll in class
           await PreInscriptionModel.addInscriptionClass(eleveId, pre.classe_id, client);
@@ -257,16 +323,18 @@ const { getUploadedFileUrl } = require('../config/cloudinary');
 
           // Envoi automatique de l'email avec l'IUP et le mot de passe temporaire (non-bloquant)
           if (effectiveEmail) {
-            emailService.sendEleveWelcome({
-              to: effectiveEmail,
-              nom: pre.nom,
-              prenom: pre.prenom,
-              iupEleve: identifiant_national,
-              tempPassword: tempPassword,
-              nomEtablissement: pre.etablissement_nom,
-              classeNom: pre.classe_nom,
-              isParent: false
-            }).catch(e => console.error('Erreur email élève pré-inscription:', e.message));
+            emailService
+              .sendEleveWelcome({
+                to: effectiveEmail,
+                nom: pre.nom,
+                prenom: pre.prenom,
+                iupEleve: identifiant_national,
+                tempPassword: tempPassword,
+                nomEtablissement: pre.etablissement_nom,
+                classeNom: pre.classe_nom,
+                isParent: false,
+              })
+              .catch((e) => console.error('Erreur email élève pré-inscription:', e.message));
           }
 
           return res.json({
@@ -275,8 +343,8 @@ const { getUploadedFileUrl } = require('../config/cloudinary');
             credentials: {
               identifiant: identifiant_national,
               password: tempPassword,
-              email: effectiveEmail
-            }
+              email: effectiveEmail,
+            },
           });
         }
       } catch (err) {
@@ -288,7 +356,7 @@ const { getUploadedFileUrl } = require('../config/cloudinary');
             email: pre.email,
             eleveNom: `${pre.prenom || ''} ${pre.nom || ''}`.trim(),
             preInscriptionId: id,
-            message: `L'adresse email "${pre.email}" est déjà associée à un compte dans le système LéralScolaire.`
+            message: `L'adresse email "${pre.email}" est déjà associée à un compte dans le système LéralScolaire.`,
           });
         }
         throw err;
@@ -318,7 +386,7 @@ const { getUploadedFileUrl } = require('../config/cloudinary');
       console.error(err);
       return response.error(res, 'Erreur serveur.', 500);
     }
-  }
+  },
 };
 
 module.exports = preInscriptionController;

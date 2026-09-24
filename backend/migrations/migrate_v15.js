@@ -37,7 +37,9 @@ async function migrate() {
       ADD COLUMN IF NOT EXISTS professeur_id UUID REFERENCES users(id) ON DELETE SET NULL,
       ADD COLUMN IF NOT EXISTS motif TEXT;
     `);
-    console.log('✅ Colonnes type_presence, duree_retard, matiere_id, classe_id, professeur_id, motif ajoutées à la table absences.');
+    console.log(
+      '✅ Colonnes type_presence, duree_retard, matiere_id, classe_id, professeur_id, motif ajoutées à la table absences.'
+    );
 
     console.log('--- Migration v15 terminée avec succès ---');
   } catch (err) {

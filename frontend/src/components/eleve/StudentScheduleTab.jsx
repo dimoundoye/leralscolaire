@@ -34,13 +34,26 @@ const StudentScheduleTab = ({ schedule, profile }) => {
     <div className="tab-pane">
       {/* 1. FULL WIDTH TIMETABLE SECTION */}
       <div className="timetable-section card-box">
-        <div className="sim-inputs-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+        <div
+          className="sim-inputs-header"
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '12px',
+          }}
+        >
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
               <h3 style={{ margin: 0 }}>Emploi du Temps Hebdomadaire</h3>
-              <span className="sched-badge-tag"><Calendar size={13} /> Année {activeAnnee}</span>
+              <span className="sched-badge-tag">
+                <Calendar size={13} /> Année {activeAnnee}
+              </span>
             </div>
-            <p className="subtitle" style={{ margin: '4px 0 0 0' }}>Organisation des cours du Lundi au Samedi</p>
+            <p className="subtitle" style={{ margin: '4px 0 0 0' }}>
+              Organisation des cours du Lundi au Samedi
+            </p>
           </div>
           {activeClassNom && (
             <div className="sched-class-pill" style={{ margin: 0 }}>
@@ -62,8 +75,8 @@ const StudentScheduleTab = ({ schedule, profile }) => {
                 <span>Semaine complète</span>
                 <span className="badge-count">{schedule.timetable.length}</span>
               </button>
-              {DAYS.map(jour => {
-                const count = schedule.timetable.filter(t => t.jour_semaine === jour).length;
+              {DAYS.map((jour) => {
+                const count = schedule.timetable.filter((t) => t.jour_semaine === jour).length;
                 const isToday = jour === todayDay;
                 return (
                   <button
@@ -84,8 +97,8 @@ const StudentScheduleTab = ({ schedule, profile }) => {
             {selectedDay === 'ALL' ? (
               <div className="timetable-scroll-wrapper">
                 <div className="timetable-grid-full mt-2">
-                  {DAYS.map(jour => {
-                    const classesForDay = schedule.timetable.filter(t => t.jour_semaine === jour);
+                  {DAYS.map((jour) => {
+                    const classesForDay = schedule.timetable.filter((t) => t.jour_semaine === jour);
                     return (
                       <div key={jour} className="day-column-full">
                         <div className="day-header-pill">
@@ -94,7 +107,7 @@ const StudentScheduleTab = ({ schedule, profile }) => {
                         </div>
                         <div className="slots-list">
                           {classesForDay.length > 0 ? (
-                            classesForDay.map(slot => (
+                            classesForDay.map((slot) => (
                               <div key={slot.id} className="slot-card-full">
                                 <div className="slot-time-badge">
                                   <Clock size={12} /> {slot.heure_debut.slice(0, 5)} - {slot.heure_fin.slice(0, 5)}
@@ -102,11 +115,10 @@ const StudentScheduleTab = ({ schedule, profile }) => {
                                 <strong className="slot-subject-title">{slot.matiere_nom}</strong>
                                 <div className="slot-footer-details">
                                   <span className="slot-teacher-lbl" title={slot.professeur_email}>
-                                    <User size={11} /> {slot.professeur_email ? slot.professeur_email.split('@')[0] : 'Enseignant'}
+                                    <User size={11} />{' '}
+                                    {slot.professeur_email ? slot.professeur_email.split('@')[0] : 'Enseignant'}
                                   </span>
-                                  <span className="slot-room-lbl">
-                                    {formatRoom(slot.salle)}
-                                  </span>
+                                  <span className="slot-room-lbl">{formatRoom(slot.salle)}</span>
                                 </div>
                               </div>
                             ))
@@ -122,7 +134,7 @@ const StudentScheduleTab = ({ schedule, profile }) => {
             ) : (
               /* Vue détaillée par jour sélectionné (Ultra confortable sur smartphone) */
               (() => {
-                const classesForSelectedDay = schedule.timetable.filter(t => t.jour_semaine === selectedDay);
+                const classesForSelectedDay = schedule.timetable.filter((t) => t.jour_semaine === selectedDay);
                 return (
                   <div className="day-single-view">
                     <div className="day-single-header">
@@ -138,14 +150,17 @@ const StudentScheduleTab = ({ schedule, profile }) => {
 
                     {classesForSelectedDay.length > 0 ? (
                       <div className="day-single-slots-grid">
-                        {classesForSelectedDay.map(slot => (
+                        {classesForSelectedDay.map((slot) => (
                           <div key={slot.id} className="slot-card-large">
                             <div className="slot-large-top">
                               <div className="slot-time-badge" style={{ fontSize: '12px' }}>
                                 <Clock size={14} /> {slot.heure_debut.slice(0, 5)} - {slot.heure_fin.slice(0, 5)}
                               </div>
                               <span className="slot-room-lbl" style={{ fontSize: '11px', padding: '3px 8px' }}>
-                                <MapPin size={11} style={{ display: 'inline', marginRight: '3px', verticalAlign: '-1px' }} />
+                                <MapPin
+                                  size={11}
+                                  style={{ display: 'inline', marginRight: '3px', verticalAlign: '-1px' }}
+                                />
                                 {formatRoom(slot.salle)}
                               </span>
                             </div>
@@ -153,10 +168,24 @@ const StudentScheduleTab = ({ schedule, profile }) => {
                             <div className="slot-large-subject">{slot.matiere_nom}</div>
 
                             <div className="slot-large-footer">
-                              <span className="slot-teacher-lbl" style={{ fontSize: '12px' }} title={slot.professeur_email}>
-                                <User size={13} /> {slot.professeur_email ? slot.professeur_email.split('@')[0] : 'Enseignant'}
+                              <span
+                                className="slot-teacher-lbl"
+                                style={{ fontSize: '12px' }}
+                                title={slot.professeur_email}
+                              >
+                                <User size={13} />{' '}
+                                {slot.professeur_email ? slot.professeur_email.split('@')[0] : 'Enseignant'}
                               </span>
-                              <span style={{ fontSize: '11px', color: '#16a34a', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <span
+                                style={{
+                                  fontSize: '11px',
+                                  color: '#16a34a',
+                                  fontWeight: 700,
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                }}
+                              >
                                 <CheckCircle2 size={12} /> Confirmé
                               </span>
                             </div>
@@ -166,8 +195,12 @@ const StudentScheduleTab = ({ schedule, profile }) => {
                     ) : (
                       <div className="slot-empty-single">
                         <Calendar size={36} color="#94a3b8" />
-                        <div><strong>Aucun cours prévu le {selectedDay}</strong></div>
-                        <div style={{ fontSize: '12px', color: '#94a3b8' }}>Profitez-en pour vos révisions ou devoirs personnels.</div>
+                        <div>
+                          <strong>Aucun cours prévu le {selectedDay}</strong>
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+                          Profitez-en pour vos révisions ou devoirs personnels.
+                        </div>
                       </div>
                     )}
                   </div>
@@ -199,11 +232,16 @@ const StudentScheduleTab = ({ schedule, profile }) => {
 
         {hasExams ? (
           <div className="exams-grid-full mt-4">
-            {schedule.exams.map(ex => {
+            {schedule.exams.map((ex) => {
               const examDate = new Date(ex.date_examen);
               const dayNum = examDate.getDate();
               const monthStr = examDate.toLocaleDateString('fr-FR', { month: 'short' }).toUpperCase();
-              const fullDateStr = examDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+              const fullDateStr = examDate.toLocaleDateString('fr-FR', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              });
               const timeStr = examDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
               return (
@@ -224,8 +262,12 @@ const StudentScheduleTab = ({ schedule, profile }) => {
                       <Clock size={13} /> {fullDateStr} à {timeStr}
                     </p>
                     <div className="exam-card-bottom">
-                      <span className="exam-room-pill">Salle : <strong>{ex.salle || 'Non définie'}</strong></span>
-                      <span className="exam-status-pill"><CheckCircle2 size={12} /> Confirmation {ex.statut || 'VALIDÉ'}</span>
+                      <span className="exam-room-pill">
+                        Salle : <strong>{ex.salle || 'Non définie'}</strong>
+                      </span>
+                      <span className="exam-status-pill">
+                        <CheckCircle2 size={12} /> Confirmation {ex.statut || 'VALIDÉ'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -239,7 +281,6 @@ const StudentScheduleTab = ({ schedule, profile }) => {
           </div>
         )}
       </div>
-
     </div>
   );
 };

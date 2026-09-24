@@ -9,19 +9,32 @@ const TeacherPlanningTab = ({
   setPlanningFilterClasse,
   planningLoading,
   planning,
-  setShowProposeModal
+  setShowProposeModal,
 }) => {
   return (
     <div className="tab-pane">
       <div className="card-box">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '16px',
+            marginBottom: '20px',
+          }}
+        >
           <div>
             <h3 style={{ margin: 0 }}>Calendrier des Évaluations</h3>
             <p className="subtitle" style={{ fontSize: '12px', color: 'var(--text-slate-500)', margin: '4px 0 0' }}>
               Consultez les devoirs/examens planifiés et proposez de nouvelles dates.
             </p>
           </div>
-          <button className="btn btn-primary" onClick={() => setShowProposeModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowProposeModal(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}
+          >
             <Plus size={16} /> Proposer un Devoir
           </button>
         </div>
@@ -29,38 +42,84 @@ const TeacherPlanningTab = ({
         {/* Filters */}
         <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
           <div style={{ minWidth: '180px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-slate-500)', display: 'block', marginBottom: '4px' }}>Établissement</label>
-            <select 
-              value={planningFilterEtab} 
-              onChange={e => { setPlanningFilterEtab(e.target.value); setPlanningFilterClasse(''); }}
-              style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid var(--border-slate-200)', fontSize: '13px' }}
+            <label
+              style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                color: 'var(--text-slate-500)',
+                display: 'block',
+                marginBottom: '4px',
+              }}
+            >
+              Établissement
+            </label>
+            <select
+              value={planningFilterEtab}
+              onChange={(e) => {
+                setPlanningFilterEtab(e.target.value);
+                setPlanningFilterClasse('');
+              }}
+              style={{
+                width: '100%',
+                padding: '8px',
+                borderRadius: '8px',
+                border: '1px solid var(--border-slate-200)',
+                fontSize: '13px',
+              }}
             >
               <option value="">Tous les établissements</option>
-              {Array.from(new Set(classes.map(c => c.etablissement_id))).map(etabId => {
-                const etabName = classes.find(c => c.etablissement_id === etabId)?.etablissement_nom;
-                return <option key={etabId} value={etabId}>{etabName}</option>;
+              {Array.from(new Set(classes.map((c) => c.etablissement_id))).map((etabId) => {
+                const etabName = classes.find((c) => c.etablissement_id === etabId)?.etablissement_nom;
+                return (
+                  <option key={etabId} value={etabId}>
+                    {etabName}
+                  </option>
+                );
               })}
             </select>
           </div>
           <div style={{ minWidth: '180px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-slate-500)', display: 'block', marginBottom: '4px' }}>Classe</label>
-            <select 
-              value={planningFilterClasse} 
-              onChange={e => setPlanningFilterClasse(e.target.value)}
-              style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid var(--border-slate-200)', fontSize: '13px' }}
+            <label
+              style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                color: 'var(--text-slate-500)',
+                display: 'block',
+                marginBottom: '4px',
+              }}
+            >
+              Classe
+            </label>
+            <select
+              value={planningFilterClasse}
+              onChange={(e) => setPlanningFilterClasse(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px',
+                borderRadius: '8px',
+                border: '1px solid var(--border-slate-200)',
+                fontSize: '13px',
+              }}
             >
               <option value="">Toutes les classes</option>
               {classes
-                .filter(c => !planningFilterEtab || c.etablissement_id === planningFilterEtab)
-                .map(c => <option key={c.classe_id} value={c.classe_id}>{c.classe_nom}</option>)
-              }
+                .filter((c) => !planningFilterEtab || c.etablissement_id === planningFilterEtab)
+                .map((c) => (
+                  <option key={c.classe_id} value={c.classe_id}>
+                    {c.classe_nom}
+                  </option>
+                ))}
             </select>
           </div>
         </div>
 
         {planningLoading ? (
           <div style={{ textAlign: 'center', padding: '40px 0' }}>
-            <Loader2 className="animate-spin" size={28} style={{ color: 'var(--primary-color)', margin: '0 auto 10px' }} />
+            <Loader2
+              className="animate-spin"
+              size={28}
+              style={{ color: 'var(--primary-color)', margin: '0 auto 10px' }}
+            />
             <p style={{ fontSize: '13px', color: 'var(--text-slate-500)' }}>Chargement du calendrier...</p>
           </div>
         ) : (
@@ -79,13 +138,18 @@ const TeacherPlanningTab = ({
               </thead>
               <tbody>
                 {planning
-                  .filter(p => !planningFilterEtab || p.etablissement_id === planningFilterEtab)
-                  .filter(p => !planningFilterClasse || p.classe_id === planningFilterClasse)
-                  .map(evalItem => {
-                    const isImminent = new Date(evalItem.date_examen) > new Date() && 
-                                       (new Date(evalItem.date_examen) - new Date()) < (2 * 24 * 60 * 60 * 1000);
+                  .filter((p) => !planningFilterEtab || p.etablissement_id === planningFilterEtab)
+                  .filter((p) => !planningFilterClasse || p.classe_id === planningFilterClasse)
+                  .map((evalItem) => {
+                    const isImminent =
+                      new Date(evalItem.date_examen) > new Date() &&
+                      new Date(evalItem.date_examen) - new Date() < 2 * 24 * 60 * 60 * 1000;
                     const formattedDate = new Date(evalItem.date_examen).toLocaleString('fr-FR', {
-                      day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
                     });
 
                     return (
@@ -98,7 +162,17 @@ const TeacherPlanningTab = ({
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <span style={{ fontWeight: 600 }}>{formattedDate}</span>
                             {isImminent && (
-                              <span style={{ background: '#f59e0b', color: 'white', fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>
+                              <span
+                                style={{
+                                  background: '#f59e0b',
+                                  color: 'white',
+                                  fontSize: '9px',
+                                  fontWeight: 800,
+                                  padding: '2px 6px',
+                                  borderRadius: '4px',
+                                  textTransform: 'uppercase',
+                                }}
+                              >
                                 ⚠️ Imminent
                               </span>
                             )}
@@ -107,17 +181,47 @@ const TeacherPlanningTab = ({
                         <td>{evalItem.salle || '—'}</td>
                         <td>
                           {evalItem.statut === 'VALIDE' && (
-                            <span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 700, background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0' }}>
+                            <span
+                              style={{
+                                padding: '2px 8px',
+                                borderRadius: '12px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                background: '#dcfce7',
+                                color: '#15803d',
+                                border: '1px solid #bbf7d0',
+                              }}
+                            >
                               Validé
                             </span>
                           )}
                           {evalItem.statut === 'EN_ATTENTE' && (
-                            <span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 700, background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a' }}>
+                            <span
+                              style={{
+                                padding: '2px 8px',
+                                borderRadius: '12px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                background: '#fef3c7',
+                                color: '#b45309',
+                                border: '1px solid #fde68a',
+                              }}
+                            >
                               En attente
                             </span>
                           )}
                           {evalItem.statut === 'REFUSE' && (
-                            <span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 700, background: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca' }}>
+                            <span
+                              style={{
+                                padding: '2px 8px',
+                                borderRadius: '12px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                background: '#fee2e2',
+                                color: '#dc2626',
+                                border: '1px solid #fecaca',
+                              }}
+                            >
                               Refusé
                             </span>
                           )}

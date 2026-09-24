@@ -61,12 +61,12 @@ class SyncEngine {
       label,
       status: 'pending',
       retryCount: 0,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
 
     const id = await db.outbox.add(item);
     console.log(`[SyncEngine] Action mise en attente (Outbox #${id}): ${label} -> ${endpoint}`);
-    
+
     this.notifyListeners({ event: 'enqueued', item: { ...item, id } });
 
     // Si on est actuellement en ligne, on tente immédiatement d'envoyer
@@ -124,13 +124,13 @@ class SyncEngine {
           const finalHeaders = {
             'Content-Type': 'application/json',
             ...item.headers,
-            'X-Client-Mutation-Id': item.clientMutationId
+            'X-Client-Mutation-Id': item.clientMutationId,
           };
 
           const response = await fetch(item.endpoint, {
             method: item.method,
             headers: finalHeaders,
-            body: item.body ? JSON.stringify(item.body) : undefined
+            body: item.body ? JSON.stringify(item.body) : undefined,
           });
 
           if (response.ok || response.status === 409) {
@@ -145,14 +145,14 @@ class SyncEngine {
             console.warn(`[SyncEngine] Échec rejeté par le serveur #${item.id}:`, errData);
             await db.outbox.update(item.id, {
               status: 'failed',
-              errorMessage: errData.message || `Erreur HTTP ${response.status}`
+              errorMessage: errData.message || `Erreur HTTP ${response.status}`,
             });
             this.notifyListeners({ event: 'item_failed', itemId: item.id, error: errData });
           } else {
             // Erreur 500 serveur -> on remet en pending avec un compteur de réessai
             await db.outbox.update(item.id, {
               status: 'pending',
-              retryCount: (item.retryCount || 0) + 1
+              retryCount: (item.retryCount || 0) + 1,
             });
             console.warn(`[SyncEngine] Erreur serveur temporaire pour #${item.id}, arrêt de la boucle.`);
             break; // On s'arrête pour réessayer plus tard

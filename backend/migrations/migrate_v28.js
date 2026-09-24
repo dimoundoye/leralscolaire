@@ -3,7 +3,9 @@ const db = require('../src/config/db');
 
 async function migrate() {
   try {
-    console.log('🚀 Migration v28 : Création de la table livrets_scolaires_bac pour le partage des livrets du BAC par les établissements...');
+    console.log(
+      '🚀 Migration v28 : Création de la table livrets_scolaires_bac pour le partage des livrets du BAC par les établissements...'
+    );
 
     await db.query(`
       CREATE TABLE IF NOT EXISTS livrets_scolaires_bac (

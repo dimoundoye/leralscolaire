@@ -13,9 +13,14 @@ export const OfficePublicationTab = ({ stats, setShowPublierModal }) => {
 
       <div className="ob-publi-grid">
         <div className="ob-card ob-publi-card">
-          <div className="ob-publi-icon"><Send size={32} /></div>
+          <div className="ob-publi-icon">
+            <Send size={32} />
+          </div>
           <h3>Publier les résultats officiels</h3>
-          <p>Une fois publiés, les résultats seront immédiatement accessibles dans l'espace candidat élève avec le relevé officiel et le système de vérification d'authenticité par QR Code.</p>
+          <p>
+            Une fois publiés, les résultats seront immédiatement accessibles dans l'espace candidat élève avec le relevé
+            officiel et le système de vérification d'authenticité par QR Code.
+          </p>
           <button className="ob-btn ob-btn-publish" onClick={() => setShowPublierModal(true)}>
             <Send size={16} /> Lancer la publication
           </button>
@@ -25,11 +30,20 @@ export const OfficePublicationTab = ({ stats, setShowPublierModal }) => {
           <h3 className="ob-card-title">Aperçu des sessions publiées</h3>
           {stats?.par_annee?.length > 0 ? (
             <table className="ob-table ob-table-sm">
-              <thead><tr><th>Année</th><th>Candidats</th><th>Admis</th><th>Moy. Générale</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>Année</th>
+                  <th>Candidats</th>
+                  <th>Admis</th>
+                  <th>Moy. Générale</th>
+                </tr>
+              </thead>
               <tbody>
-                {stats.par_annee.map(a => (
+                {stats.par_annee.map((a) => (
                   <tr key={a.annee}>
-                    <td><strong>{a.annee}</strong></td>
+                    <td>
+                      <strong>{a.annee}</strong>
+                    </td>
                     <td>{a.total}</td>
                     <td style={{ color: '#15803d', fontWeight: 700 }}>{a.admis}</td>
                     <td>{a.moyenne_generale ? parseFloat(a.moyenne_generale).toFixed(2) + '/20' : '—'}</td>
@@ -38,7 +52,9 @@ export const OfficePublicationTab = ({ stats, setShowPublierModal }) => {
               </tbody>
             </table>
           ) : (
-            <div className="ob-empty" style={{ padding: '24px' }}><p>Aucune donnée publiée</p></div>
+            <div className="ob-empty" style={{ padding: '24px' }}>
+              <p>Aucune donnée publiée</p>
+            </div>
           )}
         </div>
       </div>

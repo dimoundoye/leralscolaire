@@ -172,20 +172,23 @@
   color: var(--slate-600);
 }
 
-.input-with-icon, .textarea-with-icon {
+.input-with-icon,
+.textarea-with-icon {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-.input-with-icon svg, .textarea-with-icon svg {
+.input-with-icon svg,
+.textarea-with-icon svg {
   position: absolute;
   left: 10px;
   color: var(--slate-400);
   pointer-events: none;
 }
 
-.input-with-icon input, .input-with-icon select {
+.input-with-icon input,
+.input-with-icon select {
   width: 100%;
   padding: 8px 10px 8px 30px;
   border: 1px solid var(--slate-200);
@@ -197,7 +200,8 @@
   transition: var(--transition);
 }
 
-.input-with-icon input:focus, .input-with-icon select:focus {
+.input-with-icon input:focus,
+.input-with-icon select:focus {
   outline: none;
   border-color: var(--secondary-color);
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.08);
@@ -329,14 +333,16 @@
 .btn-spinner {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255,255,255,0.4);
+  border: 2px solid rgba(255, 255, 255, 0.4);
   border-top-color: white;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .success-card {
@@ -440,8 +446,12 @@
 }
 
 @keyframes prModalFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes prModalSlideUp {
@@ -643,4 +653,3 @@
     padding: 24px 18px;
   }
 }
-

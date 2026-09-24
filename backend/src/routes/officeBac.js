@@ -13,7 +13,7 @@ const { publicFormLimiter } = require('../middleware/rateLimit');
 // Middleware : réservé au rôle OFFICE_BAC
 const checkOfficeBac = (req, res, next) => {
   if (req.user.role !== 'OFFICE_BAC') {
-    return res.status(403).json({ message: 'Accès réservé à l\'Office du Baccalauréat.' });
+    return res.status(403).json({ message: "Accès réservé à l'Office du Baccalauréat." });
   }
   next();
 };
@@ -49,10 +49,16 @@ initJuryAuthColumns();
 router.get('/stats', auth, checkOfficeBac, async (req, res) => {
   try {
     const total = await db.query('SELECT COUNT(*) FROM resultats_examens_nationaux');
-    const publies = await db.query("SELECT COUNT(*) FROM resultats_examens_nationaux WHERE publie = true");
-    const admis = await db.query("SELECT COUNT(*) FROM resultats_examens_nationaux WHERE statut_candidat = 'ADMIS' AND publie = true");
-    const ajournes = await db.query("SELECT COUNT(*) FROM resultats_examens_nationaux WHERE statut_candidat = 'AJOURNÉ' AND publie = true");
-    const rattrapage = await db.query("SELECT COUNT(*) FROM resultats_examens_nationaux WHERE statut_resultat LIKE '%2ND TOUR%' OR statut_resultat LIKE '%RATTRAPAGE%'");
+    const publies = await db.query('SELECT COUNT(*) FROM resultats_examens_nationaux WHERE publie = true');
+    const admis = await db.query(
+      "SELECT COUNT(*) FROM resultats_examens_nationaux WHERE statut_candidat = 'ADMIS' AND publie = true"
+    );
+    const ajournes = await db.query(
+      "SELECT COUNT(*) FROM resultats_examens_nationaux WHERE statut_candidat = 'AJOURNÉ' AND publie = true"
+    );
+    const rattrapage = await db.query(
+      "SELECT COUNT(*) FROM resultats_examens_nationaux WHERE statut_resultat LIKE '%2ND TOUR%' OR statut_resultat LIKE '%RATTRAPAGE%'"
+    );
 
     const totalEtablissements = await db.query('SELECT COUNT(*) FROM etablissements');
     const totalProfesseurs = await db.query("SELECT COUNT(*) FROM users WHERE role = 'PROFESSEUR'");
@@ -70,7 +76,7 @@ router.get('/stats', auth, checkOfficeBac, async (req, res) => {
     const totalFemmesCount = parseInt(statsSexe.femmes || 0);
     const totalHommesCount = parseInt(statsSexe.hommes || 0);
     const tauxFeminisation = totalElevesCount > 0 ? Math.round((totalFemmesCount / totalElevesCount) * 100) : 0;
-    
+
     const parSerie = await db.query(`
       SELECT serie, COUNT(*) as total,
         COUNT(*) FILTER (WHERE statut_candidat = 'ADMIS') as admis
@@ -124,9 +130,20 @@ router.get('/stats', auth, checkOfficeBac, async (req, res) => {
 // ─────────────────────────────────────────────
 router.get('/carte-regionale', auth, checkOfficeBac, async (req, res) => {
   const regionsSénégal = [
-    'Dakar', 'Thiès', 'Saint-Louis', 'Diourbel', 'Louga', 'Fatick',
-    'Kaolack', 'Kaffrine', 'Ziguinchor', 'Sédhiou', 'Kolda',
-    'Tambacounda', 'Kédougou', 'Matam'
+    'Dakar',
+    'Thiès',
+    'Saint-Louis',
+    'Diourbel',
+    'Louga',
+    'Fatick',
+    'Kaolack',
+    'Kaffrine',
+    'Ziguinchor',
+    'Sédhiou',
+    'Kolda',
+    'Tambacounda',
+    'Kédougou',
+    'Matam',
   ];
 
   try {
@@ -135,14 +152,18 @@ router.get('/carte-regionale', auth, checkOfficeBac, async (req, res) => {
       FROM etablissements GROUP BY COALESCE(region, 'Dakar')
     `);
     const etabsMap = {};
-    etabsRes.rows.forEach(r => { etabsMap[r.region] = parseInt(r.count); });
+    etabsRes.rows.forEach((r) => {
+      etabsMap[r.region] = parseInt(r.count);
+    });
 
     const jurysRes = await db.query(`
       SELECT COALESCE(region, 'Dakar') as region, COUNT(*) as count 
       FROM jurys_bac GROUP BY COALESCE(region, 'Dakar')
     `);
     const jurysMap = {};
-    jurysRes.rows.forEach(r => { jurysMap[r.region] = parseInt(r.count); });
+    jurysRes.rows.forEach((r) => {
+      jurysMap[r.region] = parseInt(r.count);
+    });
 
     const elevesRes = await db.query(`
       SELECT COALESCE(et.region, 'Dakar') as region, COUNT(e.id) as count,
@@ -154,8 +175,8 @@ router.get('/carte-regionale', auth, checkOfficeBac, async (req, res) => {
     `);
     const elevesMap = {};
     const elevesSexeMap = {};
-    elevesRes.rows.forEach(r => { 
-      elevesMap[r.region] = parseInt(r.count); 
+    elevesRes.rows.forEach((r) => {
+      elevesMap[r.region] = parseInt(r.count);
       elevesSexeMap[r.region] = { femmes: parseInt(r.femmes || 0), hommes: parseInt(r.hommes || 0) };
     });
 
@@ -178,12 +199,12 @@ router.get('/carte-regionale', auth, checkOfficeBac, async (req, res) => {
     `);
 
     const examensMap = {};
-    examensRes.rows.forEach(r => {
+    examensRes.rows.forEach((r) => {
       if (!examensMap[r.region]) examensMap[r.region] = {};
       examensMap[r.region][r.type_examen] = {
         total: parseInt(r.total),
         admis: parseInt(r.admis),
-        moyenne: parseFloat(r.moyenne || 0)
+        moyenne: parseFloat(r.moyenne || 0),
       };
     });
 
@@ -192,9 +213,12 @@ router.get('/carte-regionale', auth, checkOfficeBac, async (req, res) => {
       const bac = examensMap[reg]?.['BAC'] || { total: 0, admis: 0, moyenne: 0 };
       const bfem = examensMap[reg]?.['BFEM'] || { total: 0, admis: 0, moyenne: 0 };
       const etabsCount = etabsMap[reg] || (reg === 'Dakar' ? 5 : reg === 'Thiès' ? 3 : 1);
-      const elevesCount = elevesMap[reg] || (bac.total + bfem.total || 25);
+      const elevesCount = elevesMap[reg] || bac.total + bfem.total || 25;
       const jurysCount = jurysMap[reg] || (bac.total > 0 ? Math.ceil(bac.total / 100) : 1);
-      const profsEstimate = Math.max(Math.round(etabsCount * 12), reg === 'Dakar' ? Math.ceil(totalProfsGlobaux * 0.4) : Math.ceil(totalProfsGlobaux * 0.08));
+      const profsEstimate = Math.max(
+        Math.round(etabsCount * 12),
+        reg === 'Dakar' ? Math.ceil(totalProfsGlobaux * 0.4) : Math.ceil(totalProfsGlobaux * 0.08)
+      );
 
       const femmesCount = elevesSexeMap[reg]?.femmes || 0;
       const hommesCount = elevesSexeMap[reg]?.hommes || Math.max(0, elevesCount - femmesCount);
@@ -215,7 +239,7 @@ router.get('/carte-regionale', auth, checkOfficeBac, async (req, res) => {
         moyenne_bac: bac.moyenne > 0 ? bac.moyenne : 10.5,
         admis_bfem: bfem.admis,
         taux_bfem: bfem.total > 0 ? Math.round((bfem.admis / bfem.total) * 100) : 0,
-        moyenne_bfem: bfem.moyenne > 0 ? bfem.moyenne : 11.2
+        moyenne_bfem: bfem.moyenne > 0 ? bfem.moyenne : 11.2,
       };
     });
 
@@ -234,13 +258,23 @@ router.get('/palmares', auth, checkOfficeBac, async (req, res) => {
     let params = [];
     let idx = 1;
 
-    if (annee) { conditions.push(`r.annee = $${idx++}`); params.push(parseInt(annee)); }
-    if (type_examen) { conditions.push(`r.type_examen = $${idx++}`); params.push(type_examen); }
-    if (serie) { conditions.push(`r.serie = $${idx++}`); params.push(serie); }
+    if (annee) {
+      conditions.push(`r.annee = $${idx++}`);
+      params.push(parseInt(annee));
+    }
+    if (type_examen) {
+      conditions.push(`r.type_examen = $${idx++}`);
+      params.push(type_examen);
+    }
+    if (serie) {
+      conditions.push(`r.serie = $${idx++}`);
+      params.push(serie);
+    }
 
     const lim = parseInt(limit || 20);
 
-    const result = await db.query(`
+    const result = await db.query(
+      `
       SELECT r.id, r.numero_table, r.type_examen, r.annee, r.serie, r.jury,
              r.moyenne, r.mention, r.region,
              e.nom, e.prenom, e.identifiant_national,
@@ -251,7 +285,9 @@ router.get('/palmares', auth, checkOfficeBac, async (req, res) => {
       WHERE ${conditions.join(' AND ')}
       ORDER BY r.moyenne DESC
       LIMIT $${idx}
-    `, [...params, lim]);
+    `,
+      [...params, lim]
+    );
 
     res.json(result.rows);
   } catch (err) {
@@ -270,15 +306,38 @@ router.get('/candidats', auth, checkOfficeBac, async (req, res) => {
     let params = [];
     let idx = 1;
 
-    if (annee) { conditions.push(`r.annee::text = $${idx++}::text`); params.push(annee.toString()); }
-    if (type_examen) { conditions.push(`(r.type_examen = $${idx++} OR r.type_examen IS NULL)`); params.push(type_examen); }
-    if (serie) { conditions.push(`r.serie = $${idx++}`); params.push(serie); }
-    if (statut) { conditions.push(`r.statut_candidat = $${idx++}`); params.push(statut); }
-    if (statut_dossier) { conditions.push(`r.statut_dossier = $${idx++}`); params.push(statut_dossier); }
-    if (type_candidat) { conditions.push(`r.type_candidat = $${idx++}`); params.push(type_candidat); }
-    if (jury) { conditions.push(`r.jury = $${idx++}`); params.push(jury); }
+    if (annee) {
+      conditions.push(`r.annee::text = $${idx++}::text`);
+      params.push(annee.toString());
+    }
+    if (type_examen) {
+      conditions.push(`(r.type_examen = $${idx++} OR r.type_examen IS NULL)`);
+      params.push(type_examen);
+    }
+    if (serie) {
+      conditions.push(`r.serie = $${idx++}`);
+      params.push(serie);
+    }
+    if (statut) {
+      conditions.push(`r.statut_candidat = $${idx++}`);
+      params.push(statut);
+    }
+    if (statut_dossier) {
+      conditions.push(`r.statut_dossier = $${idx++}`);
+      params.push(statut_dossier);
+    }
+    if (type_candidat) {
+      conditions.push(`r.type_candidat = $${idx++}`);
+      params.push(type_candidat);
+    }
+    if (jury) {
+      conditions.push(`r.jury = $${idx++}`);
+      params.push(jury);
+    }
     if (search) {
-      conditions.push(`(LOWER(e.nom) LIKE $${idx} OR LOWER(e.prenom) LIKE $${idx} OR e.identifiant_national LIKE $${idx} OR r.numero_table LIKE $${idx})`);
+      conditions.push(
+        `(LOWER(e.nom) LIKE $${idx} OR LOWER(e.prenom) LIKE $${idx} OR e.identifiant_national LIKE $${idx} OR r.numero_table LIKE $${idx})`
+      );
       params.push(`%${search.toLowerCase()}%`);
       idx++;
     }
@@ -290,7 +349,8 @@ router.get('/candidats', auth, checkOfficeBac, async (req, res) => {
     else if (order_by === 'serie') orderByClause = 'ORDER BY r.serie ASC, e.nom ASC';
     else if (order_by === 'nom') orderByClause = 'ORDER BY e.nom ASC, e.prenom ASC';
 
-    const result = await db.query(`
+    const result = await db.query(
+      `
       SELECT r.id, r.eleve_id, r.type_examen, r.annee, r.numero_table, r.serie, r.jury,
              r.centre_examen, r.region, r.statut_candidat, r.statut_dossier, r.motif_suspension, r.publie,
              r.type_candidat, r.statut_redoublant, r.amenagement_handicap, r.absent_epreuve, r.tour_examen, r.verrouille, r.qr_code_hash,
@@ -302,7 +362,9 @@ router.get('/candidats', auth, checkOfficeBac, async (req, res) => {
       LEFT JOIN etablissements et ON e.etablissement_id = et.id
       ${where}
       ${orderByClause}
-    `, params);
+    `,
+      params
+    );
 
     res.json(result.rows);
   } catch (err) {
@@ -314,13 +376,16 @@ router.get('/candidats', auth, checkOfficeBac, async (req, res) => {
 // Historique des candidatures d'un élève (sessions antérieures)
 router.get('/candidats/historique/:eleve_id', auth, checkOfficeBac, async (req, res) => {
   try {
-    const result = await db.query(`
+    const result = await db.query(
+      `
       SELECT r.*, e.nom, e.prenom, e.identifiant_national
       FROM resultats_examens_nationaux r
       JOIN eleves e ON r.eleve_id = e.id
       WHERE r.eleve_id = $1
       ORDER BY r.annee DESC
-    `, [req.params.eleve_id]);
+    `,
+      [req.params.eleve_id]
+    );
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -331,9 +396,18 @@ router.get('/candidats/historique/:eleve_id', auth, checkOfficeBac, async (req, 
 // Enregistrer un nouveau candidat
 router.post('/candidats', auth, checkOfficeBac, async (req, res) => {
   const {
-    eleve_id, type_examen, annee, numero_table,
-    serie, jury, centre_examen, region, statut_candidat,
-    type_candidat, statut_redoublant, amenagement_handicap
+    eleve_id,
+    type_examen,
+    annee,
+    numero_table,
+    serie,
+    jury,
+    centre_examen,
+    region,
+    statut_candidat,
+    type_candidat,
+    statut_redoublant,
+    amenagement_handicap,
   } = req.body;
 
   try {
@@ -345,15 +419,28 @@ router.post('/candidats', auth, checkOfficeBac, async (req, res) => {
       return res.status(400).json({ message: 'Ce candidat est déjà inscrit pour cette session.' });
     }
 
-    const result = await db.query(`
+    const result = await db.query(
+      `
       INSERT INTO resultats_examens_nationaux
         (eleve_id, type_examen, annee, numero_table, serie, jury, centre_examen, region, statut_candidat, statut_dossier, type_candidat, statut_redoublant, amenagement_handicap, publie)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'VALIDÉ', $10, $11, $12, false)
       RETURNING *
-    `, [
-      eleve_id, type_examen, annee, numero_table, serie, jury, centre_examen, region,
-      statut_candidat || 'CONVOQUÉ', type_candidat || 'Scolaire', statut_redoublant || false, amenagement_handicap || null
-    ]);
+    `,
+      [
+        eleve_id,
+        type_examen,
+        annee,
+        numero_table,
+        serie,
+        jury,
+        centre_examen,
+        region,
+        statut_candidat || 'CONVOQUÉ',
+        type_candidat || 'Scolaire',
+        statut_redoublant || false,
+        amenagement_handicap || null,
+      ]
+    );
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -365,18 +452,41 @@ router.post('/candidats', auth, checkOfficeBac, async (req, res) => {
 // Mettre à jour les infos candidat
 router.put('/candidats/:id', auth, checkOfficeBac, async (req, res) => {
   const {
-    numero_table, serie, jury, centre_examen, region, statut_candidat,
-    statut_dossier, type_candidat, statut_redoublant, amenagement_handicap
+    numero_table,
+    serie,
+    jury,
+    centre_examen,
+    region,
+    statut_candidat,
+    statut_dossier,
+    type_candidat,
+    statut_redoublant,
+    amenagement_handicap,
   } = req.body;
   try {
-    const result = await db.query(`
+    const result = await db.query(
+      `
       UPDATE resultats_examens_nationaux
       SET numero_table = $1, serie = $2, jury = $3, centre_examen = $4,
           region = $5, statut_candidat = $6, statut_dossier = COALESCE($7, statut_dossier),
           type_candidat = COALESCE($8, type_candidat), statut_redoublant = COALESCE($9, statut_redoublant),
           amenagement_handicap = $10, updated_at = NOW()
       WHERE id = $11 RETURNING *
-    `, [numero_table, serie, jury, centre_examen, region, statut_candidat, statut_dossier, type_candidat, statut_redoublant, amenagement_handicap, req.params.id]);
+    `,
+      [
+        numero_table,
+        serie,
+        jury,
+        centre_examen,
+        region,
+        statut_candidat,
+        statut_dossier,
+        type_candidat,
+        statut_redoublant,
+        amenagement_handicap,
+        req.params.id,
+      ]
+    );
     if (result.rows.length === 0) return res.status(404).json({ message: 'Candidat non trouvé.' });
     res.json(result.rows[0]);
   } catch (err) {
@@ -389,11 +499,14 @@ router.put('/candidats/:id', auth, checkOfficeBac, async (req, res) => {
 router.put('/candidats/:id/dossier', auth, checkOfficeBac, async (req, res) => {
   const { statut_dossier } = req.body;
   try {
-    const result = await db.query(`
+    const result = await db.query(
+      `
       UPDATE resultats_examens_nationaux
       SET statut_dossier = $1, updated_at = NOW()
       WHERE id = $2 RETURNING *
-    `, [statut_dossier, req.params.id]);
+    `,
+      [statut_dossier, req.params.id]
+    );
     if (result.rows.length === 0) return res.status(404).json({ message: 'Candidat non trouvé.' });
     res.json(result.rows[0]);
   } catch (err) {
@@ -408,18 +521,24 @@ router.put('/candidats/:id/suspendre', auth, checkOfficeBac, async (req, res) =>
   try {
     let result;
     if (annuler) {
-      result = await db.query(`
+      result = await db.query(
+        `
         UPDATE resultats_examens_nationaux
         SET statut_candidat = 'CONVOQUÉ', motif_suspension = NULL, updated_at = NOW()
         WHERE id = $1 RETURNING *
-      `, [req.params.id]);
+      `,
+        [req.params.id]
+      );
     } else {
       if (!motif) return res.status(400).json({ message: 'Le motif de suspension est obligatoire.' });
-      result = await db.query(`
+      result = await db.query(
+        `
         UPDATE resultats_examens_nationaux
         SET statut_candidat = 'SUSPENDU', motif_suspension = $1, updated_at = NOW()
         WHERE id = $2 RETURNING *
-      `, [motif, req.params.id]);
+      `,
+        [motif, req.params.id]
+      );
     }
     if (result.rows.length === 0) return res.status(404).json({ message: 'Candidat non trouvé.' });
     res.json(result.rows[0]);
@@ -433,13 +552,16 @@ router.put('/candidats/:id/suspendre', auth, checkOfficeBac, async (req, res) =>
 router.post('/candidats/generer-numeros', auth, checkOfficeBac, async (req, res) => {
   const { annee, type_examen, prefixe } = req.body;
   try {
-    const candidats = await db.query(`
+    const candidats = await db.query(
+      `
       SELECT r.id, r.serie, r.jury
       FROM resultats_examens_nationaux r
       JOIN eleves e ON r.eleve_id = e.id
       WHERE r.annee = $1 AND r.type_examen = $2
       ORDER BY r.serie ASC, r.jury ASC, e.nom ASC, e.prenom ASC
-    `, [annee, type_examen]);
+    `,
+      [annee, type_examen]
+    );
 
     if (candidats.rows.length === 0) {
       return res.status(400).json({ message: 'Aucun candidat trouvé pour cette session.' });
@@ -451,11 +573,14 @@ router.post('/candidats/generer-numeros', auth, checkOfficeBac, async (req, res)
       const cand = candidats.rows[i];
       const seq = String(i + 1).padStart(4, '0');
       const numTable = `${pfx}-${annee}-${seq}`;
-      await db.query(`
+      await db.query(
+        `
         UPDATE resultats_examens_nationaux
         SET numero_table = $1, updated_at = NOW()
         WHERE id = $2
-      `, [numTable, cand.id]);
+      `,
+        [numTable, cand.id]
+      );
       count++;
     }
 
@@ -489,11 +614,14 @@ router.get('/coefficients', auth, checkOfficeBac, async (req, res) => {
 router.post('/coefficients', auth, checkOfficeBac, async (req, res) => {
   const { serie, matiere, coefficient } = req.body;
   try {
-    const result = await db.query(`
+    const result = await db.query(
+      `
       INSERT INTO bac_coefficients_series (serie, matiere, coefficient)
       VALUES ($1, $2, $3)
       RETURNING *
-    `, [serie, matiere, parseFloat(coefficient)]);
+    `,
+      [serie, matiere, parseFloat(coefficient)]
+    );
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error(err);
@@ -506,15 +634,25 @@ router.post('/coefficients', auth, checkOfficeBac, async (req, res) => {
 // ─────────────────────────────────────────────
 router.put('/candidats/:id/resultats', auth, checkOfficeBac, async (req, res) => {
   const {
-    moyenne, mention, statut_resultat, details_epreuves,
-    appreciation_jury, date_deliberation, absent_epreuve, tour_examen
+    moyenne,
+    mention,
+    statut_resultat,
+    details_epreuves,
+    appreciation_jury,
+    date_deliberation,
+    absent_epreuve,
+    tour_examen,
   } = req.body;
 
   try {
     // Vérifier si la fiche est déjà verrouillée
-    const checkVerrou = await db.query('SELECT verrouille FROM resultats_examens_nationaux WHERE id = $1', [req.params.id]);
+    const checkVerrou = await db.query('SELECT verrouille FROM resultats_examens_nationaux WHERE id = $1', [
+      req.params.id,
+    ]);
     if (checkVerrou.rows[0]?.verrouille) {
-      return res.status(403).json({ message: 'Cette fiche de résultats est verrouillée par le jury. Modification interdite.' });
+      return res
+        .status(403)
+        .json({ message: 'Cette fiche de résultats est verrouillée par le jury. Modification interdite.' });
     }
 
     let moy = moyenne !== undefined && moyenne !== null ? parseFloat(moyenne) : null;
@@ -527,7 +665,7 @@ router.put('/candidats/:id/resultats', auth, checkOfficeBac, async (req, res) =>
       calculatedMention = null;
     } else if (moy !== null) {
       // Délibération automatique 1er vs 2nd tour (rattrapage)
-      if (moy >= 10.00) {
+      if (moy >= 10.0) {
         calculatedStatut = 'Admis';
         if (!calculatedMention) {
           if (moy >= 16) calculatedMention = 'Très Bien';
@@ -535,7 +673,7 @@ router.put('/candidats/:id/resultats', auth, checkOfficeBac, async (req, res) =>
           else if (moy >= 12) calculatedMention = 'Assez Bien';
           else calculatedMention = 'Passable';
         }
-      } else if (moy >= 8.00) {
+      } else if (moy >= 8.0) {
         calculatedStatut = 'Admissible (2nd Tour / Rattrapage)';
         calculatedMention = null;
       } else {
@@ -547,7 +685,8 @@ router.put('/candidats/:id/resultats', auth, checkOfficeBac, async (req, res) =>
     // Générer un hash QR Code unique d'authenticité s'il n'existe pas encore
     const qrHash = crypto.randomBytes(16).toString('hex');
 
-    const result = await db.query(`
+    const result = await db.query(
+      `
       UPDATE resultats_examens_nationaux
       SET moyenne = $1, mention = $2, statut_resultat = $3,
           details_epreuves = $4, appreciation_jury = $5,
@@ -556,12 +695,20 @@ router.put('/candidats/:id/resultats', auth, checkOfficeBac, async (req, res) =>
           statut_candidat = CASE WHEN $3 = 'Admis' THEN 'ADMIS' WHEN $3 LIKE '%Ajourné%' THEN 'AJOURNÉ' ELSE statut_candidat END,
           updated_at = NOW()
       WHERE id = $10 RETURNING *
-    `, [
-      moy, calculatedMention, calculatedStatut,
-      JSON.stringify(details_epreuves || {}), appreciation_jury,
-      date_deliberation, absent_epreuve || null, tour_examen || 1,
-      qrHash, req.params.id
-    ]);
+    `,
+      [
+        moy,
+        calculatedMention,
+        calculatedStatut,
+        JSON.stringify(details_epreuves || {}),
+        appreciation_jury,
+        date_deliberation,
+        absent_epreuve || null,
+        tour_examen || 1,
+        qrHash,
+        req.params.id,
+      ]
+    );
 
     if (result.rows.length === 0) return res.status(404).json({ message: 'Candidat non trouvé.' });
     res.json(result.rows[0]);
@@ -575,11 +722,14 @@ router.put('/candidats/:id/resultats', auth, checkOfficeBac, async (req, res) =>
 router.put('/candidats/:id/verrouiller', auth, checkOfficeBac, async (req, res) => {
   const { verrouille } = req.body;
   try {
-    const result = await db.query(`
+    const result = await db.query(
+      `
       UPDATE resultats_examens_nationaux
       SET verrouille = $1, updated_at = NOW()
       WHERE id = $2 RETURNING *
-    `, [verrouille, req.params.id]);
+    `,
+      [verrouille, req.params.id]
+    );
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
@@ -592,22 +742,25 @@ router.put('/candidats/:id/verrouiller', auth, checkOfficeBac, async (req, res) 
 // ─────────────────────────────────────────────
 router.get('/releve/:id', auth, checkOfficeBac, async (req, res) => {
   try {
-    const result = await db.query(`
+    const result = await db.query(
+      `
       SELECT r.*, e.nom, e.prenom, e.identifiant_national, e.date_naissance,
              et.nom as etablissement_nom, et.region as etab_region
       FROM resultats_examens_nationaux r
       JOIN eleves e ON r.eleve_id = e.id
       LEFT JOIN etablissements et ON e.etablissement_id = et.id
       WHERE r.id = $1
-    `, [req.params.id]);
+    `,
+      [req.params.id]
+    );
 
     if (result.rows.length === 0) return res.status(404).json({ message: 'Relevé non trouvé.' });
     const row = result.rows[0];
-    
+
     // Format des données du relevé certifié
     res.json({
       ...row,
-      verification_url: `http://localhost:5002/api/office-bac/verifier-qr/${row.qr_code_hash}`
+      verification_url: `http://localhost:5002/api/office-bac/verifier-qr/${row.qr_code_hash}`,
     });
   } catch (err) {
     console.error(err);
@@ -618,14 +771,17 @@ router.get('/releve/:id', auth, checkOfficeBac, async (req, res) => {
 // Route publique de vérification d'authenticité QR Code
 router.get('/verifier-qr/:hash', async (req, res) => {
   try {
-    const result = await db.query(`
+    const result = await db.query(
+      `
       SELECT r.numero_table, r.type_examen, r.annee, r.serie, r.moyenne, r.mention, r.statut_resultat,
              e.nom, e.prenom, e.identifiant_national, et.nom as etablissement_nom
       FROM resultats_examens_nationaux r
       JOIN eleves e ON r.eleve_id = e.id
       LEFT JOIN etablissements et ON e.etablissement_id = et.id
       WHERE r.qr_code_hash = $1 AND r.publie = true
-    `, [req.params.hash]);
+    `,
+      [req.params.hash]
+    );
 
     if (result.rows.length === 0) {
       return res.status(404).json({ authentique: false, message: 'Relevé introuvable ou non authentifié.' });
@@ -647,31 +803,37 @@ router.post('/publier', auth, checkOfficeBac, async (req, res) => {
     let conditions = ['annee = $1', 'type_examen = $2'];
     let params = [annee, type_examen];
     let idx = 3;
-    if (serie) { conditions.push(`serie = $${idx++}`); params.push(serie); }
+    if (serie) {
+      conditions.push(`serie = $${idx++}`);
+      params.push(serie);
+    }
 
-    const result = await db.query(`
+    const result = await db.query(
+      `
       UPDATE resultats_examens_nationaux
       SET publie = true, updated_at = NOW()
       WHERE ${conditions.join(' AND ')} AND moyenne IS NOT NULL
       RETURNING eleve_id
-    `, params);
+    `,
+      params
+    );
 
     const count = result.rows.length;
 
     for (const row of result.rows) {
-      const eleveUser = await db.query(
-        'SELECT user_id FROM eleves WHERE id = $1',
-        [row.eleve_id]
-      );
+      const eleveUser = await db.query('SELECT user_id FROM eleves WHERE id = $1', [row.eleve_id]);
       if (eleveUser.rows[0]) {
-        await db.query(`
+        await db.query(
+          `
           INSERT INTO notifications (user_id, titre, description, type)
           VALUES ($1, $2, $3, 'info')
-        `, [
-          eleveUser.rows[0].user_id,
-          '📢 Résultats BAC/BFEM publiés !',
-          `Les résultats officiels du ${type_examen} session ${annee}${serie ? ' — Série ' + serie : ''} sont maintenant disponibles avec votre numéro de table.`
-        ]);
+        `,
+          [
+            eleveUser.rows[0].user_id,
+            '📢 Résultats BAC/BFEM publiés !',
+            `Les résultats officiels du ${type_examen} session ${annee}${serie ? ' — Série ' + serie : ''} sont maintenant disponibles avec votre numéro de table.`,
+          ]
+        );
       }
     }
 
@@ -687,14 +849,17 @@ router.get('/eleves-search', auth, checkOfficeBac, async (req, res) => {
   const { q } = req.query;
   if (!q || q.length < 2) return res.json([]);
   try {
-    const result = await db.query(`
+    const result = await db.query(
+      `
       SELECT e.id, e.nom, e.prenom, e.identifiant_national,
              et.nom as etablissement_nom
       FROM eleves e
       LEFT JOIN etablissements et ON e.etablissement_id = et.id
       WHERE LOWER(e.nom) LIKE $1 OR LOWER(e.prenom) LIKE $1 OR e.identifiant_national LIKE $1
       LIMIT 20
-    `, [`%${q.toLowerCase()}%`]);
+    `,
+      [`%${q.toLowerCase()}%`]
+    );
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -724,33 +889,50 @@ router.get('/etablissements', auth, checkOfficeBac, async (req, res) => {
 });
 
 router.post('/etablissements', auth, checkOfficeBac, async (req, res) => {
-  const { nom, region, ville, code_etablissement, admin_email, telephone, autorisation_numero, ia_nom, ief_nom } = req.body;
+  const { nom, region, ville, code_etablissement, admin_email, telephone, autorisation_numero, ia_nom, ief_nom } =
+    req.body;
   if (!nom || !admin_email) {
-    return res.status(400).json({ message: 'Le nom et l\'email admin sont obligatoires.' });
+    return res.status(400).json({ message: "Le nom et l'email admin sont obligatoires." });
   }
 
   try {
     const checkEmail = await db.query('SELECT id FROM users WHERE email = $1', [admin_email]);
     if (checkEmail.rows.length > 0) {
-      return res.status(400).json({ message: 'Cet email d\'administrateur est déjà utilisé.' });
+      return res.status(400).json({ message: "Cet email d'administrateur est déjà utilisé." });
     }
 
-    const generatedCode = code_etablissement || await generateIUP('ETAB', region || 'Dakar');
+    const generatedCode = code_etablissement || (await generateIUP('ETAB', region || 'Dakar'));
 
     const tempPassword = `Etab@${Math.floor(100000 + Math.random() * 900000)}`;
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(tempPassword, salt);
 
-    const userRes = await db.query(`
+    const userRes = await db.query(
+      `
       INSERT INTO users (email, password_hash, role)
       VALUES ($1, $2, 'ADMIN_ETABLISSEMENT') RETURNING id
-    `, [admin_email, passwordHash]);
+    `,
+      [admin_email, passwordHash]
+    );
     const adminId = userRes.rows[0].id;
 
-    const etabRes = await db.query(`
+    const etabRes = await db.query(
+      `
       INSERT INTO etablissements (code_etablissement, nom, region, ville, admin_id, telephone, autorisation_numero, ia_nom, ief_nom)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *
-    `, [generatedCode, nom, region || 'Dakar', ville || 'Dakar', adminId, telephone || '', autorisation_numero || '', ia_nom || null, ief_nom || null]);
+    `,
+      [
+        generatedCode,
+        nom,
+        region || 'Dakar',
+        ville || 'Dakar',
+        adminId,
+        telephone || '',
+        autorisation_numero || '',
+        ia_nom || null,
+        ief_nom || null,
+      ]
+    );
 
     res.status(201).json({
       message: 'Établissement enregistré avec succès ! Identifiants uniques générés.',
@@ -758,8 +940,8 @@ router.post('/etablissements', auth, checkOfficeBac, async (req, res) => {
       credentials: {
         login: admin_email,
         code_etablissement: generatedCode,
-        temp_password: tempPassword
-      }
+        temp_password: tempPassword,
+      },
     });
   } catch (err) {
     console.error(err);
@@ -801,7 +983,20 @@ router.get('/professeurs', auth, checkOfficeBac, async (req, res) => {
 });
 
 router.post('/professeurs', auth, checkOfficeBac, async (req, res) => {
-  const { nom, prenom, email, telephone, matiere_principale, etablissement_id, identifiant_national, sexe, region, ville, cni_numero, matricule_solde } = req.body;
+  const {
+    nom,
+    prenom,
+    email,
+    telephone,
+    matiere_principale,
+    etablissement_id,
+    identifiant_national,
+    sexe,
+    region,
+    ville,
+    cni_numero,
+    matricule_solde,
+  } = req.body;
   if (!email || !nom || !prenom) {
     return res.status(400).json({ message: 'Email, nom et prénom sont obligatoires.' });
   }
@@ -812,30 +1007,50 @@ router.post('/professeurs', auth, checkOfficeBac, async (req, res) => {
       return res.status(400).json({ message: 'Cet email de professeur est déjà utilisé.' });
     }
 
-    const generatedIne = identifiant_national || await generateIUP('ENS', region || 'Dakar');
+    const generatedIne = identifiant_national || (await generateIUP('ENS', region || 'Dakar'));
     const tempPassword = `Prof@${Math.floor(100000 + Math.random() * 900000)}`;
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(tempPassword, salt);
 
-    const userRes = await db.query(`
+    const userRes = await db.query(
+      `
       INSERT INTO users (email, password_hash, role, identifiant_national)
       VALUES ($1, $2, 'PROFESSEUR', $3) RETURNING id
-    `, [email, passwordHash, generatedIne]);
+    `,
+      [email, passwordHash, generatedIne]
+    );
     const profId = userRes.rows[0].id;
 
     const sexeValue = sexe === 'F' ? 'F' : 'M';
-    await db.query(`
+    await db.query(
+      `
       INSERT INTO professeurs (id, nom, prenom, telephone, matiere_principale, sexe, region, ville, cni_numero, matricule_solde)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       ON CONFLICT (id) DO UPDATE SET nom = $2, prenom = $3, telephone = $4, matiere_principale = $5, sexe = $6, region = $7, ville = $8, cni_numero = $9, matricule_solde = $10
-    `, [profId, nom, prenom, telephone || '', matiere_principale || 'Général', sexeValue, region || 'Dakar', ville || 'Dakar', cni_numero || '', matricule_solde || '']);
+    `,
+      [
+        profId,
+        nom,
+        prenom,
+        telephone || '',
+        matiere_principale || 'Général',
+        sexeValue,
+        region || 'Dakar',
+        ville || 'Dakar',
+        cni_numero || '',
+        matricule_solde || '',
+      ]
+    );
 
     if (etablissement_id) {
-      await db.query(`
+      await db.query(
+        `
         INSERT INTO professeurs_etablissements (professeur_id, etablissement_id, statut)
         VALUES ($1, $2, 'CONFIRMÉ')
         ON CONFLICT (professeur_id, etablissement_id) DO UPDATE SET statut = 'CONFIRMÉ'
-      `, [profId, etablissement_id]);
+      `,
+        [profId, etablissement_id]
+      );
     }
 
     res.status(201).json({
@@ -844,8 +1059,8 @@ router.post('/professeurs', auth, checkOfficeBac, async (req, res) => {
       credentials: {
         login: email,
         identifiant_national: generatedIne,
-        temp_password: tempPassword
-      }
+        temp_password: tempPassword,
+      },
     });
   } catch (err) {
     console.error(err);
@@ -860,12 +1075,25 @@ router.post('/professeurs', auth, checkOfficeBac, async (req, res) => {
 // Route publique (sans auth) : formulaire d'inscription pour Établissement ou Professeur
 router.post('/demande-public', publicFormLimiter, async (req, res) => {
   const {
-    type_demande, nom, prenom, email, telephone, region, ville,
-    specialite_ou_code, documents_fournis, cni_numero, autorisation_numero, matricule_solde, sexe, ia_nom, ief_nom
+    type_demande,
+    nom,
+    prenom,
+    email,
+    telephone,
+    region,
+    ville,
+    specialite_ou_code,
+    documents_fournis,
+    cni_numero,
+    autorisation_numero,
+    matricule_solde,
+    sexe,
+    ia_nom,
+    ief_nom,
   } = req.body;
 
   if (!type_demande || !nom || !email) {
-    return res.status(400).json({ message: 'Le type de demande, le nom et l\'email sont obligatoires.' });
+    return res.status(400).json({ message: "Le type de demande, le nom et l'email sont obligatoires." });
   }
 
   try {
@@ -874,7 +1102,9 @@ router.post('/demande-public', publicFormLimiter, async (req, res) => {
       [email]
     );
     if (existing.rows.length > 0) {
-      return res.status(400).json({ message: 'Une demande d\'inscription est déjà en cours de validation pour cet email.' });
+      return res
+        .status(400)
+        .json({ message: "Une demande d'inscription est déjà en cours de validation pour cet email." });
     }
 
     // Validation et sauvegarde des pièces justificatives (types, taille et noms contrôlés)
@@ -888,31 +1118,48 @@ router.post('/demande-public', publicFormLimiter, async (req, res) => {
       throw docErr;
     }
 
-    const result = await db.query(`
+    const result = await db.query(
+      `
       INSERT INTO demandes_inscription_office
         (type_demande, nom, prenom, email, telephone, region, ville, specialite_ou_code, documents_fournis, cni_numero, autorisation_numero, matricule_solde, sexe, ia_nom, ief_nom, statut)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, 'EN_ATTENTE')
       RETURNING *
-    `, [
-      type_demande, nom, prenom || null, email, telephone || null,
-      region || 'Dakar', ville || 'Dakar', specialite_ou_code || null,
-      JSON.stringify(processedDocs), cni_numero || null, autorisation_numero || null, matricule_solde || null,
-      sexe || 'M', ia_nom || null, ief_nom || null
-    ]);
+    `,
+      [
+        type_demande,
+        nom,
+        prenom || null,
+        email,
+        telephone || null,
+        region || 'Dakar',
+        ville || 'Dakar',
+        specialite_ou_code || null,
+        JSON.stringify(processedDocs),
+        cni_numero || null,
+        autorisation_numero || null,
+        matricule_solde || null,
+        sexe || 'M',
+        ia_nom || null,
+        ief_nom || null,
+      ]
+    );
 
     const createdDemande = result.rows[0];
 
     // Envoi automatique de l'accusé de réception par email (non-bloquant)
-    emailService.sendDemandeReception({
-      to: email,
-      nom: prenom ? `${prenom} ${nom}` : nom,
-      typeDemande: type_demande,
-      referenceId: createdDemande.id
-    }).catch(e => console.error('Erreur email accusé réception:', e.message));
+    emailService
+      .sendDemandeReception({
+        to: email,
+        nom: prenom ? `${prenom} ${nom}` : nom,
+        typeDemande: type_demande,
+        referenceId: createdDemande.id,
+      })
+      .catch((e) => console.error('Erreur email accusé réception:', e.message));
 
     res.status(201).json({
-      message: 'Votre demande de pré-inscription a été transmise avec succès ! Un accusé de réception vous a été envoyé par email. Nos équipes instruiront votre dossier dans les plus brefs délais.',
-      demande: createdDemande
+      message:
+        'Votre demande de pré-inscription a été transmise avec succès ! Un accusé de réception vous a été envoyé par email. Nos équipes instruiront votre dossier dans les plus brefs délais.',
+      demande: createdDemande,
     });
   } catch (err) {
     console.error(err);
@@ -947,36 +1194,51 @@ router.put('/demandes/:id/valider', auth, checkOfficeBac, async (req, res) => {
     const d = demRes.rows[0];
     if (d.statut === 'VALIDÉ') return res.status(400).json({ message: 'Cette demande a déjà été validée.' });
 
-
     if (d.type_demande === 'ETABLISSEMENT') {
-      const generatedCode = (d.specialite_ou_code && d.specialite_ou_code.startsWith('ETAB-'))
-        ? d.specialite_ou_code
-        : await generateIUP('ETAB', d.region || 'Dakar');
+      const generatedCode =
+        d.specialite_ou_code && d.specialite_ou_code.startsWith('ETAB-')
+          ? d.specialite_ou_code
+          : await generateIUP('ETAB', d.region || 'Dakar');
       const tempPassword = `Etab@${Math.floor(100000 + Math.random() * 900000)}`;
 
       const salt = await bcrypt.genSalt(10);
       const passwordHash = await bcrypt.hash(tempPassword, salt);
 
-      const userRes = await db.query(`
+      const userRes = await db.query(
+        `
         INSERT INTO users (email, password_hash, role, identifiant_national, password_provisoire)
         VALUES ($1, $2, 'ADMIN_ETABLISSEMENT', $3, $4) RETURNING id
-      `, [d.email, passwordHash, generatedCode, tempPassword]);
+      `,
+        [d.email, passwordHash, generatedCode, tempPassword]
+      );
 
-      await db.query(`
+      await db.query(
+        `
         INSERT INTO etablissements (code_etablissement, nom, region, ville, admin_id, telephone, autorisation_numero, email_professionnel)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      `, [generatedCode, d.nom, d.region, d.ville, userRes.rows[0].id, d.telephone || '', d.autorisation_numero || '', d.email]);
-
+      `,
+        [
+          generatedCode,
+          d.nom,
+          d.region,
+          d.ville,
+          userRes.rows[0].id,
+          d.telephone || '',
+          d.autorisation_numero || '',
+          d.email,
+        ]
+      );
 
       // Envoi de l'email officiel d'approbation
-      emailService.sendDemandeValidee({
-        to: d.email,
-        nom: d.nom,
-        typeDemande: 'ETABLISSEMENT',
-        iup: generatedCode,
-        tempPassword: tempPassword
-      }).catch(e => console.error('Erreur email validation établissement:', e.message));
-
+      emailService
+        .sendDemandeValidee({
+          to: d.email,
+          nom: d.nom,
+          typeDemande: 'ETABLISSEMENT',
+          iup: generatedCode,
+          tempPassword: tempPassword,
+        })
+        .catch((e) => console.error('Erreur email validation établissement:', e.message));
     } else {
       // Pour les enseignants, générer systématiquement un véritable IUP (ENS-AAAA-TRI-XXXX)
       const generatedIne = await generateIUP('ENS', d.region || 'Dakar');
@@ -985,36 +1247,46 @@ router.put('/demandes/:id/valider', auth, checkOfficeBac, async (req, res) => {
       const salt = await bcrypt.genSalt(10);
       const passwordHash = await bcrypt.hash(tempPassword, salt);
 
-      const userRes = await db.query(`
+      const userRes = await db.query(
+        `
         INSERT INTO users (email, password_hash, role, identifiant_national, password_provisoire)
         VALUES ($1, $2, 'PROFESSEUR', $3, $4) RETURNING id
-      `, [d.email, passwordHash, generatedIne, tempPassword]);
+      `,
+        [d.email, passwordHash, generatedIne, tempPassword]
+      );
 
-      await db.query(`
+      await db.query(
+        `
         INSERT INTO professeurs (id, nom, prenom, telephone, matiere_principale, sexe)
         VALUES ($1, $2, $3, $4, $5, $6)
         ON CONFLICT (id) DO UPDATE SET nom = $2, prenom = $3, telephone = $4, matiere_principale = $5, sexe = $6
-      `, [userRes.rows[0].id, d.nom, d.prenom || '', d.telephone || '', d.specialite_ou_code || 'Général', d.sexe || 'M']);
-
+      `,
+        [userRes.rows[0].id, d.nom, d.prenom || '', d.telephone || '', d.specialite_ou_code || 'Général', d.sexe || 'M']
+      );
 
       // Envoi de l'email officiel d'approbation
-      emailService.sendDemandeValidee({
-        to: d.email,
-        nom: [d.prenom, d.nom].filter(Boolean).join(' '),
-        typeDemande: 'PROFESSEUR',
-        iup: generatedIne,
-        tempPassword: tempPassword
-      }).catch(e => console.error('Erreur email validation professeur:', e.message));
+      emailService
+        .sendDemandeValidee({
+          to: d.email,
+          nom: [d.prenom, d.nom].filter(Boolean).join(' '),
+          typeDemande: 'PROFESSEUR',
+          iup: generatedIne,
+          tempPassword: tempPassword,
+        })
+        .catch((e) => console.error('Erreur email validation professeur:', e.message));
     }
 
-    await db.query(`
+    await db.query(
+      `
       UPDATE demandes_inscription_office
       SET statut = 'VALIDÉ', updated_at = NOW()
       WHERE id = $1
-    `, [req.params.id]);
+    `,
+      [req.params.id]
+    );
 
     res.json({
-      message: `Demande de ${d.nom} validée avec succès ! Les identifiants et le mot de passe ont été transmis de manière confidentielle à ${d.email}.`
+      message: `Demande de ${d.nom} validée avec succès ! Les identifiants et le mot de passe ont été transmis de manière confidentielle à ${d.email}.`,
     });
   } catch (err) {
     console.error(err);
@@ -1030,23 +1302,30 @@ router.put('/demandes/:id/rejeter', auth, checkOfficeBac, async (req, res) => {
     if (demRes.rows.length === 0) return res.status(404).json({ message: 'Demande non trouvée.' });
 
     const d = demRes.rows[0];
-    if (d.statut === 'VALIDÉ') return res.status(400).json({ message: 'Impossible de rejeter une demande déjà validée.' });
+    if (d.statut === 'VALIDÉ')
+      return res.status(400).json({ message: 'Impossible de rejeter une demande déjà validée.' });
 
-    const cleanMotif = (motif_rejet || '').trim() || 'Pièces justificatives incomplètes ou non conformes aux critères ministériels.';
+    const cleanMotif =
+      (motif_rejet || '').trim() || 'Pièces justificatives incomplètes ou non conformes aux critères ministériels.';
 
-    await db.query(`
+    await db.query(
+      `
       UPDATE demandes_inscription_office
       SET statut = 'REJETÉ', motif_rejet = $1, updated_at = NOW()
       WHERE id = $2
-    `, [cleanMotif, req.params.id]);
+    `,
+      [cleanMotif, req.params.id]
+    );
 
     // Envoi de l'email officiel de rejet / correction
-    emailService.sendDemandeRejetee({
-      to: d.email,
-      nom: [d.prenom, d.nom].filter(Boolean).join(' '),
-      typeDemande: d.type_demande,
-      motifRejet: cleanMotif
-    }).catch(e => console.error('Erreur email rejet:', e.message));
+    emailService
+      .sendDemandeRejetee({
+        to: d.email,
+        nom: [d.prenom, d.nom].filter(Boolean).join(' '),
+        typeDemande: d.type_demande,
+        motifRejet: cleanMotif,
+      })
+      .catch((e) => console.error('Erreur email rejet:', e.message));
 
     res.json({ message: `Demande rejetée avec succès. L'email explicatif a été expédié à ${d.email}.` });
   } catch (err) {
@@ -1100,23 +1379,31 @@ router.get('/livrets', auth, checkOfficeBac, async (req, res) => {
 });
 
 router.post('/livrets', auth, checkOfficeBac, async (req, res) => {
-  const { eleve_id, annee, serie, moyenne_seconde, moyenne_premiere, moyenne_terminale, appreciation_conseil } = req.body;
+  const { eleve_id, annee, serie, moyenne_seconde, moyenne_premiere, moyenne_terminale, appreciation_conseil } =
+    req.body;
   if (!eleve_id || !serie) {
-    return res.status(400).json({ message: 'L\'élève et la série sont obligatoires.' });
+    return res.status(400).json({ message: "L'élève et la série sont obligatoires." });
   }
 
   try {
-    const result = await db.query(`
+    const result = await db.query(
+      `
       INSERT INTO livrets_scolaires_bac
         (eleve_id, etablissement_id, annee, serie, moyenne_seconde, moyenne_premiere, moyenne_terminale, appreciation_conseil, statut_validation)
       -- L'établissement est celui de l'élève, jamais une valeur envoyée par le client
       VALUES ($1, (SELECT etablissement_id FROM eleves WHERE id = $1), $2, $3, $4, $5, $6, $7, 'CONFORME')
       RETURNING *
-    `, [
-      eleve_id, annee || new Date().getFullYear(),
-      serie, moyenne_seconde || null, moyenne_premiere || null, moyenne_terminale || null,
-      appreciation_conseil || null
-    ]);
+    `,
+      [
+        eleve_id,
+        annee || new Date().getFullYear(),
+        serie,
+        moyenne_seconde || null,
+        moyenne_premiere || null,
+        moyenne_terminale || null,
+        appreciation_conseil || null,
+      ]
+    );
 
     res.status(201).json({ message: 'Livret scolaire transmis avec succès au Jury du BAC !', livret: result.rows[0] });
   } catch (err) {
@@ -1131,11 +1418,14 @@ router.put('/livrets/:id/valider', auth, checkOfficeBac, async (req, res) => {
     return res.status(400).json({ message: 'Statut de livret invalide.' });
   }
   try {
-    const result = await db.query(`
+    const result = await db.query(
+      `
       UPDATE livrets_scolaires_bac
       SET statut_validation = $1, updated_at = NOW()
       WHERE id = $2 RETURNING *
-    `, [statut_validation || 'CONFORME', req.params.id]);
+    `,
+      [statut_validation || 'CONFORME', req.params.id]
+    );
 
     res.json({ message: `Statut du livret mis à jour : ${statut_validation}`, livret: result.rows[0] });
   } catch (err) {
@@ -1196,66 +1486,117 @@ router.get('/centres-examen', auth, checkOfficeBac, async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur récupération des centres d\'examen.' });
+    res.status(500).json({ message: "Erreur récupération des centres d'examen." });
   }
 });
 
 router.post('/centres-examen', auth, checkOfficeBac, async (req, res) => {
-  const { nom_centre, type_centre, centre_principal_id, region, zone_commune, effectif_previsionnel, series_disponibles } = req.body;
+  const {
+    nom_centre,
+    type_centre,
+    centre_principal_id,
+    region,
+    zone_commune,
+    effectif_previsionnel,
+    series_disponibles,
+  } = req.body;
   if (!nom_centre || !region || !zone_commune) {
     return res.status(400).json({ message: 'Le nom du centre, la région et la zone sont obligatoires.' });
   }
 
   try {
     const seriesArr = Array.isArray(series_disponibles) ? series_disponibles : ['S1', 'S2', 'L1', 'L2'];
-    const result = await db.query(`
+    const result = await db.query(
+      `
       INSERT INTO centres_examen_bac (nom_centre, type_centre, centre_principal_id, region, zone_commune, effectif_previsionnel, series_disponibles)
       VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
-    `, [nom_centre, type_centre || 'PRINCIPAL', centre_principal_id || null, region, zone_commune, parseInt(effectif_previsionnel) || 0, seriesArr]);
+    `,
+      [
+        nom_centre,
+        type_centre || 'PRINCIPAL',
+        centre_principal_id || null,
+        region,
+        zone_commune,
+        parseInt(effectif_previsionnel) || 0,
+        seriesArr,
+      ]
+    );
 
-    res.status(201).json({ message: 'Centre d\'examen pré-configuré avec succès !', centre: result.rows[0] });
+    res.status(201).json({ message: "Centre d'examen pré-configuré avec succès !", centre: result.rows[0] });
   } catch (err) {
     if (err.code === '23505') {
-      return res.status(400).json({ message: 'Ce centre d\'examen existe déjà.' });
+      return res.status(400).json({ message: "Ce centre d'examen existe déjà." });
     }
     console.error(err);
-    res.status(500).json({ message: 'Erreur création du centre d\'examen.' });
+    res.status(500).json({ message: "Erreur création du centre d'examen." });
   }
 });
 
 router.put('/centres-examen/:id', auth, checkOfficeBac, async (req, res) => {
-  const { nom_centre, type_centre, centre_principal_id, region, zone_commune, effectif_previsionnel, series_disponibles } = req.body;
+  const {
+    nom_centre,
+    type_centre,
+    centre_principal_id,
+    region,
+    zone_commune,
+    effectif_previsionnel,
+    series_disponibles,
+  } = req.body;
   try {
     const seriesArr = Array.isArray(series_disponibles) ? series_disponibles : ['S1', 'S2', 'L1', 'L2'];
-    const result = await db.query(`
+    const result = await db.query(
+      `
       UPDATE centres_examen_bac
       SET nom_centre = $1, type_centre = $2, centre_principal_id = $3, region = $4, zone_commune = $5,
           effectif_previsionnel = $6, series_disponibles = $7, updated_at = NOW()
       WHERE id = $8 RETURNING *
-    `, [nom_centre, type_centre || 'PRINCIPAL', centre_principal_id || null, region, zone_commune, parseInt(effectif_previsionnel) || 0, seriesArr, req.params.id]);
+    `,
+      [
+        nom_centre,
+        type_centre || 'PRINCIPAL',
+        centre_principal_id || null,
+        region,
+        zone_commune,
+        parseInt(effectif_previsionnel) || 0,
+        seriesArr,
+        req.params.id,
+      ]
+    );
 
-    if (result.rows.length === 0) return res.status(404).json({ message: 'Centre d\'examen introuvable.' });
-    res.json({ message: 'Centre d\'examen mis à jour avec succès !', centre: result.rows[0] });
+    if (result.rows.length === 0) return res.status(404).json({ message: "Centre d'examen introuvable." });
+    res.json({ message: "Centre d'examen mis à jour avec succès !", centre: result.rows[0] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur mise à jour centre d\'examen.' });
+    res.status(500).json({ message: "Erreur mise à jour centre d'examen." });
   }
 });
 
 router.delete('/centres-examen/:id', auth, checkOfficeBac, async (req, res) => {
   try {
     await db.query('DELETE FROM centres_examen_bac WHERE id = $1', [req.params.id]);
-    res.json({ message: 'Centre d\'examen supprimé avec succès.' });
+    res.json({ message: "Centre d'examen supprimé avec succès." });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur suppression centre d\'examen.' });
+    res.status(500).json({ message: "Erreur suppression centre d'examen." });
   }
 });
 
 // Créer un nouveau Jury (Office du BAC) et notifier le Président par messagerie
 router.post('/jurys', auth, checkOfficeBac, async (req, res) => {
-  const { numero_jury, centre_examen_id, centre_examen, centre_secondaire, region, zone_commune, series_autorisees, annee, type_examen, president_prof_id, president_jury } = req.body;
+  const {
+    numero_jury,
+    centre_examen_id,
+    centre_examen,
+    centre_secondaire,
+    region,
+    zone_commune,
+    series_autorisees,
+    annee,
+    type_examen,
+    president_prof_id,
+    president_jury,
+  } = req.body;
   if (!numero_jury || !centre_examen || !region) {
     return res.status(400).json({ message: 'Le numéro de jury, le centre et la région sont obligatoires.' });
   }
@@ -1270,7 +1611,9 @@ router.post('/jurys', auth, checkOfficeBac, async (req, res) => {
       [numero_jury, currentAnnee, currentTypeExamen]
     );
     if (checkExists.rows.length > 0) {
-      return res.status(400).json({ message: `Le ${numero_jury} a déjà été créé pour la session ${currentTypeExamen} ${currentAnnee}. Veuillez choisir un autre numéro (ex: Jury 002).` });
+      return res.status(400).json({
+        message: `Le ${numero_jury} a déjà été créé pour la session ${currentTypeExamen} ${currentAnnee}. Veuillez choisir un autre numéro (ex: Jury 002).`,
+      });
     }
 
     let finalPresidentName = president_jury || null;
@@ -1281,7 +1624,9 @@ router.post('/jurys', auth, checkOfficeBac, async (req, res) => {
     let dateExpiration = null;
 
     // Récupération de la date d'expiration globale configurée pour la session
-    const settingRes = await db.query("SELECT setting_value FROM office_bac_settings WHERE setting_key = 'session_expiration_date'");
+    const settingRes = await db.query(
+      "SELECT setting_value FROM office_bac_settings WHERE setting_key = 'session_expiration_date'"
+    );
     if (settingRes.rows.length > 0 && settingRes.rows[0].setting_value) {
       dateExpiration = new Date(settingRes.rows[0].setting_value);
     } else {
@@ -1290,12 +1635,15 @@ router.post('/jurys', auth, checkOfficeBac, async (req, res) => {
     }
 
     if (president_prof_id) {
-      const profRes = await db.query(`
+      const profRes = await db.query(
+        `
         SELECT u.id, u.email, p.nom, p.prenom
         FROM users u
         LEFT JOIN professeurs p ON u.id = p.id
         WHERE u.id = $1
-      `, [president_prof_id]);
+      `,
+        [president_prof_id]
+      );
 
       if (profRes.rows.length > 0) {
         const prof = profRes.rows[0];
@@ -1311,21 +1659,41 @@ router.post('/jurys', auth, checkOfficeBac, async (req, res) => {
     }
 
     // 2. Insérer le jury avec ses accès temporaires dans la base de données
-    const result = await db.query(`
+    const result = await db.query(
+      `
       INSERT INTO jurys_bac
         (numero_jury, centre_examen_id, centre_examen, centre_secondaire, region, zone_commune, series_autorisees, annee, type_examen, president_prof_id, president_jury, identifiant_temporaire, mot_de_passe_temporaire, password_hash, date_expiration_acces, statut_acces, statut)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, 'ACTIF', 'ACTIF')
       RETURNING *
-    `, [
-      numero_jury, centre_examen_id || null, centre_examen, centre_secondaire || null, region, zone_commune || null,
-      series_autorisees || 'Toutes séries', currentAnnee, currentTypeExamen,
-      president_prof_id || null, finalPresidentName,
-      tempIdentifiant, tempMotDePasse, tempHash, dateExpiration
-    ]);
+    `,
+      [
+        numero_jury,
+        centre_examen_id || null,
+        centre_examen,
+        centre_secondaire || null,
+        region,
+        zone_commune || null,
+        series_autorisees || 'Toutes séries',
+        currentAnnee,
+        currentTypeExamen,
+        president_prof_id || null,
+        finalPresidentName,
+        tempIdentifiant,
+        tempMotDePasse,
+        tempHash,
+        dateExpiration,
+      ]
+    );
 
     // 3. Transmettre la convocation officielle par messagerie interne (avec PDF joint)
     if (president_prof_id && profEmail) {
-      const dateExpStr = dateExpiration.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const dateExpStr = dateExpiration.toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
 
       let pdfMeta = { fileName: null, fileUrl: null };
       try {
@@ -1340,7 +1708,7 @@ router.post('/jurys', auth, checkOfficeBac, async (req, res) => {
           president_jury: finalPresidentName,
           identifiant_temporaire: tempIdentifiant,
           mot_de_passe_temporaire: tempMotDePasse,
-          date_expiration_str: dateExpStr
+          date_expiration_str: dateExpStr,
         });
       } catch (pdfErr) {
         console.error('Erreur génération PDF convocation:', pdfErr);
@@ -1349,17 +1717,20 @@ router.post('/jurys', auth, checkOfficeBac, async (req, res) => {
       const sujetMsg = `📜 CONVOCATION OFFICIELLE & ACCÈS TEMPORAIRES — Présidence du ${numero_jury} (Session ${currentTypeExamen} ${currentAnnee})`;
       const contenuMsg = `RÉPUBLIQUE DU SÉNÉGAL\nMinistère de l'Éducation Nationale — Office du Baccalauréat\n------------------------------------------------------------\nCONVOCATION OFFICIELLE DE PRÉSIDENT DE JURY & ACCÈS SÉCURISÉS\n------------------------------------------------------------\n\nMadame, Monsieur ${finalPresidentName},\n\nVous êtes officiellement désigné(e) par l'Office du Baccalauréat du Sénégal en qualité de Président(e) du ${numero_jury} pour la session ${currentTypeExamen} ${currentAnnee}.\n\n📍 Centre d'Examen : ${centre_examen} (${region} - ${zone_commune || 'Centre'})\n📚 Séries Attribuées : ${series_autorisees || 'S1, S2, L1, L2'}\n\n============================================================\n🔑 VOS ACCÈS TEMPORAIRES SÉCURISÉS (PORTAIL PRÉSIDENT DU JURY) :\n• Identifiant Temporaire : ${tempIdentifiant}\n• Mot de Passe Temporaire : ${tempMotDePasse}\n• Date Limite d'Expiration : ${dateExpStr}\n============================================================\n\n📄 Votre lettre de convocation officielle imprimable au format PDF est ci-jointe à ce message.\n\n📌 Note Importante :\nVos accès temporaires d'examen et votre badge officiel "🎖️ Président du Jury" s'auto-verrouilleront automatiquement le ${dateExpStr}. Votre compte enseignant habituel au sein de votre établissement reste 100% intact.\n\nL'Office du Baccalauréat du Sénégal.`;
 
-      await db.query(`
+      await db.query(
+        `
         INSERT INTO messages (expediteur_id, destinataire_type, destinataire_id, sujet, contenu, fichier_url, fichier_nom)
         VALUES ($1, 'PROFESSEUR', $2, $3, $4, $5, $6)
-      `, [req.user.id, president_prof_id, sujetMsg, contenuMsg, pdfMeta.fileUrl, pdfMeta.fileName]);
+      `,
+        [req.user.id, president_prof_id, sujetMsg, contenuMsg, pdfMeta.fileUrl, pdfMeta.fileName]
+      );
 
       console.log(`✉️ [CONVOCATION & PDF ENVOYÉS] Message expédié à ${profEmail} pour la présidence du ${numero_jury}`);
     }
 
     res.status(201).json({
       message: `Jury ${numero_jury} créé avec succès !${profEmail ? ' Convocation transmise au Président via messagerie.' : ''}`,
-      jury: result.rows[0]
+      jury: result.rows[0],
     });
   } catch (err) {
     if (err.code === '23505') {
@@ -1374,11 +1745,14 @@ router.post('/jurys', auth, checkOfficeBac, async (req, res) => {
 router.put('/candidats/:id/reattribuer-jury', auth, checkOfficeBac, async (req, res) => {
   const { jury, centre_examen } = req.body;
   try {
-    const result = await db.query(`
+    const result = await db.query(
+      `
       UPDATE resultats_examens_nationaux
       SET jury = $1, centre_examen = $2, updated_at = NOW()
       WHERE id = $3 RETURNING *
-    `, [jury, centre_examen, req.params.id]);
+    `,
+      [jury, centre_examen, req.params.id]
+    );
 
     res.json({ message: 'Rattachement du jury corrigé avec succès !', candidat: result.rows[0] });
   } catch (err) {
@@ -1397,25 +1771,33 @@ router.post('/dispatch-alphabetique', auth, checkOfficeBac, async (req, res) => 
   const maxCap = parseInt(capacite_defaut) || 120;
 
   try {
-    const jurysRes = await db.query(`
+    const jurysRes = await db.query(
+      `
       SELECT * FROM jurys_bac 
       WHERE (type_examen = $1 OR type_examen IS NULL) AND (annee = $2 OR annee IS NULL)
       ORDER BY numero_jury ASC
-    `, [currentType, currentAnnee]);
+    `,
+      [currentType, currentAnnee]
+    );
 
     if (jurysRes.rows.length === 0) {
-      return res.status(400).json({ message: 'Aucun jury créé pour cette session. Veuillez créer au moins un jury (ex: Jury 001).' });
+      return res
+        .status(400)
+        .json({ message: 'Aucun jury créé pour cette session. Veuillez créer au moins un jury (ex: Jury 001).' });
     }
 
     const jurys = jurysRes.rows;
 
-    const candRes = await db.query(`
+    const candRes = await db.query(
+      `
       SELECT r.id, r.eleve_id, e.nom, e.prenom, e.identifiant_national
       FROM resultats_examens_nationaux r
       JOIN eleves e ON r.eleve_id = e.id
       WHERE (r.type_examen = $1 OR r.type_examen IS NULL)
       ORDER BY e.nom ASC, e.prenom ASC
-    `, [currentType]);
+    `,
+      [currentType]
+    );
 
     const candidats = candRes.rows;
     if (candidats.length === 0) {
@@ -1437,14 +1819,17 @@ router.post('/dispatch-alphabetique', auth, checkOfficeBac, async (req, res) => 
       }
 
       const activeJury = jurys[juryIdx];
-      const juryNumberInt = parseInt((activeJury.numero_jury || '').replace(/\D/g, '')) || (juryIdx + 1);
-      const tableNum = (100000 + (juryNumberInt * 100) + (countInCurrentJury + 1)).toString();
+      const juryNumberInt = parseInt((activeJury.numero_jury || '').replace(/\D/g, '')) || juryIdx + 1;
+      const tableNum = (100000 + juryNumberInt * 100 + (countInCurrentJury + 1)).toString();
 
-      await db.query(`
+      await db.query(
+        `
         UPDATE resultats_examens_nationaux
         SET jury = $1, centre_examen = $2, numero_table = $3, updated_at = NOW()
         WHERE id = $4
-      `, [activeJury.numero_jury, activeJury.centre_examen, tableNum, c.id]);
+      `,
+        [activeJury.numero_jury, activeJury.centre_examen, tableNum, c.id]
+      );
 
       countInCurrentJury++;
       assignedCount++;
@@ -1452,7 +1837,7 @@ router.post('/dispatch-alphabetique', auth, checkOfficeBac, async (req, res) => 
 
     res.json({
       message: `Répartition alphabétique réussie ! ${assignedCount} candidat(s) réparti(s) automatiquement sur ${jurys.length} jury(s) avec numéros de table attribués.`,
-      assignedCount
+      assignedCount,
     });
   } catch (err) {
     console.error(err);
@@ -1465,22 +1850,27 @@ router.post('/dispatch-alphabetique', auth, checkOfficeBac, async (req, res) => 
 // ─────────────────────────────────────────────
 router.post('/transmettre-livrets-zone', auth, async (req, res) => {
   try {
-    const etabRes = await db.query('SELECT id, nom, region, zone_examen FROM etablissements WHERE admin_id = $1', [req.user.id]);
+    const etabRes = await db.query('SELECT id, nom, region, zone_examen FROM etablissements WHERE admin_id = $1', [
+      req.user.id,
+    ]);
     if (etabRes.rows.length === 0) {
       return res.status(404).json({ message: 'Établissement non trouvé.' });
     }
     const etab = etabRes.rows[0];
 
-    const result = await db.query(`
+    const result = await db.query(
+      `
       UPDATE livrets_scolaires_bac
       SET statut_transmission = 'TRANSMIS', transmis_at = NOW(), updated_at = NOW()
       WHERE etablissement_id = $1
       RETURNING id
-    `, [etab.id]);
+    `,
+      [etab.id]
+    );
 
     res.json({
       message: `Succès ! ${result.rows.length} livret(s) scolaire(s) officiel(s) transmis à l'Office du BAC (Zone ${etab.zone_examen || etab.region || 'Nationale'}).`,
-      count: result.rows.length
+      count: result.rows.length,
     });
   } catch (err) {
     console.error(err);
@@ -1496,12 +1886,15 @@ router.post('/restituer-livrets', auth, checkOfficeBac, async (req, res) => {
   const currentAnnee = annee || new Date().getFullYear();
 
   try {
-    const result = await db.query(`
+    const result = await db.query(
+      `
       UPDATE livrets_scolaires_bac
       SET statut_transmission = 'RESTITUÉ_ÉTABLISSEMENT', restitue_at = NOW(), updated_at = NOW()
       WHERE annee = $1
       RETURNING id, etablissement_id
-    `, [currentAnnee]);
+    `,
+      [currentAnnee]
+    );
 
     const count = result.rows.length;
 
@@ -1510,20 +1903,23 @@ router.post('/restituer-livrets', auth, checkOfficeBac, async (req, res) => {
     `);
 
     for (const etab of etabsRes.rows) {
-      await db.query(`
+      await db.query(
+        `
         INSERT INTO notifications (user_id, titre, description, type)
         VALUES ($1, $2, $3, 'info')
-      `, [
-        etab.admin_id,
-        `📜 Restitution des Livrets Scolaires (BAC ${currentAnnee})`,
-        `L'Office du Baccalauréat informe l'établissement "${etab.nom}" que tous les livrets scolaires de la session BAC ${currentAnnee} ont été officiellement restitués et archivés.`
-      ]);
+      `,
+        [
+          etab.admin_id,
+          `📜 Restitution des Livrets Scolaires (BAC ${currentAnnee})`,
+          `L'Office du Baccalauréat informe l'établissement "${etab.nom}" que tous les livrets scolaires de la session BAC ${currentAnnee} ont été officiellement restitués et archivés.`,
+        ]
+      );
     }
 
     res.json({
       message: `Succès ! ${count} livret(s) scolaire(s) officiel(s) ont été restitués aux établissements pour la session BAC ${currentAnnee}.`,
       count,
-      etablissements_notifies: etabsRes.rows.length
+      etablissements_notifies: etabsRes.rows.length,
     });
   } catch (err) {
     console.error(err);
@@ -1534,13 +1930,15 @@ router.post('/restituer-livrets', auth, checkOfficeBac, async (req, res) => {
 // Récupérer la date d'expiration globale de la session
 router.get('/settings/expiration-date', auth, checkOfficeBac, async (req, res) => {
   try {
-    const result = await db.query("SELECT setting_value FROM office_bac_settings WHERE setting_key = 'session_expiration_date'");
+    const result = await db.query(
+      "SELECT setting_value FROM office_bac_settings WHERE setting_key = 'session_expiration_date'"
+    );
     res.json({
-      setting_value: result.rows.length > 0 ? result.rows[0].setting_value : null
+      setting_value: result.rows.length > 0 ? result.rows[0].setting_value : null,
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur récupération date d\'expiration.' });
+    res.status(500).json({ message: "Erreur récupération date d'expiration." });
   }
 });
 
@@ -1548,26 +1946,32 @@ router.get('/settings/expiration-date', auth, checkOfficeBac, async (req, res) =
 router.post('/settings/expiration-date', auth, checkOfficeBac, async (req, res) => {
   const { expiration_date } = req.body;
   try {
-    await db.query(`
+    await db.query(
+      `
       INSERT INTO office_bac_settings (setting_key, setting_value, updated_at)
       VALUES ('session_expiration_date', $1, NOW())
       ON CONFLICT (setting_key)
       DO UPDATE SET setting_value = EXCLUDED.setting_value, updated_at = NOW()
-    `, [expiration_date]);
+    `,
+      [expiration_date]
+    );
 
     // Mettre à jour rétroactivement les jurys actifs sans date d'expiration ou les adapter
     if (expiration_date) {
-      await db.query(`
+      await db.query(
+        `
         UPDATE jurys_bac
         SET date_expiration_acces = $1
         WHERE statut = 'ACTIF'
-      `, [new Date(expiration_date)]);
+      `,
+        [new Date(expiration_date)]
+      );
     }
 
-    res.json({ message: 'Date d\'expiration globale de la session mise à jour avec succès !' });
+    res.json({ message: "Date d'expiration globale de la session mise à jour avec succès !" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur mise à jour date d\'expiration.' });
+    res.status(500).json({ message: "Erreur mise à jour date d'expiration." });
   }
 });
 

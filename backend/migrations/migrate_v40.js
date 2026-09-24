@@ -30,7 +30,7 @@ async function migrate() {
             typeDemande: 'PROFESSEUR',
             iup: fixedIup,
             // Absent si l'enseignant a déjà défini son propre mot de passe : l'email n'en affiche alors aucun.
-            tempPassword: prof.password_provisoire
+            tempPassword: prof.password_provisoire,
           });
           console.log(`  📧 Nouvel IUP (${fixedIup}) envoyé à ${prof.email}`);
         } catch (e) {

@@ -3,7 +3,9 @@ const db = require('../src/config/db');
 
 async function migrate() {
   try {
-    console.log('🚀 Migration v30 : Ajout de la colonne president_prof_id dans jurys_bac pour la désignation par ID Professeur...');
+    console.log(
+      '🚀 Migration v30 : Ajout de la colonne president_prof_id dans jurys_bac pour la désignation par ID Professeur...'
+    );
 
     await db.query(`
       ALTER TABLE jurys_bac

@@ -2,18 +2,14 @@ const db = require('../config/db');
 
 const ClassModel = {
   async getEtablissementIdByAdminId(adminId) {
-    const { rows } = await db.query(
-      'SELECT id FROM etablissements WHERE admin_id = $1',
-      [adminId]
-    );
+    const { rows } = await db.query('SELECT id FROM etablissements WHERE admin_id = $1', [adminId]);
     return rows[0]?.id;
   },
 
   async listClasses(etablissementId) {
-    const { rows } = await db.query(
-      'SELECT * FROM classes WHERE etablissement_id = $1 ORDER BY niveau, nom',
-      [etablissementId]
-    );
+    const { rows } = await db.query('SELECT * FROM classes WHERE etablissement_id = $1 ORDER BY niveau, nom', [
+      etablissementId,
+    ]);
     return rows;
   },
 
@@ -34,41 +30,53 @@ const ClassModel = {
   },
 
   async assignMatiere(classeId, matiereId, coefficient) {
-    await db.query(`
+    await db.query(
+      `
       INSERT INTO classe_matieres (classe_id, matiere_id, coefficient)
       VALUES ($1, $2, $3)
       ON CONFLICT (classe_id, matiere_id) DO UPDATE SET coefficient = EXCLUDED.coefficient
-    `, [classeId, matiereId, coefficient]);
+    `,
+      [classeId, matiereId, coefficient]
+    );
     return true;
   },
 
   async listMatieres(classeId) {
-    const { rows } = await db.query(`
+    const { rows } = await db.query(
+      `
       SELECT m.*, cm.coefficient
       FROM matieres m
       JOIN classe_matieres cm ON m.id = cm.matiere_id
       WHERE cm.classe_id = $1
-    `, [classeId]);
+    `,
+      [classeId]
+    );
     return rows;
   },
 
   async addSchedule(classeId, matiereId, professeurId, jourSemaine, heureDebut, heureFin, salle) {
-    await db.query(`
+    await db.query(
+      `
       INSERT INTO emplois_du_temps (classe_id, matiere_id, professeur_id, jour_semaine, heure_debut, heure_fin, salle)
       VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, [classeId, matiereId, professeurId, jourSemaine, heureDebut, heureFin, salle]);
+    `,
+      [classeId, matiereId, professeurId, jourSemaine, heureDebut, heureFin, salle]
+    );
     return true;
   },
 
   async getSchedule(classeId) {
-    const { rows } = await db.query(`
+    const { rows } = await db.query(
+      `
       SELECT edt.*, m.nom as matiere_nom, COALESCE(u.email, 'Non assigné') as professeur_nom
       FROM emplois_du_temps edt
       JOIN matieres m ON edt.matiere_id = m.id
       LEFT JOIN users u ON edt.professeur_id = u.id
       WHERE edt.classe_id = $1
       ORDER BY jour_semaine, heure_debut
-    `, [classeId]);
+    `,
+      [classeId]
+    );
     return rows;
   },
 
@@ -83,31 +91,40 @@ const ClassModel = {
   },
 
   async addExam(etablissementId, classeId, matiereId, typeExamen, dateExamen, salle) {
-    await db.query(`
+    await db.query(
+      `
       INSERT INTO examens_planification (etablissement_id, classe_id, matiere_id, type_examen, date_examen, salle)
       VALUES ($1, $2, $3, $4, $5, $6)
-    `, [etablissementId, classeId, matiereId, typeExamen, dateExamen, salle]);
+    `,
+      [etablissementId, classeId, matiereId, typeExamen, dateExamen, salle]
+    );
     return true;
   },
 
   async getExams(classeId) {
-    const { rows } = await db.query(`
+    const { rows } = await db.query(
+      `
       SELECT ep.*, m.nom as matiere_nom
       FROM examens_planification ep
       JOIN matieres m ON ep.matiere_id = m.id
       WHERE ep.classe_id = $1
       ORDER BY ep.date_examen
-    `, [classeId]);
+    `,
+      [classeId]
+    );
     return rows;
   },
 
   async updateExam(examId, classeId, matiereId, typeExamen, dateExamen, salle) {
-    const { rows } = await db.query(`
+    const { rows } = await db.query(
+      `
       UPDATE examens_planification
       SET matiere_id = $1, type_examen = $2, date_examen = $3, salle = $4
       WHERE id = $5 AND classe_id = $6
       RETURNING *
-    `, [matiereId, typeExamen, dateExamen, salle, examId, classeId]);
+    `,
+      [matiereId, typeExamen, dateExamen, salle, examId, classeId]
+    );
     return rows[0];
   },
 
@@ -135,7 +152,7 @@ const ClassModel = {
 
     const { rows } = await db.query(query, params);
     return rows;
-  }
+  },
 };
 
 module.exports = ClassModel;

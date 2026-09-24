@@ -1,6 +1,21 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogIn, UserPlus, Mail, Lock, Building, ArrowRight, ArrowLeft, Shield, KeyRound, Loader2, AlertCircle, CheckCircle2, GraduationCap, School } from 'lucide-react';
+import {
+  LogIn,
+  UserPlus,
+  Mail,
+  Lock,
+  Building,
+  ArrowRight,
+  ArrowLeft,
+  Shield,
+  KeyRound,
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
+  GraduationCap,
+  School,
+} from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './Auth.css';
@@ -56,7 +71,7 @@ const Auth = () => {
           iup: forgotData.iup,
           email: forgotData.email,
           code: forgotData.code,
-          newPassword: forgotData.newPassword
+          newPassword: forgotData.newPassword,
         }),
       });
       const data = await response.json();
@@ -64,7 +79,7 @@ const Auth = () => {
         setMessage({ type: 'success', text: 'Mot de passe réinitialisé avec succès ! Vous pouvez vous connecter.' });
         setShowForgot(false);
         setForgotStep(1);
-        setLoginData(prev => ({ ...prev, identifier: forgotData.iup, password: '' }));
+        setLoginData((prev) => ({ ...prev, identifier: forgotData.iup, password: '' }));
       } else {
         setMessage({ type: 'error', text: data.message || 'Code incorrect ou expiré.' });
       }
@@ -93,15 +108,16 @@ const Auth = () => {
         login(data.user);
         setMessage({ type: 'success', text: 'Connexion réussie ! Redirection...' });
 
-        const redirectPath = data.user.role === 'PRESIDENT_JURY'
-          ? '/jury/dashboard'
-          : data.user.role === 'ELEVE' 
-            ? '/student/dashboard' 
-            : data.user.role === 'PROFESSEUR' 
-              ? '/professeur/dashboard' 
-              : data.user.role === 'OFFICE_BAC'
-                ? '/office/dashboard'
-                : '/dashboard';
+        const redirectPath =
+          data.user.role === 'PRESIDENT_JURY'
+            ? '/jury/dashboard'
+            : data.user.role === 'ELEVE'
+              ? '/student/dashboard'
+              : data.user.role === 'PROFESSEUR'
+                ? '/professeur/dashboard'
+                : data.user.role === 'OFFICE_BAC'
+                  ? '/office/dashboard'
+                  : '/dashboard';
         setTimeout(() => navigate(redirectPath), 1500);
       } else {
         setMessage({ type: 'error', text: 'Mot de passe ou identifiant incorrect' });
@@ -128,33 +144,55 @@ const Auth = () => {
             <span style={{ color: '#1e3a8a', fontWeight: 800 }}>LéralScolaire</span>
           </Link>
           <div className="info-content">
-            <h2>{isLogin ? 'Bon retour parmi nous !' : 'Rejoignez le futur de l\'éducation'}</h2>
+            <h2>{isLogin ? 'Bon retour parmi nous !' : "Rejoignez le futur de l'éducation"}</h2>
             <p>
-              {isLogin 
-                ? 'Connectez-vous pour accéder à votre livret scolaire numérique.' 
+              {isLogin
+                ? 'Connectez-vous pour accéder à votre livret scolaire numérique.'
                 : 'Inscrivez votre établissement pour commencer la digitalisation.'}
             </p>
           </div>
           <div className="info-footer">
-            <div className="badge"><Shield size={14} /> Sécurisé par l'État du Sénégal</div>
+            <div className="badge">
+              <Shield size={14} /> Sécurisé par l'État du Sénégal
+            </div>
           </div>
         </div>
 
         {/* Form Side */}
         <div className="auth-form-card">
           <Link to="/" className="auth-header-brand" title="Retour à l'accueil">
-            <img 
-              src="/logo_leralscolaire.png" 
-              alt="Logo LéralScolaire" 
-              onError={(e) => { e.target.style.display = 'none'; }}
+            <img
+              src="/logo_leralscolaire.png"
+              alt="Logo LéralScolaire"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
             />
             <h2>LéralScolaire</h2>
             <p>Plateforme Nationale du Livret Scolaire</p>
           </Link>
 
           <div className="form-toggle">
-            <button className={isLogin && !showForgot ? 'active' : ''} onClick={() => { setIsLogin(true); setShowForgot(false); setMessage({type:'',text:''}); }}>Connexion</button>
-            <button className={!isLogin && !showForgot ? 'active' : ''} onClick={() => { setIsLogin(false); setShowForgot(false); setMessage({type:'',text:''}); }}>Pré-inscription</button>
+            <button
+              className={isLogin && !showForgot ? 'active' : ''}
+              onClick={() => {
+                setIsLogin(true);
+                setShowForgot(false);
+                setMessage({ type: '', text: '' });
+              }}
+            >
+              Connexion
+            </button>
+            <button
+              className={!isLogin && !showForgot ? 'active' : ''}
+              onClick={() => {
+                setIsLogin(false);
+                setShowForgot(false);
+                setMessage({ type: '', text: '' });
+              }}
+            >
+              Pré-inscription
+            </button>
           </div>
 
           {message.text && (
@@ -166,12 +204,31 @@ const Auth = () => {
 
           <AnimatePresence mode="wait">
             {showForgot ? (
-              <motion.form key="forgot" onSubmit={forgotStep === 1 ? handleRequestResetCode : handleConfirmNewPassword} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="form-content">
+              <motion.form
+                key="forgot"
+                onSubmit={forgotStep === 1 ? handleRequestResetCode : handleConfirmNewPassword}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="form-content"
+              >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <button 
-                    type="button" 
-                    onClick={() => { setShowForgot(false); setForgotStep(1); setMessage({type:'', text:''}); }}
-                    style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px', display: 'inline-flex', alignItems: 'center' }}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForgot(false);
+                      setForgotStep(1);
+                      setMessage({ type: '', text: '' });
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#64748b',
+                      cursor: 'pointer',
+                      padding: '4px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                    }}
                     title="Retour"
                   >
                     <ArrowLeft size={20} />
@@ -179,8 +236,8 @@ const Auth = () => {
                   <h3 style={{ margin: 0 }}>Mot de passe oublié</h3>
                 </div>
                 <p className="subtitle">
-                  {forgotStep === 1 
-                    ? 'Entrez votre IUP et votre Email pour vérifier votre compte' 
+                  {forgotStep === 1
+                    ? 'Entrez votre IUP et votre Email pour vérifier votre compte'
                     : 'Entrez le code reçu par email pour réinitialiser votre mot de passe'}
                 </p>
 
@@ -190,12 +247,12 @@ const Auth = () => {
                       <label>Identifiant Unique (IUP)</label>
                       <div className="input-wrapper">
                         <Shield size={18} />
-                        <input 
-                          type="text" 
-                          required 
+                        <input
+                          type="text"
+                          required
                           value={forgotData.iup}
-                          onChange={(e) => setForgotData({...forgotData, iup: e.target.value})}
-                          placeholder="ETAB-..., ENS-... ou SN-..." 
+                          onChange={(e) => setForgotData({ ...forgotData, iup: e.target.value })}
+                          placeholder="ETAB-..., ENS-... ou SN-..."
                         />
                       </div>
                       <small style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', display: 'block' }}>
@@ -207,12 +264,12 @@ const Auth = () => {
                       <label>Adresse Email associée</label>
                       <div className="input-wrapper">
                         <Mail size={18} />
-                        <input 
-                          type="email" 
-                          required 
+                        <input
+                          type="email"
+                          required
                           value={forgotData.email}
-                          onChange={(e) => setForgotData({...forgotData, email: e.target.value})}
-                          placeholder="L'adresse email enregistrée lors de l'inscription" 
+                          onChange={(e) => setForgotData({ ...forgotData, email: e.target.value })}
+                          placeholder="L'adresse email enregistrée lors de l'inscription"
                         />
                       </div>
                       <small style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', display: 'block' }}>
@@ -220,8 +277,19 @@ const Auth = () => {
                       </small>
                     </div>
 
-                    <button type="submit" disabled={loading} className="btn btn-primary btn-full" style={{ marginTop: '14px' }}>
-                      {loading ? <Loader2 className="animate-spin" /> : <>Recevoir le code par email <ArrowRight size={18} /></>}
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="btn btn-primary btn-full"
+                      style={{ marginTop: '14px' }}
+                    >
+                      {loading ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <>
+                          Recevoir le code par email <ArrowRight size={18} />
+                        </>
+                      )}
                     </button>
                   </>
                 ) : (
@@ -230,13 +298,13 @@ const Auth = () => {
                       <label>Code de vérification (6 chiffres)</label>
                       <div className="input-wrapper">
                         <KeyRound size={18} />
-                        <input 
-                          type="text" 
-                          required 
+                        <input
+                          type="text"
+                          required
                           maxLength={6}
                           value={forgotData.code}
-                          onChange={(e) => setForgotData({...forgotData, code: e.target.value})}
-                          placeholder="123456" 
+                          onChange={(e) => setForgotData({ ...forgotData, code: e.target.value })}
+                          placeholder="123456"
                           style={{ letterSpacing: '4px', fontWeight: 700, fontSize: '18px' }}
                         />
                       </div>
@@ -249,26 +317,44 @@ const Auth = () => {
                       <label>Nouveau mot de passe</label>
                       <div className="input-wrapper">
                         <Lock size={18} />
-                        <input 
-                          type="password" 
-                          required 
+                        <input
+                          type="password"
+                          required
                           minLength={6}
                           value={forgotData.newPassword}
-                          onChange={(e) => setForgotData({...forgotData, newPassword: e.target.value})}
-                          placeholder="Au moins 6 caractères" 
+                          onChange={(e) => setForgotData({ ...forgotData, newPassword: e.target.value })}
+                          placeholder="Au moins 6 caractères"
                         />
                       </div>
                     </div>
 
-                    <button type="submit" disabled={loading} className="btn btn-primary btn-full" style={{ marginTop: '14px' }}>
-                      {loading ? <Loader2 className="animate-spin" /> : <>Réinitialiser mon mot de passe <CheckCircle2 size={18} /></>}
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="btn btn-primary btn-full"
+                      style={{ marginTop: '14px' }}
+                    >
+                      {loading ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <>
+                          Réinitialiser mon mot de passe <CheckCircle2 size={18} />
+                        </>
+                      )}
                     </button>
 
                     <div style={{ textAlign: 'center', marginTop: '12px' }}>
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         onClick={() => setForgotStep(1)}
-                        style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '12px', cursor: 'pointer', textDecoration: 'underline' }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#64748b',
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                          textDecoration: 'underline',
+                        }}
                       >
                         Modifier l'IUP ou l'adresse email
                       </button>
@@ -276,18 +362,37 @@ const Auth = () => {
                   </>
                 )}
 
-                <div style={{ textAlign: 'center', marginTop: '16px', borderTop: '1px solid #e2e8f0', paddingTop: '12px' }}>
-                  <button 
-                    type="button" 
-                    onClick={() => { setShowForgot(false); setForgotStep(1); setMessage({type:'', text:''}); }}
-                    style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+                <div
+                  style={{ textAlign: 'center', marginTop: '16px', borderTop: '1px solid #e2e8f0', paddingTop: '12px' }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForgot(false);
+                      setForgotStep(1);
+                      setMessage({ type: '', text: '' });
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#2563eb',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
                   >
                     ← Retour à la connexion
                   </button>
                 </div>
               </motion.form>
             ) : isLogin ? (
-              <motion.form key="login" onSubmit={handleLogin} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="form-content">
+              <motion.form
+                key="login"
+                onSubmit={handleLogin}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="form-content"
+              >
                 <h3>Connexion</h3>
                 <p className="subtitle">Accédez à votre espace personnel</p>
 
@@ -295,16 +400,17 @@ const Auth = () => {
                   <label>Identifiant Unique (IUP) / Accès Examen</label>
                   <div className="input-wrapper">
                     <Shield size={18} />
-                    <input 
-                      type="text" 
-                      required 
+                    <input
+                      type="text"
+                      required
                       value={loginData.identifier}
-                      onChange={(e) => setLoginData({...loginData, identifier: e.target.value})}
-                      placeholder="ETAB-..., ENS-..., SN-... ou PRESIDENT.JURY..." 
+                      onChange={(e) => setLoginData({ ...loginData, identifier: e.target.value })}
+                      placeholder="ETAB-..., ENS-..., SN-... ou PRESIDENT.JURY..."
                     />
                   </div>
                   <small style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', display: 'block' }}>
-                    IUP Établissement (ETAB-...), Enseignant (ENS-...), Élève (SN-...) ou Président de Jury (PRESIDENT.JURY...)
+                    IUP Établissement (ETAB-...), Enseignant (ENS-...), Élève (SN-...) ou Président de Jury
+                    (PRESIDENT.JURY...)
                   </small>
                 </div>
 
@@ -312,42 +418,67 @@ const Auth = () => {
                   <label>Mot de passe</label>
                   <div className="input-wrapper">
                     <Lock size={18} />
-                    <input 
-                      type="password" 
-                      required 
+                    <input
+                      type="password"
+                      required
                       value={loginData.password}
-                      onChange={(e) => setLoginData({...loginData, password: e.target.value})}
-                      placeholder="••••••••" 
+                      onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                      placeholder="••••••••"
                     />
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-4px', marginBottom: '14px' }}>
-                  <button 
-                    type="button" 
-                    onClick={() => { setShowForgot(true); setForgotStep(1); setMessage({type:'', text:''}); }}
-                    style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: '12px', fontWeight: 600, cursor: 'pointer', padding: 0 }}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForgot(true);
+                      setForgotStep(1);
+                      setMessage({ type: '', text: '' });
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#2563eb',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      padding: 0,
+                    }}
                   >
                     Mot de passe oublié ?
                   </button>
                 </div>
 
                 <button type="submit" disabled={loading} className="btn btn-primary btn-full">
-                  {loading ? <Loader2 className="animate-spin" /> : <>Se connecter <ArrowRight size={18} /></>}
+                  {loading ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <>
+                      Se connecter <ArrowRight size={18} />
+                    </>
+                  )}
                 </button>
               </motion.form>
             ) : (
-              <motion.div key="preinscription" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="form-content">
+              <motion.div
+                key="preinscription"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="form-content"
+              >
                 <h3>Demande de Pré-inscription</h3>
                 <p className="subtitle">Portail officiel d'homologation - Office du Baccalauréat</p>
 
                 <p style={{ fontSize: '13px', color: '#475569', marginBottom: '16px', lineHeight: 1.5 }}>
-                  Sélectionnez votre profil pour accéder au formulaire de pré-inscription avec dépôt des pièces justificatives :
+                  Sélectionnez votre profil pour accéder au formulaire de pré-inscription avec dépôt des pièces
+                  justificatives :
                 </p>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '18px' }}>
                   {/* Option 1: Etablissement */}
-                  <div 
+                  <div
                     onClick={() => navigate('/inscription-nationale?type=ETABLISSEMENT')}
                     style={{
                       border: '1.5px solid #cbd5e1',
@@ -359,17 +490,37 @@ const Auth = () => {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '14px',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#1e3a8a'; e.currentTarget.style.background = '#f8fafc'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = '#ffffff'; }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#1e3a8a';
+                      e.currentTarget.style.background = '#f8fafc';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = '#cbd5e1';
+                      e.currentTarget.style.background = '#ffffff';
+                    }}
                   >
-                    <div style={{ width: '46px', height: '46px', borderRadius: '10px', background: '#eff6ff', color: '#1e3a8a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <div
+                      style={{
+                        width: '46px',
+                        height: '46px',
+                        borderRadius: '10px',
+                        background: '#eff6ff',
+                        color: '#1e3a8a',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
                       <Building size={24} />
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>Établissement Scolaire</h4>
+                        <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>
+                          Établissement Scolaire
+                        </h4>
                         <ArrowRight size={16} color="#64748b" />
                       </div>
                       <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#64748b', lineHeight: 1.4 }}>
@@ -379,7 +530,7 @@ const Auth = () => {
                   </div>
 
                   {/* Option 2: Professeur */}
-                  <div 
+                  <div
                     onClick={() => navigate('/inscription-nationale?type=PROFESSEUR')}
                     style={{
                       border: '1.5px solid #cbd5e1',
@@ -391,17 +542,37 @@ const Auth = () => {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '14px',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#1e3a8a'; e.currentTarget.style.background = '#f8fafc'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = '#ffffff'; }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#1e3a8a';
+                      e.currentTarget.style.background = '#f8fafc';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = '#cbd5e1';
+                      e.currentTarget.style.background = '#ffffff';
+                    }}
                   >
-                    <div style={{ width: '46px', height: '46px', borderRadius: '10px', background: '#fef3c7', color: '#b45309', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <div
+                      style={{
+                        width: '46px',
+                        height: '46px',
+                        borderRadius: '10px',
+                        background: '#fef3c7',
+                        color: '#b45309',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
                       <GraduationCap size={24} />
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>Professeur / Enseignant</h4>
+                        <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>
+                          Professeur / Enseignant
+                        </h4>
                         <ArrowRight size={16} color="#64748b" />
                       </div>
                       <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#64748b', lineHeight: 1.4 }}>
@@ -411,8 +582,20 @@ const Auth = () => {
                   </div>
                 </div>
 
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px 14px', fontSize: '11px', color: '#64748b', lineHeight: 1.5 }}>
-                  🛡️ <strong>Instruction par l'Office du Bac :</strong> Un accusé de réception est envoyé immédiatement par email. Après examen de votre dossier, vos identifiants ou les motifs de correction vous seront expédiés.
+                <div
+                  style={{
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '10px',
+                    padding: '12px 14px',
+                    fontSize: '11px',
+                    color: '#64748b',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  🛡️ <strong>Instruction par l'Office du Bac :</strong> Un accusé de réception est envoyé immédiatement
+                  par email. Après examen de votre dossier, vos identifiants ou les motifs de correction vous seront
+                  expédiés.
                 </div>
               </motion.div>
             )}

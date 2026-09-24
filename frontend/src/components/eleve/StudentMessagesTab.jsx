@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
 import {
-  MessageSquare, Users, UserCheck, Building2, Bell, Paperclip, Download, X, Send, ChevronLeft
+  MessageSquare,
+  Users,
+  UserCheck,
+  Building2,
+  Bell,
+  Paperclip,
+  Download,
+  X,
+  Send,
+  ChevronLeft,
 } from 'lucide-react';
 
 const StudentMessagesTab = ({
@@ -20,7 +29,7 @@ const StudentMessagesTab = ({
   chatInput,
   setChatInput,
   chatEndRef,
-  API_BASE_URL
+  API_BASE_URL,
 }) => {
   const [mobileView, setMobileView] = useState('channels'); // 'channels' | 'chat'
 
@@ -36,33 +45,34 @@ const StudentMessagesTab = ({
 
   return (
     <div className="tab-pane">
-      
       {/* Messages Main Layout */}
       <div className="messages-layout-full card-box">
-        
         {/* Left Column: Channels & Contacts List */}
         <div className={`msg-channels-sidebar ${mobileView === 'chat' && activeChatTarget ? 'mobile-hide' : ''}`}>
           <div className="msg-sidebar-header">
-            <h3><MessageSquare size={18} /> Canaux & Messagerie</h3>
+            <h3>
+              <MessageSquare size={18} /> Canaux & Messagerie
+            </h3>
             <span>Sélectionnez une discussion</span>
           </div>
 
           <div className="msg-channels-list">
-            
             {/* 1. CANAL DE CLASSE */}
             {classe && (
               <div className="channel-group">
                 <span className="group-label">GROUPE DE CLASSE</span>
-                <button 
+                <button
                   type="button"
                   className={`channel-item ${activeChatTarget?.type === 'CLASSE' ? 'active' : ''}`}
-                  onClick={() => handleSelectTarget({
-                    type: 'CLASSE',
-                    target_id: classe.classe_id,
-                    title: `Canal de Groupe ${classe.classe_nom}`,
-                    sub: `Discussion de la classe • ${classe.annee_scolaire}`,
-                    badge: 'Groupe'
-                  })}
+                  onClick={() =>
+                    handleSelectTarget({
+                      type: 'CLASSE',
+                      target_id: classe.classe_id,
+                      title: `Canal de Groupe ${classe.classe_nom}`,
+                      sub: `Discussion de la classe • ${classe.annee_scolaire}`,
+                      badge: 'Groupe',
+                    })
+                  }
                 >
                   <div className="chan-icon-box chan-classe">
                     <Users size={18} />
@@ -79,24 +89,28 @@ const StudentMessagesTab = ({
             {teachers.length > 0 && (
               <div className="channel-group">
                 <span className="group-label">MES PROFESSEURS</span>
-                {teachers.map(t => (
-                  <button 
+                {teachers.map((t) => (
+                  <button
                     key={t.user_id}
                     type="button"
                     className={`channel-item ${activeChatTarget?.type === 'PROFESSEUR' && activeChatTarget?.target_id === t.user_id ? 'active' : ''}`}
-                    onClick={() => handleSelectTarget({
-                      type: 'PROFESSEUR',
-                      target_id: t.user_id,
-                      title: `Prof. ${t.prenom || ''} ${t.nom || 'Enseignant'}`,
-                      sub: t.matiere_nom ? `Enseignant de ${t.matiere_nom}` : 'Professeur',
-                      badge: 'Prof'
-                    })}
+                    onClick={() =>
+                      handleSelectTarget({
+                        type: 'PROFESSEUR',
+                        target_id: t.user_id,
+                        title: `Prof. ${t.prenom || ''} ${t.nom || 'Enseignant'}`,
+                        sub: t.matiere_nom ? `Enseignant de ${t.matiere_nom}` : 'Professeur',
+                        badge: 'Prof',
+                      })
+                    }
                   >
                     <div className="chan-icon-box chan-prof">
                       <UserCheck size={18} />
                     </div>
                     <div className="chan-meta">
-                      <span className="chan-name">Prof. {t.prenom ? `${t.prenom} ${t.nom}` : (t.nom || 'Enseignant')}</span>
+                      <span className="chan-name">
+                        Prof. {t.prenom ? `${t.prenom} ${t.nom}` : t.nom || 'Enseignant'}
+                      </span>
                       <span className="chan-sub">{t.matiere_nom || 'Discipline'}</span>
                     </div>
                   </button>
@@ -108,17 +122,19 @@ const StudentMessagesTab = ({
             {admin && (
               <div className="channel-group">
                 <span className="group-label">ÉTABLISSEMENT</span>
-                <button 
+                <button
                   type="button"
                   className={`channel-item ${activeChatTarget?.type === 'ADMIN' ? 'active' : ''}`}
-                  onClick={() => handleSelectTarget({
-                    type: 'ADMIN',
-                    target_id: admin.admin_user_id,
-                    etablissement_id: admin.etablissement_id,
-                    title: admin.etablissement_nom,
-                    sub: "Administration de l'établissement",
-                    badge: 'Admin'
-                  })}
+                  onClick={() =>
+                    handleSelectTarget({
+                      type: 'ADMIN',
+                      target_id: admin.admin_user_id,
+                      etablissement_id: admin.etablissement_id,
+                      title: admin.etablissement_nom,
+                      sub: "Administration de l'établissement",
+                      badge: 'Admin',
+                    })
+                  }
                 >
                   <div className="chan-icon-box chan-admin">
                     <Building2 size={18} />
@@ -134,16 +150,18 @@ const StudentMessagesTab = ({
             {/* 4. ANNONCES & DIFFUSIONS */}
             <div className="channel-group">
               <span className="group-label">DIFFUSIONS & ANNONCES</span>
-              <button 
+              <button
                 type="button"
                 className={`channel-item ${activeChatTarget?.type === 'BROADCAST' ? 'active' : ''}`}
-                onClick={() => handleSelectTarget({
-                  type: 'BROADCAST',
-                  target_id: 'broadcast',
-                  title: 'Diffusions & Annonces Officielles',
-                  sub: 'Messages généraux envoyés aux élèves',
-                  badge: 'Annonces'
-                })}
+                onClick={() =>
+                  handleSelectTarget({
+                    type: 'BROADCAST',
+                    target_id: 'broadcast',
+                    title: 'Diffusions & Annonces Officielles',
+                    sub: 'Messages généraux envoyés aux élèves',
+                    badge: 'Annonces',
+                  })
+                }
               >
                 <div className="chan-icon-box chan-bell">
                   <Bell size={18} />
@@ -154,7 +172,6 @@ const StudentMessagesTab = ({
                 </div>
               </button>
             </div>
-
           </div>
         </div>
 
@@ -165,9 +182,9 @@ const StudentMessagesTab = ({
               {/* Chat Panel Header */}
               <div className="chat-panel-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
-                  <button 
-                    type="button" 
-                    className="msg-mobile-back-btn" 
+                  <button
+                    type="button"
+                    className="msg-mobile-back-btn"
                     onClick={() => {
                       setMobileView('channels');
                       setActiveChatTarget(null);
@@ -184,8 +201,14 @@ const StudentMessagesTab = ({
                       {activeChatTarget.type === 'BROADCAST' && <Bell size={20} />}
                     </div>
                     <div style={{ minWidth: 0, overflow: 'hidden' }}>
-                      <h4 style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeChatTarget.title}</h4>
-                      <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{activeChatTarget.sub}</span>
+                      <h4 style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {activeChatTarget.title}
+                      </h4>
+                      <span
+                        style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}
+                      >
+                        {activeChatTarget.sub}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -198,15 +221,22 @@ const StudentMessagesTab = ({
                   /* Broadcast Notifications Feed */
                   <div className="broadcast-feed">
                     {messages.length > 0 ? (
-                      messages.map(msg => (
+                      messages.map((msg) => (
                         <div key={msg.id} className={`broadcast-card ${msg.lu ? 'read' : 'unread'}`}>
                           <div className="broadcast-card-header">
                             <strong>{msg.sujet}</strong>
                             <span className="broadcast-date">
-                              {new Date(msg.date_envoi).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                              {new Date(msg.date_envoi).toLocaleDateString('fr-FR', {
+                                day: '2-digit',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
                             </span>
                           </div>
-                          <p className="broadcast-sender">De : <strong>{msg.expediteur_nom_complet || msg.expediteur_nom}</strong></p>
+                          <p className="broadcast-sender">
+                            De : <strong>{msg.expediteur_nom_complet || msg.expediteur_nom}</strong>
+                          </p>
                           <p className="broadcast-content">{msg.contenu}</p>
                         </div>
                       ))
@@ -225,22 +255,23 @@ const StudentMessagesTab = ({
                         <span>Chargement des messages...</span>
                       </div>
                     ) : chatHistory.length > 0 ? (
-                      chatHistory.map(msg => {
+                      chatHistory.map((msg) => {
                         const isMe = String(msg.expediteur_id) === String(user?.id);
                         return (
                           <div key={msg.id} className={`chat-msg-row ${isMe ? 'me' : 'other'}`}>
                             <div className="chat-msg-bubble">
                               {!isMe && (
                                 <span className="msg-sender-name">
-                                  {msg.expediteur_role === 'PROFESSEUR' ? 'Prof. ' : ''}{msg.expediteur_nom_complet || msg.expediteur_nom}
+                                  {msg.expediteur_role === 'PROFESSEUR' ? 'Prof. ' : ''}
+                                  {msg.expediteur_nom_complet || msg.expediteur_nom}
                                 </span>
                               )}
                               <p className="msg-text">{msg.contenu}</p>
                               {msg.fichier_url && (
-                                <a 
-                                  href={`${API_BASE_URL.replace('/api', '')}${msg.fichier_url}`} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer" 
+                                <a
+                                  href={`${API_BASE_URL.replace('/api', '')}${msg.fichier_url}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
                                   className={`msg-file-attachment ${isMe ? 'file-me' : 'file-other'}`}
                                 >
                                   <Paperclip size={13} />
@@ -249,7 +280,10 @@ const StudentMessagesTab = ({
                                 </a>
                               )}
                               <span className="msg-timestamp">
-                                {new Date(msg.date_envoi).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                {new Date(msg.date_envoi).toLocaleTimeString('fr-FR', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
                               </span>
                             </div>
                           </div>
@@ -282,13 +316,22 @@ const StudentMessagesTab = ({
                   <form onSubmit={sendChatMessage} className="chat-input-footer">
                     <label className="file-upload-btn" title="Joindre un fichier (PDF, image, doc...)">
                       <Paperclip size={18} />
-                      <input type="file" onChange={handleFileUpload} style={{ display: 'none' }} disabled={uploadingFile} />
+                      <input
+                        type="file"
+                        onChange={handleFileUpload}
+                        style={{ display: 'none' }}
+                        disabled={uploadingFile}
+                      />
                     </label>
                     <input
                       type="text"
-                      placeholder={uploadingFile ? "Téléchargement du fichier..." : `Écrire un message dans ${activeChatTarget.title}...`}
+                      placeholder={
+                        uploadingFile
+                          ? 'Téléchargement du fichier...'
+                          : `Écrire un message dans ${activeChatTarget.title}...`
+                      }
                       value={chatInput}
-                      onChange={e => setChatInput(e.target.value)}
+                      onChange={(e) => setChatInput(e.target.value)}
                       disabled={uploadingFile}
                     />
                     <button type="submit" className="chat-send-btn" disabled={uploadingFile} title="Envoyer le message">
@@ -299,18 +342,40 @@ const StudentMessagesTab = ({
               )}
             </>
           ) : (
-            <div className="empty-state py-12" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '340px', padding: '40px 20px', color: 'var(--text-slate-400)' }}>
+            <div
+              className="empty-state py-12"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100%',
+                minHeight: '340px',
+                padding: '40px 20px',
+                color: 'var(--text-slate-400)',
+              }}
+            >
               <MessageSquare size={52} style={{ marginBottom: '14px', opacity: 0.35, color: 'var(--primary-blue)' }} />
-              <h4 style={{ margin: '0 0 6px', fontSize: '16px', fontWeight: 800, color: 'var(--text-slate-800)' }}>Choisissez une discussion</h4>
-              <p style={{ fontSize: '13px', margin: 0, textAlign: 'center', maxWidth: '320px', color: 'var(--text-slate-500)', lineHeight: 1.5 }}>
-                Sélectionnez votre canal de classe, un enseignant ou l'administration dans le volet de gauche pour démarrer la discussion.
+              <h4 style={{ margin: '0 0 6px', fontSize: '16px', fontWeight: 800, color: 'var(--text-slate-800)' }}>
+                Choisissez une discussion
+              </h4>
+              <p
+                style={{
+                  fontSize: '13px',
+                  margin: 0,
+                  textAlign: 'center',
+                  maxWidth: '320px',
+                  color: 'var(--text-slate-500)',
+                  lineHeight: 1.5,
+                }}
+              >
+                Sélectionnez votre canal de classe, un enseignant ou l'administration dans le volet de gauche pour
+                démarrer la discussion.
               </p>
             </div>
           )}
         </div>
-
       </div>
-
     </div>
   );
 };

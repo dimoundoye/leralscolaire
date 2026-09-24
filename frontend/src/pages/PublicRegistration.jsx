@@ -1,6 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { School, User, Calendar, MapPin, Phone, Mail, Globe, ShieldAlert, Award, FileText, CheckCircle2, AlertCircle, Camera, Home, ArrowRight, X } from 'lucide-react';
+import {
+  School,
+  User,
+  Calendar,
+  MapPin,
+  Phone,
+  Mail,
+  Globe,
+  ShieldAlert,
+  Award,
+  FileText,
+  CheckCircle2,
+  AlertCircle,
+  Camera,
+  Home,
+  ArrowRight,
+  X,
+} from 'lucide-react';
 import './PublicRegistration.css';
 
 const PublicRegistration = () => {
@@ -30,7 +47,7 @@ const PublicRegistration = () => {
     email: '',
     coordonnees_parent: '',
     statut: 'APTE',
-    identifiant_existant: ''
+    identifiant_existant: '',
   });
 
   useEffect(() => {
@@ -54,7 +71,7 @@ const PublicRegistration = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handlePhotoChange = (e) => {
@@ -72,7 +89,7 @@ const PublicRegistration = () => {
 
     try {
       const formDataToSend = new FormData();
-      Object.keys(formData).forEach(key => {
+      Object.keys(formData).forEach((key) => {
         if (key === 'identifiant_existant') {
           formDataToSend.append(key, isTransfer ? formData.identifiant_existant : '');
         } else {
@@ -87,12 +104,12 @@ const PublicRegistration = () => {
 
       const res = await fetch('/api/pre-inscriptions/public/register', {
         method: 'POST',
-        body: formDataToSend
+        body: formDataToSend,
       });
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.message || 'Une erreur est survenue lors de l\'inscription.');
+        throw new Error(data.message || "Une erreur est survenue lors de l'inscription.");
       }
 
       setSuccess(true);
@@ -120,7 +137,9 @@ const PublicRegistration = () => {
           <AlertCircle size={48} className="text-red" />
           <h2>Lien Invalide</h2>
           <p>{error}</p>
-          <button className="back-btn" onClick={() => navigate('/auth')}>Retour à la connexion</button>
+          <button className="back-btn" onClick={() => navigate('/auth')}>
+            Retour à la connexion
+          </button>
         </div>
       </div>
     );
@@ -129,14 +148,15 @@ const PublicRegistration = () => {
   return (
     <div className="registration-page">
       <div className="registration-container">
-        
         {/* HEADER BRAND */}
         <div className="brand-logo" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <img 
-            src="/logo_leralscolaire.png" 
-            alt="Logo LéralScolaire" 
+          <img
+            src="/logo_leralscolaire.png"
+            alt="Logo LéralScolaire"
             style={{ height: '48px', width: 'auto', objectFit: 'contain' }}
-            onError={(e) => { e.target.style.display = 'none'; }}
+            onError={(e) => {
+              e.target.style.display = 'none';
+            }}
           />
           <div>
             <h2>Portail LeralScolaire</h2>
@@ -162,16 +182,23 @@ const PublicRegistration = () => {
             <CheckCircle2 size={64} className="text-green" />
             <h2>Demande transmise avec succès !</h2>
             <p className="success-message">
-              Votre dossier de pré-inscription pour la classe de <strong>{classInfo?.classe_nom}</strong> a bien été envoyé à l'administration de l'établissement <strong>{classInfo?.etablissement_nom}</strong>.
+              Votre dossier de pré-inscription pour la classe de <strong>{classInfo?.classe_nom}</strong> a bien été
+              envoyé à l'administration de l'établissement <strong>{classInfo?.etablissement_nom}</strong>.
             </p>
             <div className="success-next-steps">
               <h4>Étapes suivantes :</h4>
               <ul>
                 <li>L'administration examinera et validera vos informations.</li>
                 {isTransfer ? (
-                  <li>Après validation, vous pourrez vous connecter directement sur le portail avec vos identifiants existants.</li>
+                  <li>
+                    Après validation, vous pourrez vous connecter directement sur le portail avec vos identifiants
+                    existants.
+                  </li>
                 ) : (
-                  <li>Après validation, vos identifiants d'accès (Identifiant national unique et mot de passe provisoire) vous seront fournis par l'établissement.</li>
+                  <li>
+                    Après validation, vos identifiants d'accès (Identifiant national unique et mot de passe provisoire)
+                    vous seront fournis par l'établissement.
+                  </li>
                 )}
               </ul>
             </div>
@@ -188,20 +215,25 @@ const PublicRegistration = () => {
           </div>
         ) : (
           <div className="form-card animate-fade-in">
-            
             {/* TABS CONTROL */}
             <div className="reg-tabs">
-              <button 
-                type="button" 
-                className={`reg-tab ${!isTransfer ? 'active' : ''}`} 
-                onClick={() => { setIsTransfer(false); setError(''); }}
+              <button
+                type="button"
+                className={`reg-tab ${!isTransfer ? 'active' : ''}`}
+                onClick={() => {
+                  setIsTransfer(false);
+                  setError('');
+                }}
               >
                 Nouvelle Inscription
               </button>
-              <button 
-                type="button" 
-                className={`reg-tab ${isTransfer ? 'active' : ''}`} 
-                onClick={() => { setIsTransfer(true); setError(''); }}
+              <button
+                type="button"
+                className={`reg-tab ${isTransfer ? 'active' : ''}`}
+                onClick={() => {
+                  setIsTransfer(true);
+                  setError('');
+                }}
               >
                 Transfert (J'ai déjà un compte)
               </button>
@@ -215,16 +247,17 @@ const PublicRegistration = () => {
             )}
 
             <form onSubmit={handleSubmit} className="reg-form">
-              
               {isTransfer && (
                 <div className="form-section highlight-section">
                   <h3>Identifiant Existant</h3>
                   <div className="input-group">
-                    <label htmlFor="identifiant_existant">Identifiant National Unique (Format: SN-YYYY-XXX-XXXXXX) *</label>
+                    <label htmlFor="identifiant_existant">
+                      Identifiant National Unique (Format: SN-YYYY-XXX-XXXXXX) *
+                    </label>
                     <div className="input-with-icon">
                       <ShieldAlert size={18} />
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         id="identifiant_existant"
                         name="identifiant_existant"
                         placeholder="Ex: SN-2026-XCH-000004"
@@ -233,21 +266,23 @@ const PublicRegistration = () => {
                         required={isTransfer}
                       />
                     </div>
-                    <p className="helper-text">Saisissez exactement l'identifiant fourni par votre ancien établissement.</p>
+                    <p className="helper-text">
+                      Saisissez exactement l'identifiant fourni par votre ancien établissement.
+                    </p>
                   </div>
                 </div>
               )}
 
               <div className="form-section">
                 <h3>Informations Personnelles de l'Élève</h3>
-                
+
                 <div className="form-row">
                   <div className="input-group">
                     <label htmlFor="prenom">Prénom *</label>
                     <div className="input-with-icon">
                       <User size={18} />
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         id="prenom"
                         name="prenom"
                         placeholder="Ex: Babacar"
@@ -261,8 +296,8 @@ const PublicRegistration = () => {
                     <label htmlFor="nom">Nom *</label>
                     <div className="input-with-icon">
                       <User size={18} />
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         id="nom"
                         name="nom"
                         placeholder="Ex: Diop"
@@ -279,8 +314,8 @@ const PublicRegistration = () => {
                     <label htmlFor="date_naissance">Date de naissance *</label>
                     <div className="input-with-icon">
                       <Calendar size={18} />
-                      <input 
-                        type="date" 
+                      <input
+                        type="date"
                         id="date_naissance"
                         name="date_naissance"
                         value={formData.date_naissance}
@@ -293,8 +328,8 @@ const PublicRegistration = () => {
                     <label htmlFor="lieu_naissance">Lieu de naissance *</label>
                     <div className="input-with-icon">
                       <MapPin size={18} />
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         id="lieu_naissance"
                         name="lieu_naissance"
                         placeholder="Ex: Dakar"
@@ -317,7 +352,12 @@ const PublicRegistration = () => {
                         value={formData.sexe || 'M'}
                         onChange={handleChange}
                         required
-                        style={{ width: '100%', padding: '10px 12px 10px 40px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px 10px 40px',
+                          borderRadius: '8px',
+                          border: '1px solid #cbd5e1',
+                        }}
                       >
                         <option value="M">Masculin (M.)</option>
                         <option value="F">Féminin (Mme / Mlle)</option>
@@ -328,8 +368,8 @@ const PublicRegistration = () => {
                     <label htmlFor="nationalite">Nationalité *</label>
                     <div className="input-with-icon">
                       <Globe size={18} />
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         id="nationalite"
                         name="nationalite"
                         placeholder="Ex: Sénégalaise"
@@ -346,8 +386,8 @@ const PublicRegistration = () => {
                     <label htmlFor="telephone">Numéro de Téléphone *</label>
                     <div className="input-with-icon">
                       <Phone size={18} />
-                      <input 
-                        type="tel" 
+                      <input
+                        type="tel"
                         id="telephone"
                         name="telephone"
                         placeholder="Ex: 77 123 45 67"
@@ -361,8 +401,8 @@ const PublicRegistration = () => {
                     <label htmlFor="email">Email (Élève ou Parent / Tuteur) *</label>
                     <div className="input-with-icon">
                       <Mail size={18} />
-                      <input 
-                        type="email" 
+                      <input
+                        type="email"
                         id="email"
                         name="email"
                         placeholder="Ex: parent@gmail.com ou eleve@sn.sn"
@@ -382,20 +422,13 @@ const PublicRegistration = () => {
                     <label htmlFor="statut">Aptitude Physique *</label>
                     <div className="input-with-icon">
                       <Award size={18} />
-                      <select 
-                        id="statut"
-                        name="statut"
-                        value={formData.statut}
-                        onChange={handleChange}
-                        required
-                      >
+                      <select id="statut" name="statut" value={formData.statut} onChange={handleChange} required>
                         <option value="APTE">Apte aux activités physiques</option>
                         <option value="INAPTE">Inapte (Certificat médical requis)</option>
                       </select>
                     </div>
                   </div>
                 </div>
-
               </div>
 
               <div className="form-section">
@@ -404,7 +437,7 @@ const PublicRegistration = () => {
                   <label htmlFor="coordonnees_parent">Nom complet, Téléphone et Adresse du Parent *</label>
                   <div className="textarea-with-icon">
                     <FileText size={18} className="textarea-icon" />
-                    <textarea 
+                    <textarea
                       id="coordonnees_parent"
                       name="coordonnees_parent"
                       rows="3"
@@ -423,18 +456,22 @@ const PublicRegistration = () => {
                   {photoPreview ? (
                     <div className="photo-preview-wrapper">
                       <img src={photoPreview} alt="Aperçu" className="photo-preview-img" />
-                      <button type="button" className="remove-photo-btn" onClick={() => { setPhotoFile(null); setPhotoPreview(null); }}>Retirer la photo</button>
+                      <button
+                        type="button"
+                        className="remove-photo-btn"
+                        onClick={() => {
+                          setPhotoFile(null);
+                          setPhotoPreview(null);
+                        }}
+                      >
+                        Retirer la photo
+                      </button>
                     </div>
                   ) : (
                     <label className="photo-upload-label">
                       <Camera size={24} />
                       <span>Ajouter une photo d'identité (Optionnel)</span>
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={handlePhotoChange} 
-                        style={{ display: 'none' }} 
-                      />
+                      <input type="file" accept="image/*" onChange={handlePhotoChange} style={{ display: 'none' }} />
                     </label>
                   )}
                 </div>
@@ -446,15 +483,15 @@ const PublicRegistration = () => {
                     <div className="btn-spinner"></div>
                     Envoi en cours...
                   </>
+                ) : isTransfer ? (
+                  'Soumettre la demande de transfert'
                 ) : (
-                  isTransfer ? 'Soumettre la demande de transfert' : 'Soumettre ma pré-inscription'
+                  'Soumettre ma pré-inscription'
                 )}
               </button>
-
             </form>
           </div>
         )}
-
       </div>
 
       {/* POPUP CONFIRMATION D'INSCRIPTION */}
@@ -478,7 +515,11 @@ const PublicRegistration = () => {
             <h2 className="pr-modal-title">Demande transmise avec succès !</h2>
 
             <p className="pr-modal-description">
-              La pré-inscription de <strong>{formData.prenom} {formData.nom}</strong> a bien été enregistrée et transmise à l'administration de l'établissement scolaire.
+              La pré-inscription de{' '}
+              <strong>
+                {formData.prenom} {formData.nom}
+              </strong>{' '}
+              a bien été enregistrée et transmise à l'administration de l'établissement scolaire.
             </p>
 
             <div className="pr-modal-summary">
@@ -488,7 +529,9 @@ const PublicRegistration = () => {
               </div>
               <div className="pr-summary-item">
                 <span className="label">Classe & Niveau :</span>
-                <span className="value">{classInfo?.classe_nom} ({classInfo?.niveau})</span>
+                <span className="value">
+                  {classInfo?.classe_nom} ({classInfo?.niveau})
+                </span>
               </div>
               <div className="pr-summary-item">
                 <span className="label">Statut du dossier :</span>
@@ -504,24 +547,17 @@ const PublicRegistration = () => {
 
             <div className="pr-modal-note">
               <p>
-                L'administration examinera les informations fournies. Dès confirmation, vous recevrez vos identifiants officiels d'accès au portail.
+                L'administration examinera les informations fournies. Dès confirmation, vous recevrez vos identifiants
+                officiels d'accès au portail.
               </p>
             </div>
 
             <div className="pr-modal-buttons">
-              <button
-                type="button"
-                className="pr-btn-home"
-                onClick={() => navigate('/')}
-              >
+              <button type="button" className="pr-btn-home" onClick={() => navigate('/')}>
                 <Home size={18} />
                 Revenir à la page d'accueil
               </button>
-              <button
-                type="button"
-                className="pr-btn-auth"
-                onClick={() => navigate('/auth')}
-              >
+              <button type="button" className="pr-btn-auth" onClick={() => navigate('/auth')}>
                 Aller au portail de connexion
                 <ArrowRight size={16} />
               </button>

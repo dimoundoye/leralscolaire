@@ -32,4 +32,3 @@ router.get('/channels', auth, messageController.getChannels);
 router.get('/history', auth, messageController.getChannelHistory);
 
 module.exports = router;
-

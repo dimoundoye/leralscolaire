@@ -43,8 +43,17 @@ const studentController = {
    */
   async enrollStudent(req, res, next) {
     const {
-      nom, prenom, sexe, date_naissance, lieu_naissance, nationalite,
-      telephone, coordonnees_parent, classe_id, statut, email
+      nom,
+      prenom,
+      sexe,
+      date_naissance,
+      lieu_naissance,
+      nationalite,
+      telephone,
+      coordonnees_parent,
+      classe_id,
+      statut,
+      email,
     } = req.body;
 
     // Validation stricte des champs obligatoires
@@ -53,15 +62,21 @@ const studentController = {
     }
     const cleanEmail = email ? String(email).trim() : null;
     if (!cleanEmail) {
-      return response.error(res, "L'adresse email (de l'élève ou du parent/tuteur) est obligatoire pour l'envoi des identifiants.", 400);
+      return response.error(
+        res,
+        "L'adresse email (de l'élève ou du parent/tuteur) est obligatoire pour l'envoi des identifiants.",
+        400
+      );
     }
 
     const { getUploadedFileUrl } = require('../config/cloudinary');
     const photo_url = req.files?.photo?.[0] ? getUploadedFileUrl(req.files.photo[0], 'photos') : null;
-    const justificatif_inapte_url = req.files?.justificatif_inapte?.[0] ? getUploadedFileUrl(req.files.justificatif_inapte[0], 'justificatifs_inapte') : null;
+    const justificatif_inapte_url = req.files?.justificatif_inapte?.[0]
+      ? getUploadedFileUrl(req.files.justificatif_inapte[0], 'justificatifs_inapte')
+      : null;
 
     // Validation : si statut INAPTE, le justificatif est obligatoire
-    if ((statut === 'INAPTE') && !justificatif_inapte_url) {
+    if (statut === 'INAPTE' && !justificatif_inapte_url) {
       return response.error(res, 'Un justificatif (PDF ou image) est obligatoire pour déclarer un élève Inapte.', 400);
     }
 
@@ -88,27 +103,37 @@ const studentController = {
         const passwordHash = await bcrypt.hash(tempPassword, salt);
 
         // Create associated User account (Role: ELEVE)
-        const user = await StudentModel.createUser(cleanEmail, identifiant_national, passwordHash, tempPassword, 'ELEVE', client);
+        const user = await StudentModel.createUser(
+          cleanEmail,
+          identifiant_national,
+          passwordHash,
+          tempPassword,
+          'ELEVE',
+          client
+        );
         const userId = user.id;
 
         // Create Student profile
-        const eleve = await StudentModel.createStudent({
-          identifiant_national,
-          user_id: userId,
-          etablissement_id: etablissementId,
-          nom,
-          prenom,
-          sexe: sexe || 'M',
-          date_naissance,
-          lieu_naissance,
-          nationalite,
-          telephone: telephone.trim(),
-          coordonnees_parent,
-          photo_url,
-          justificatif_inapte_url,
-          statut: statut || 'APTE',
-          email: cleanEmail
-        }, client);
+        const eleve = await StudentModel.createStudent(
+          {
+            identifiant_national,
+            user_id: userId,
+            etablissement_id: etablissementId,
+            nom,
+            prenom,
+            sexe: sexe || 'M',
+            date_naissance,
+            lieu_naissance,
+            nationalite,
+            telephone: telephone.trim(),
+            coordonnees_parent,
+            photo_url,
+            justificatif_inapte_url,
+            statut: statut || 'APTE',
+            email: cleanEmail,
+          },
+          client
+        );
 
         const eleveId = eleve.id;
         let classeNom = null;
@@ -123,22 +148,24 @@ const studentController = {
         await client.query('COMMIT');
 
         // Envoi automatique de l'email avec l'IUP et mot de passe temporaire (non-bloquant)
-        emailService.sendEleveWelcome({
-          to: cleanEmail,
-          nom,
-          prenom,
-          iupEleve: identifiant_national,
-          tempPassword: tempPassword,
-          nomEtablissement: etab.nom,
-          classeNom: classeNom,
-          isParent: false
-        }).catch(e => console.error('Erreur email élève:', e.message));
+        emailService
+          .sendEleveWelcome({
+            to: cleanEmail,
+            nom,
+            prenom,
+            iupEleve: identifiant_national,
+            tempPassword: tempPassword,
+            nomEtablissement: etab.nom,
+            classeNom: classeNom,
+            isParent: false,
+          })
+          .catch((e) => console.error('Erreur email élève:', e.message));
 
         return res.status(201).json({
-          message: 'Élève inscrit avec succès ! Identifiants d\'accès envoyés par email.',
+          message: "Élève inscrit avec succès ! Identifiants d'accès envoyés par email.",
           identifiant: identifiant_national,
           password: tempPassword,
-          eleve
+          eleve,
         });
       } catch (err) {
         await client.query('ROLLBACK');
@@ -169,8 +196,13 @@ const studentController = {
 
       for (const row of data) {
         const { nom, prenom, sexe, civilite, date_naissance, lieu_naissance, nationalite, telephone, classe_nom } = row;
-        const rawSexe = String(sexe || civilite || '').toUpperCase().trim();
-        const sexeVal = (rawSexe === 'F' || rawSexe.startsWith('FEM') || rawSexe.includes('MME') || rawSexe.includes('MLLE')) ? 'F' : 'M';
+        const rawSexe = String(sexe || civilite || '')
+          .toUpperCase()
+          .trim();
+        const sexeVal =
+          rawSexe === 'F' || rawSexe.startsWith('FEM') || rawSexe.includes('MME') || rawSexe.includes('MLLE')
+            ? 'F'
+            : 'M';
 
         // Use transaction for each row insertion to ensure consistency
         const client = await db.pool.connect();
@@ -182,21 +214,31 @@ const studentController = {
           const salt = await bcrypt.genSalt(10);
           const passwordHash = await bcrypt.hash(tempPassword, salt);
 
-          const user = await StudentModel.createUser(null, identifiant_national, passwordHash, tempPassword, 'ELEVE', client);
+          const user = await StudentModel.createUser(
+            null,
+            identifiant_national,
+            passwordHash,
+            tempPassword,
+            'ELEVE',
+            client
+          );
           const userId = user.id;
 
-          const eleve = await StudentModel.createStudent({
-            identifiant_national,
-            user_id: userId,
-            etablissement_id: etablissementId,
-            nom,
-            prenom,
-            sexe: sexeVal,
-            date_naissance,
-            lieu_naissance,
-            nationalite,
-            telephone
-          }, client);
+          const eleve = await StudentModel.createStudent(
+            {
+              identifiant_national,
+              user_id: userId,
+              etablissement_id: etablissementId,
+              nom,
+              prenom,
+              sexe: sexeVal,
+              date_naissance,
+              lieu_naissance,
+              nationalite,
+              telephone,
+            },
+            client
+          );
 
           if (classe_nom) {
             const classId = await StudentModel.getEtablissementClassByName(classe_nom, etablissementId);
@@ -250,10 +292,24 @@ const studentController = {
    * Update student details (with optional photo)
    */
   async updateStudent(req, res, next) {
-    const { nom, prenom, sexe, date_naissance, lieu_naissance, nationalite, telephone, coordonnees_parent, statut, classe_id, email } = req.body;
+    const {
+      nom,
+      prenom,
+      sexe,
+      date_naissance,
+      lieu_naissance,
+      nationalite,
+      telephone,
+      coordonnees_parent,
+      statut,
+      classe_id,
+      email,
+    } = req.body;
     const { getUploadedFileUrl } = require('../config/cloudinary');
     const photo_url = req.files?.photo?.[0] ? getUploadedFileUrl(req.files.photo[0], 'photos') : undefined;
-    const justificatif_inapte_url = req.files?.justificatif_inapte?.[0] ? getUploadedFileUrl(req.files.justificatif_inapte[0], 'justificatifs_inapte') : undefined;
+    const justificatif_inapte_url = req.files?.justificatif_inapte?.[0]
+      ? getUploadedFileUrl(req.files.justificatif_inapte[0], 'justificatifs_inapte')
+      : undefined;
 
     // Validation : si statut INAPTE, le justificatif est obligatoire
     const currentStudent = await StudentModel.getStudentById(req.params.id);
@@ -269,15 +325,33 @@ const studentController = {
         return response.error(res, 'Élève non trouvé.', 404);
       }
       if (student.etablissement_id !== adminEtablissementId) {
-        return response.error(res, "Accès refusé. Vous n'avez plus les droits d'édition sur cet élève (élève transféré).", 403);
+        return response.error(
+          res,
+          "Accès refusé. Vous n'avez plus les droits d'édition sur cet élève (élève transféré).",
+          403
+        );
       }
       if (classe_id && !(await canAccessClasse(req.user, classe_id))) {
         return response.error(res, 'Accès refusé. Cette classe ne relève pas de votre établissement.', 403);
       }
 
-      const updatedStudent = await StudentModel.updateStudent(req.params.id, {
-        nom, prenom, sexe, date_naissance, lieu_naissance, nationalite, telephone, coordonnees_parent, statut, email
-      }, photo_url, justificatif_inapte_url);
+      const updatedStudent = await StudentModel.updateStudent(
+        req.params.id,
+        {
+          nom,
+          prenom,
+          sexe,
+          date_naissance,
+          lieu_naissance,
+          nationalite,
+          telephone,
+          coordonnees_parent,
+          statut,
+          email,
+        },
+        photo_url,
+        justificatif_inapte_url
+      );
 
       if (email && student.user_id) {
         await db.query('UPDATE users SET email = $1 WHERE id = $2', [email.trim(), student.user_id]);
@@ -323,7 +397,7 @@ const studentController = {
       return res.json({ message: 'Élève affecté à la classe avec succès !' });
     } catch (err) {
       console.error(err);
-      return response.error(res, 'Erreur lors de l\'affectation.', 500);
+      return response.error(res, "Erreur lors de l'affectation.", 500);
     }
   },
 
@@ -370,7 +444,10 @@ const studentController = {
 
       await StudentModel.createTransferRecord(req.params.id, adminEtablissementId, nouveau_etablissement_id, motif);
 
-      return res.json({ message: 'Demande de transfert envoyée avec succès. Vous conservez les droits d\'édition jusqu\'à la validation par l\'établissement d\'accueil.' });
+      return res.json({
+        message:
+          "Demande de transfert envoyée avec succès. Vous conservez les droits d'édition jusqu'à la validation par l'établissement d'accueil.",
+      });
     } catch (err) {
       console.error(err);
       return response.error(res, 'Erreur lors de la demande de transfert.', 500);
@@ -386,7 +463,7 @@ const studentController = {
       return response.error(res, 'Veuillez sélectionner au moins un élève.', 400);
     }
     if (!nouveau_etablissement_id) {
-      return response.error(res, 'Veuillez sélectionner l\'établissement destinataire.', 400);
+      return response.error(res, "Veuillez sélectionner l'établissement destinataire.", 400);
     }
 
     try {
@@ -403,10 +480,18 @@ const studentController = {
       const client = await db.pool.connect();
       try {
         await client.query('BEGIN');
-        await StudentModel.createPendingTransfersBulk(eleve_ids, adminEtablissementId, nouveau_etablissement_id, motif, client);
+        await StudentModel.createPendingTransfersBulk(
+          eleve_ids,
+          adminEtablissementId,
+          nouveau_etablissement_id,
+          motif,
+          client
+        );
         await client.query('COMMIT');
 
-        return res.json({ message: `${eleve_ids.length} demande(s) de transfert envoyée(s) avec succès. Vos droits d'édition sont conservés jusqu'à la validation.` });
+        return res.json({
+          message: `${eleve_ids.length} demande(s) de transfert envoyée(s) avec succès. Vos droits d'édition sont conservés jusqu'à la validation.`,
+        });
       } catch (err) {
         await client.query('ROLLBACK');
         throw err;
@@ -462,10 +547,10 @@ const studentController = {
         await StudentModel.acceptTransfer(id, etablissementId, client);
         await client.query('COMMIT');
 
-        return res.json({ message: 'Transfert accepté avec succès ! Les droits d\'édition vous ont été transmis.' });
+        return res.json({ message: "Transfert accepté avec succès ! Les droits d'édition vous ont été transmis." });
       } catch (err) {
         await client.query('ROLLBACK');
-        return response.error(res, err.message || 'Erreur lors de l\'acceptation.', 400);
+        return response.error(res, err.message || "Erreur lors de l'acceptation.", 400);
       } finally {
         client.release();
       }
@@ -506,7 +591,7 @@ const studentController = {
       console.error(err);
       return response.error(res, 'Erreur serveur.', 500);
     }
-  }
+  },
 };
 
 module.exports = studentController;

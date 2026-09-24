@@ -11,12 +11,14 @@ export const OfficeTopbar = ({ examenMode, copyPublicLink }) => {
         </div>
       </div>
       <div className="ob-topbar-right" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button className="ob-btn ob-btn-primary ob-btn-sm" onClick={copyPublicLink} style={{ background: '#10b981', borderColor: '#059669' }}>
+        <button
+          className="ob-btn ob-btn-primary ob-btn-sm"
+          onClick={copyPublicLink}
+          style={{ background: '#10b981', borderColor: '#059669' }}
+        >
           <Copy size={14} /> Copier le Lien d'Inscription Publique
         </button>
-        <div className="ob-topbar-badge">
-          🇸🇳 République du Sénégal
-        </div>
+        <div className="ob-topbar-badge">🇸🇳 République du Sénégal</div>
       </div>
     </header>
   );

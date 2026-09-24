@@ -3,7 +3,7 @@ const db = require('../src/config/db');
 
 async function migrate() {
   try {
-    console.log("🚀 Migration v35 : Correction schéma Office du BAC (centres, jurys, professeurs, établissements)...");
+    console.log('🚀 Migration v35 : Correction schéma Office du BAC (centres, jurys, professeurs, établissements)...');
 
     // 1. Table centres_examen_bac
     await db.query(`
@@ -107,7 +107,7 @@ async function migrate() {
           ('Lycée Charles de Gaulle', 'PRINCIPAL', 'Saint-Louis', 'Saint-Louis Île', 380, '{"S1", "S2", "L1", "L2"}')
         ON CONFLICT DO NOTHING;
       `);
-      console.log('  ✓ Centres d\'examen initiaux créés');
+      console.log("  ✓ Centres d'examen initiaux créés");
     }
 
     console.log('✅ Migration v35 exécutée avec succès !');

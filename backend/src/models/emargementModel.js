@@ -17,20 +17,22 @@ const EmargementModel = {
   generateLiveQrToken(etablissementId) {
     const timestamp20s = Math.floor(Date.now() / 20000); // Tranche de 20 secondes
     const secret = this.getEtablissementSecret(etablissementId);
-    
+
     const payload = `${etablissementId}:${timestamp20s}`;
     const hmac = crypto.createHmac('sha256', secret).update(payload).digest('hex').substring(0, 16);
 
-    const token = Buffer.from(JSON.stringify({
-      etabId: etablissementId,
-      time: timestamp20s,
-      hash: hmac
-    })).toString('base64');
+    const token = Buffer.from(
+      JSON.stringify({
+        etabId: etablissementId,
+        time: timestamp20s,
+        hash: hmac,
+      })
+    ).toString('base64');
 
     return {
       token,
       expiresInSeconds: 20 - (Math.floor(Date.now() / 1000) % 20),
-      timestamp20s
+      timestamp20s,
     };
   },
 
@@ -43,13 +45,13 @@ const EmargementModel = {
       // Si l'un des deux est 'default' ou non spécifié, on autorise la validation
       if (etablissementId && decoded.etabId && decoded.etabId !== 'default' && etablissementId !== 'default') {
         if (decoded.etabId !== String(etablissementId)) {
-          return { valid: false, reason: "Ce QR Code appartient à un autre établissement !" };
+          return { valid: false, reason: 'Ce QR Code appartient à un autre établissement !' };
         }
       }
 
       // Tolérance jusqu'à 2 tranches (40s) pour éviter les rejets lors du décalage de seconde
       if (Math.abs(current20s - decoded.time) > 2) {
-        return { valid: false, reason: "QR Code expiré (plus de 20 secondes). Veuillez rescanner !" };
+        return { valid: false, reason: 'QR Code expiré (plus de 20 secondes). Veuillez rescanner !' };
       }
 
       const tokenEtab = decoded.etabId || etablissementId;
@@ -58,26 +60,38 @@ const EmargementModel = {
       const expectedHmac = crypto.createHmac('sha256', secret).update(expectedPayload).digest('hex').substring(0, 16);
 
       if (decoded.hash !== expectedHmac) {
-        return { valid: false, reason: "Signature du QR Code invalide ou corrompue." };
+        return { valid: false, reason: 'Signature du QR Code invalide ou corrompue.' };
       }
 
       return { valid: true };
     } catch (err) {
-      return { valid: false, reason: "Format de QR Code illisible." };
+      return { valid: false, reason: 'Format de QR Code illisible.' };
     }
   },
 
   // 4. Créer ou récupérer une séance de cours
-  async findOrCreateSeance(profId, etablissementId, classeId, matiereCode, matiereNom, heureDebut, heureFin, typeSeance = 'REGULIER') {
+  async findOrCreateSeance(
+    profId,
+    etablissementId,
+    classeId,
+    matiereCode,
+    matiereNom,
+    heureDebut,
+    heureFin,
+    typeSeance = 'REGULIER'
+  ) {
     const today = new Date().toISOString().split('T')[0];
 
     // Sécurisation des UUIDs Postgres
     let safeEtabId = isValidUuid(etablissementId) ? etablissementId : null;
     if (!safeEtabId) {
-      const { rows: etabRows } = await db.query(`
+      const { rows: etabRows } = await db.query(
+        `
         SELECT pe.etablissement_id FROM professeurs_etablissements pe 
         WHERE pe.professeur_id = $1 AND pe.statut = 'ACTIF' LIMIT 1
-      `, [profId]);
+      `,
+        [profId]
+      );
       if (etabRows.length > 0 && isValidUuid(etabRows[0].etablissement_id)) {
         safeEtabId = etabRows[0].etablissement_id;
       } else {
@@ -88,65 +102,101 @@ const EmargementModel = {
 
     let safeClasseId = isValidUuid(classeId) ? classeId : null;
     if (!safeClasseId && safeEtabId) {
-      const { rows: classRows } = await db.query(`
+      const { rows: classRows } = await db.query(
+        `
         SELECT c.id FROM classes c 
         LEFT JOIN cours cr ON cr.classe_id = c.id 
         WHERE (c.professeur_principal_id = $1 OR cr.professeur_id = $1)
           AND c.etablissement_id = $2 LIMIT 1
-      `, [profId, safeEtabId]);
+      `,
+        [profId, safeEtabId]
+      );
       if (classRows.length > 0 && isValidUuid(classRows[0].id)) {
         safeClasseId = classRows[0].id;
       }
     }
 
-    const { rows: existing } = await db.query(`
+    const { rows: existing } = await db.query(
+      `
       SELECT * FROM seances_cours 
       WHERE professeur_id = $1 AND etablissement_id = $2 AND date_seance = $3 
         AND heure_debut = $4 LIMIT 1
-    `, [profId, safeEtabId, today, heureDebut]);
+    `,
+      [profId, safeEtabId, today, heureDebut]
+    );
 
     if (existing.length > 0) {
       return existing[0];
     }
 
-    const { rows: inserted } = await db.query(`
+    const { rows: inserted } = await db.query(
+      `
       INSERT INTO seances_cours (
         etablissement_id, professeur_id, classe_id, matiere_code, matiere_nom, 
         date_seance, heure_debut, heure_fin, type_seance, statut
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'EMARGE_PRESENCE')
       RETURNING *
-    `, [safeEtabId, profId, safeClasseId, matiereCode || 'GEN', matiereNom || 'Cours Général', today, heureDebut, heureFin, typeSeance]);
+    `,
+      [
+        safeEtabId,
+        profId,
+        safeClasseId,
+        matiereCode || 'GEN',
+        matiereNom || 'Cours Général',
+        today,
+        heureDebut,
+        heureFin,
+        typeSeance,
+      ]
+    );
 
     return inserted[0];
   },
 
   // 5. Enregistrer un Émargement
-  async createEmargement(seanceId, profId, etablissementId, modeEmargement, lat, lng, distMetres, tokenUtilise, terrainEpsId = null) {
+  async createEmargement(
+    seanceId,
+    profId,
+    etablissementId,
+    modeEmargement,
+    lat,
+    lng,
+    distMetres,
+    tokenUtilise,
+    terrainEpsId = null
+  ) {
     let safeEtabId = isValidUuid(etablissementId) ? etablissementId : null;
     if (!safeEtabId) {
       const { rows: sRows } = await db.query('SELECT etablissement_id FROM seances_cours WHERE id = $1', [seanceId]);
       safeEtabId = sRows[0]?.etablissement_id || null;
     }
 
-    const { rows } = await db.query(`
+    const { rows } = await db.query(
+      `
       INSERT INTO emargements (
         seance_id, professeur_id, etablissement_id, mode_emargement, 
         latitude, longitude, distance_etablissement_metres, token_totp_utilise, statut, terrain_eps_id
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'VALIDE', $9)
       RETURNING *
-    `, [seanceId, profId, safeEtabId, modeEmargement, lat, lng, distMetres, tokenUtilise, terrainEpsId]);
+    `,
+      [seanceId, profId, safeEtabId, modeEmargement, lat, lng, distMetres, tokenUtilise, terrainEpsId]
+    );
 
-    await db.query(`
+    await db.query(
+      `
       UPDATE seances_cours SET statut = 'EMARGE_PRESENCE', updated_at = CURRENT_TIMESTAMP
       WHERE id = $1
-    `, [seanceId]);
+    `,
+      [seanceId]
+    );
 
     return rows[0];
   },
 
   // 6. Remplir le Cahier de Texte
   async completeSeanceCahierTexte(seanceId, profId, titre, contenu, devoirs) {
-    const { rows } = await db.query(`
+    const { rows } = await db.query(
+      `
       UPDATE seances_cours 
       SET cahier_texte_titre = $1, 
           cahier_texte_contenu = $2, 
@@ -156,66 +206,94 @@ const EmargementModel = {
           updated_at = CURRENT_TIMESTAMP
       WHERE id = $4 AND professeur_id = $5
       RETURNING *
-    `, [titre, contenu, devoirs, seanceId, profId]);
+    `,
+      [titre, contenu, devoirs, seanceId, profId]
+    );
 
     return rows[0];
   },
 
   // 7. Demande et Approbation des cours de Rattrapage
-  async demandRattrapage(profId, etablissementId, classeId, matiereCode, matiereNom, dateSeance, heureDebut, heureFin, motif) {
-    const { rows } = await db.query(`
+  async demandRattrapage(
+    profId,
+    etablissementId,
+    classeId,
+    matiereCode,
+    matiereNom,
+    dateSeance,
+    heureDebut,
+    heureFin,
+    motif
+  ) {
+    const { rows } = await db.query(
+      `
       INSERT INTO seances_cours (
         etablissement_id, professeur_id, classe_id, matiere_code, matiere_nom,
         date_seance, heure_debut, heure_fin, type_seance, statut_rattrapage, motif_rattrapage, statut
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'RATTRAPAGE', 'DEMANDE', $9, 'PROGRAMME')
       RETURNING *
-    `, [etablissementId, profId, classeId, matiereCode, matiereNom, dateSeance, heureDebut, heureFin, motif]);
+    `,
+      [etablissementId, profId, classeId, matiereCode, matiereNom, dateSeance, heureDebut, heureFin, motif]
+    );
 
     return rows[0];
   },
 
   async approveRattrapage(seanceId, etablissementId) {
-    const { rows } = await db.query(`
+    const { rows } = await db.query(
+      `
       UPDATE seances_cours
       SET statut_rattrapage = 'APPROUVE', updated_at = CURRENT_TIMESTAMP
       WHERE id = $1 AND etablissement_id = $2
       RETURNING *
-    `, [seanceId, etablissementId]);
+    `,
+      [seanceId, etablissementId]
+    );
 
     return rows[0];
   },
 
   // 8. Calcul du Score National Enseignant sur 1 000 Points
   async calculateProfScore1000(profId) {
-    const { rows: statsSeances } = await db.query(`
+    const { rows: statsSeances } = await db.query(
+      `
       SELECT 
         COUNT(*) filter (where statut IN ('EMARGE_PRESENCE', 'VALIDE_COMPLET')) as effectues,
         COUNT(*) as total
       FROM seances_cours WHERE professeur_id = $1
-    `, [profId]);
+    `,
+      [profId]
+    );
 
     const total = parseInt(statsSeances[0]?.total || 0, 10);
     const effectues = parseInt(statsSeances[0]?.effectues || 0, 10);
-    const ratioAssiduite = total > 0 ? (effectues / total) : 0;
+    const ratioAssiduite = total > 0 ? effectues / total : 0;
     const ptsAssiduite = Math.round(ratioAssiduite * 350);
 
-    const { rows: statsCahier } = await db.query(`
+    const { rows: statsCahier } = await db.query(
+      `
       SELECT COUNT(*) as complets FROM seances_cours 
       WHERE professeur_id = $1 AND statut = 'VALIDE_COMPLET'
-    `, [profId]);
+    `,
+      [profId]
+    );
     const complets = parseInt(statsCahier[0]?.complets || 0, 10);
-    const ratioCahier = total > 0 ? (complets / total) : 0;
+    const ratioCahier = total > 0 ? complets / total : 0;
     const ptsCahier = Math.round(ratioCahier * 250);
 
-    const { rows: profInfo } = await db.query(`
+    const { rows: profInfo } = await db.query(
+      `
       SELECT note_inspection, diplome_eleve, est_eligible_jury_bac, nombre_participations_bac
       FROM professeurs WHERE id = $1
-    `, [profId]);
+    `,
+      [profId]
+    );
 
     const noteInspection = profInfo[0]?.note_inspection ? parseFloat(profInfo[0].note_inspection) : null;
     const ptsInspection = noteInspection ? Math.round((noteInspection / 20.0) * 200) : 0;
 
-    const { rows: evalStats } = await db.query(`
+    const { rows: evalStats } = await db.query(
+      `
       SELECT 
         AVG(q1_pedagogie) as avg_q1,
         AVG(q2_assiduite) as avg_q2,
@@ -224,7 +302,9 @@ const EmargementModel = {
         AVG(q5_climat) as avg_q5,
         COUNT(*) as total_votes
       FROM evaluations_eleves WHERE professeur_id = $1
-    `, [profId]);
+    `,
+      [profId]
+    );
 
     const totalVotes = parseInt(evalStats[0]?.total_votes || 0, 10);
     let avgGlobalScore = null;
@@ -272,14 +352,15 @@ const EmargementModel = {
         totalVotes,
         totalSeances: total,
         seancesEffectuees: effectues,
-        cahiersComplets: complets
-      }
+        cahiersComplets: complets,
+      },
     };
   },
 
   // 9. Carte d'Identité Numérique Enseignant pour l'Office du BAC
   async getProfFullIdentityCard(profId) {
-    const { rows: profDetails } = await db.query(`
+    const { rows: profDetails } = await db.query(
+      `
       SELECT 
         u.id, u.email, u.identifiant_national, 
         p.nom, p.prenom, p.telephone, p.matiere_principale, p.matricule_national,
@@ -288,24 +369,30 @@ const EmargementModel = {
       FROM users u
       LEFT JOIN professeurs p ON u.id = p.id
       WHERE u.id = $1
-    `, [profId]);
+    `,
+      [profId]
+    );
 
     if (!profDetails[0]) return null;
 
     const prof = profDetails[0];
 
-    const { rows: classesEnseignees } = await db.query(`
+    const { rows: classesEnseignees } = await db.query(
+      `
       SELECT DISTINCT c.id, c.nom as classe_nom, c.niveau, e.nom as nom_etablissement, e.ville
       FROM seances_cours s
       JOIN classes c ON s.classe_id = c.id
       JOIN etablissements e ON s.etablissement_id = e.id
       WHERE s.professeur_id = $1
       ORDER BY c.niveau DESC, c.nom ASC
-    `, [profId]);
+    `,
+      [profId]
+    );
 
     const scoreData = await this.calculateProfScore1000(profId);
 
-    const { rows: evalDetail } = await db.query(`
+    const { rows: evalDetail } = await db.query(
+      `
       SELECT 
         COALESCE(ROUND(AVG(q1_pedagogie), 1), 4.5) as q1,
         COALESCE(ROUND(AVG(q2_assiduite), 1), 4.7) as q2,
@@ -314,15 +401,17 @@ const EmargementModel = {
         COALESCE(ROUND(AVG(q5_climat), 1), 4.6) as q5,
         COUNT(*) as total_votes
       FROM evaluations_eleves WHERE professeur_id = $1
-    `, [profId]);
+    `,
+      [profId]
+    );
 
     return {
       professeur: prof,
       classesEnseignees,
       score1000: scoreData,
-      evaluationsElevesDetail: evalDetail[0]
+      evaluationsElevesDetail: evalDetail[0],
     };
-  }
+  },
 };
 
 module.exports = EmargementModel;

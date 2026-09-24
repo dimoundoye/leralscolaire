@@ -23,12 +23,12 @@ async function migrate() {
     const { rows: etabs } = await db.query(`SELECT id FROM etablissements`);
     for (const etab of etabs) {
       const defaultBaremes = [
-        { min: 0,  max: 4,  label: 'Très Faible',  color: '#ef4444' },
-        { min: 4.01, max: 7, label: 'Faible',      color: '#f97316' },
+        { min: 0, max: 4, label: 'Très Faible', color: '#ef4444' },
+        { min: 4.01, max: 7, label: 'Faible', color: '#f97316' },
         { min: 7.01, max: 9, label: 'Insuffisant', color: '#f59e0b' },
-        { min: 9.01, max: 11, label: 'Passable',   color: '#eab308' },
-        { min: 11.01, max: 13, label: 'Assez Bien',color: '#84cc16' },
-        { min: 13.01, max: 15, label: 'Bien',      color: '#22c55e' },
+        { min: 9.01, max: 11, label: 'Passable', color: '#eab308' },
+        { min: 11.01, max: 13, label: 'Assez Bien', color: '#84cc16' },
+        { min: 13.01, max: 15, label: 'Bien', color: '#22c55e' },
         { min: 15.01, max: 17, label: 'Très Bien', color: '#14b8a6' },
         { min: 17.01, max: 20, label: 'Excellent', color: '#6366f1' },
       ];

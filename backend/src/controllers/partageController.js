@@ -22,7 +22,7 @@ const partageController = {
         cheminFichier: req.file.path,
         taille: req.file.size,
         typeFichier: req.file.mimetype,
-        description
+        description,
       });
 
       return res.json(document);
@@ -133,7 +133,7 @@ const partageController = {
       console.error(err);
       return response.error(res, 'Erreur.', 500);
     }
-  }
+  },
 };
 
 module.exports = partageController;

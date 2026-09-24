@@ -28,22 +28,21 @@ async function migrate() {
 
     // 2. Créer le compte Office du BAC s'il n'existe pas encore.
     // Un compte existant n'est jamais modifié : son mot de passe appartient à son titulaire.
-    const existing = await db.query(
-      "SELECT id FROM users WHERE email = 'OFFICE-BAC-SN'",
-    );
+    const existing = await db.query("SELECT id FROM users WHERE email = 'OFFICE-BAC-SN'");
 
     if (existing.rows.length > 0) {
       console.log('  ℹ️  Compte OFFICE-BAC-SN déjà présent, aucune modification.');
     } else if (!process.env.OFFICE_BAC_INITIAL_PASSWORD) {
-      console.warn('  ⚠️ Compte OFFICE-BAC-SN absent : définissez OFFICE_BAC_INITIAL_PASSWORD puis relancez les migrations.');
+      console.warn(
+        '  ⚠️ Compte OFFICE-BAC-SN absent : définissez OFFICE_BAC_INITIAL_PASSWORD puis relancez les migrations.'
+      );
     } else {
       const salt = await bcrypt.genSalt(10);
       const hash = await bcrypt.hash(process.env.OFFICE_BAC_INITIAL_PASSWORD, salt);
 
-      await db.query(
-        "INSERT INTO users (email, password_hash, role) VALUES ('OFFICE-BAC-SN', $1, 'OFFICE_BAC')",
-        [hash]
-      );
+      await db.query("INSERT INTO users (email, password_hash, role) VALUES ('OFFICE-BAC-SN', $1, 'OFFICE_BAC')", [
+        hash,
+      ]);
       console.log('  ✓ Compte OFFICE-BAC-SN créé avec le mot de passe défini dans OFFICE_BAC_INITIAL_PASSWORD');
     }
 

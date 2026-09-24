@@ -4,24 +4,24 @@
  * Dictionnaire officiel des trigrammes des 14 régions académiques du Sénégal
  */
 const REGION_TRIGRAMMES = {
-  'DAKAR': 'DKR',
-  'THIES': 'THS',
-  'THIÈS': 'THS',
+  DAKAR: 'DKR',
+  THIES: 'THS',
+  THIÈS: 'THS',
   'SAINT-LOUIS': 'SLN',
   'SAINT LOUIS': 'SLN',
-  'DIOURBEL': 'DBL',
-  'FATICK': 'FTK',
-  'KAOLACK': 'KLK',
-  'KOLDA': 'KLD',
-  'LOUGA': 'LGA',
-  'MATAM': 'MAT',
-  'KEDOUGOU': 'KDG',
-  'KÉDOUGOU': 'KDG',
-  'KAFFRINE': 'KFR',
-  'SEDHIOU': 'SDH',
-  'SÉDHIOU': 'SDH',
-  'TAMBACOUNDA': 'TBA',
-  'ZIGUINCHOR': 'ZIG'
+  DIOURBEL: 'DBL',
+  FATICK: 'FTK',
+  KAOLACK: 'KLK',
+  KOLDA: 'KLD',
+  LOUGA: 'LGA',
+  MATAM: 'MAT',
+  KEDOUGOU: 'KDG',
+  KÉDOUGOU: 'KDG',
+  KAFFRINE: 'KFR',
+  SEDHIOU: 'SDH',
+  SÉDHIOU: 'SDH',
+  TAMBACOUNDA: 'TBA',
+  ZIGUINCHOR: 'ZIG',
 };
 
 /**
@@ -78,7 +78,7 @@ async function generateIUP(prefix, region, year = null, client = db) {
       WHERE identifiant_national LIKE $1
     `;
     const { rows } = await client.query(query, [`${patternPrefix}%`]);
-    rows.forEach(r => {
+    rows.forEach((r) => {
       const parts = (r.identifiant_national || '').split('-');
       if (parts.length >= 4) {
         const seqVal = parseInt(parts[3], 10);
@@ -93,7 +93,7 @@ async function generateIUP(prefix, region, year = null, client = db) {
       WHERE code_etablissement LIKE $1
     `;
     const { rows } = await client.query(query, [`${patternPrefix}%`]);
-    rows.forEach(r => {
+    rows.forEach((r) => {
       const parts = (r.code_etablissement || '').split('-');
       if (parts.length >= 4) {
         const seqVal = parseInt(parts[3], 10);
@@ -108,7 +108,7 @@ async function generateIUP(prefix, region, year = null, client = db) {
       WHERE role = 'PROFESSEUR' AND identifiant_national LIKE $1
     `;
     const { rows } = await client.query(query, [`${patternPrefix}%`]);
-    rows.forEach(r => {
+    rows.forEach((r) => {
       const parts = (r.identifiant_national || '').split('-');
       if (parts.length >= 4) {
         const seqVal = parseInt(parts[3], 10);
@@ -128,5 +128,5 @@ module.exports = {
   REGION_TRIGRAMMES,
   resolveTrigramme,
   formatDynamicSequence,
-  generateIUP
+  generateIUP,
 };

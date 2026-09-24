@@ -13,15 +13,17 @@ db.pool.connect((err, client, release) => {
   release();
 
   // Start server
-  app.listen(PORT, () => {
-    console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
-  }).on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-      console.error(`❌ Le port ${PORT} est déjà utilisé !`);
-    } else {
-      console.error('❌ Erreur serveur :', err);
-    }
-  });
+  app
+    .listen(PORT, () => {
+      console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
+    })
+    .on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`❌ Le port ${PORT} est déjà utilisé !`);
+      } else {
+        console.error('❌ Erreur serveur :', err);
+      }
+    });
 });
 
 // Capture unexpected process errors

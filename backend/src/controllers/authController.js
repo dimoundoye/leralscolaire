@@ -8,7 +8,8 @@ const { startSession, clearSession } = require('../utils/session');
 const crypto = require('crypto');
 
 const MAX_RESET_ATTEMPTS = 5;
-const RESET_CODE_SENT_MESSAGE = "Si un compte correspond à cet IUP et à cette adresse email, un code de vérification à 6 chiffres vient d'y être envoyé.";
+const RESET_CODE_SENT_MESSAGE =
+  "Si un compte correspond à cet IUP et à cette adresse email, un code de vérification à 6 chiffres vient d'y être envoyé.";
 
 const authController = {
   /**
@@ -27,10 +28,9 @@ const authController = {
       let user;
 
       // 1. Vérifier en priorité absolue si l'identifiant est un compte temporaire de Président de Jury (ex: PRESIDENT.JURY...)
-      const juryTempRes = await db.query(
-        "SELECT * FROM jurys_bac WHERE LOWER(identifiant_temporaire) = LOWER($1)",
-        [cleanId]
-      );
+      const juryTempRes = await db.query('SELECT * FROM jurys_bac WHERE LOWER(identifiant_temporaire) = LOWER($1)', [
+        cleanId,
+      ]);
 
       if (juryTempRes.rows.length > 0) {
         const juryRow = juryTempRes.rows[0];
@@ -51,7 +51,7 @@ const authController = {
           matchTempPass = await bcrypt.compare(password, juryRow.password_hash);
         }
         if (!matchTempPass && juryRow.mot_de_passe_temporaire) {
-          matchTempPass = (password.trim() === juryRow.mot_de_passe_temporaire.trim());
+          matchTempPass = password.trim() === juryRow.mot_de_passe_temporaire.trim();
         }
 
         if (!matchTempPass) {
@@ -74,7 +74,7 @@ const authController = {
             is_president_jury: true,
             numero_jury: juryRow.numero_jury,
             centre_examen: juryRow.centre_examen,
-            date_expiration_acces: juryRow.date_expiration_acces
+            date_expiration_acces: juryRow.date_expiration_acces,
           }
         );
       }
@@ -93,10 +93,7 @@ const authController = {
 
       // 3. Recherche utilisateur par IUP (identifiant_national / code_etablissement)
       // a. Recherche directe dans la table users par identifiant_national
-      const userRes = await db.query(
-        'SELECT * FROM users WHERE LOWER(identifiant_national) = LOWER($1)',
-        [cleanId]
-      );
+      const userRes = await db.query('SELECT * FROM users WHERE LOWER(identifiant_national) = LOWER($1)', [cleanId]);
 
       if (userRes.rows.length > 0) {
         user = userRes.rows[0];
@@ -145,13 +142,17 @@ const authController = {
       const isPresidentJury = checkJury.rows.length > 0;
 
       // 6. Ouvrir la session (cookie httpOnly)
-      return startSession(res, { id: user.id, role: user.role }, {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        is_president_jury: isPresidentJury,
-        numero_jury: isPresidentJury ? checkJury.rows[0].numero_jury : null
-      });
+      return startSession(
+        res,
+        { id: user.id, role: user.role },
+        {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          is_president_jury: isPresidentJury,
+          numero_jury: isPresidentJury ? checkJury.rows[0].numero_jury : null,
+        }
+      );
     } catch (err) {
       console.error(err);
       return response.error(res, 'Erreur lors de la connexion.', 500);
@@ -180,7 +181,7 @@ const authController = {
     const { iup, email } = req.body;
 
     if (!iup || !email) {
-      return response.error(res, "Veuillez renseigner à la fois votre IUP et votre adresse email.", 400);
+      return response.error(res, 'Veuillez renseigner à la fois votre IUP et votre adresse email.', 400);
     }
 
     const cleanIup = String(iup).trim();
@@ -243,7 +244,7 @@ const authController = {
       await emailService.sendPasswordResetCode({
         to: cleanEmail,
         iup: cleanIup,
-        code
+        code,
       });
 
       return response.success(res, null, RESET_CODE_SENT_MESSAGE);
@@ -260,11 +261,11 @@ const authController = {
     const { iup, email, code, newPassword } = req.body;
 
     if (!iup || !email || !code || !newPassword) {
-      return response.error(res, "Tous les champs sont obligatoires (IUP, email, code et nouveau mot de passe).", 400);
+      return response.error(res, 'Tous les champs sont obligatoires (IUP, email, code et nouveau mot de passe).', 400);
     }
 
     if (String(newPassword).length < 6) {
-      return response.error(res, "Le mot de passe doit contenir au moins 6 caractères.", 400);
+      return response.error(res, 'Le mot de passe doit contenir au moins 6 caractères.', 400);
     }
 
     const cleanIup = String(iup).trim();
@@ -307,7 +308,7 @@ const authController = {
       }
 
       if (!matchedUserId) {
-        return response.error(res, "Code de vérification incorrect ou expiré.", 400);
+        return response.error(res, 'Code de vérification incorrect ou expiré.', 400);
       }
 
       // Vérifier le code dans password_resets (invalidé après MAX_RESET_ATTEMPTS essais erronés)
@@ -318,8 +319,11 @@ const authController = {
 
       if (resetRes.rows.length === 0) {
         await db.query('UPDATE password_resets SET tentatives = tentatives + 1 WHERE user_id = $1', [matchedUserId]);
-        await db.query('DELETE FROM password_resets WHERE user_id = $1 AND tentatives >= $2', [matchedUserId, MAX_RESET_ATTEMPTS]);
-        return response.error(res, "Code de vérification incorrect ou expiré.", 400);
+        await db.query('DELETE FROM password_resets WHERE user_id = $1 AND tentatives >= $2', [
+          matchedUserId,
+          MAX_RESET_ATTEMPTS,
+        ]);
+        return response.error(res, 'Code de vérification incorrect ou expiré.', 400);
       }
 
       // Hacher le nouveau mot de passe
@@ -327,21 +331,24 @@ const authController = {
       const passwordHash = await bcrypt.hash(newPassword, salt);
 
       // Mettre à jour le mot de passe utilisateur
-      await db.query(
-        'UPDATE users SET password_hash = $1, password_provisoire = NULL WHERE id = $2',
-        [passwordHash, matchedUserId]
-      );
+      await db.query('UPDATE users SET password_hash = $1, password_provisoire = NULL WHERE id = $2', [
+        passwordHash,
+        matchedUserId,
+      ]);
 
       // Supprimer le code utilisé
       await db.query('DELETE FROM password_resets WHERE user_id = $1', [matchedUserId]);
 
-      return response.success(res, null, "Mot de passe réinitialisé avec succès ! Vous pouvez maintenant vous connecter.");
+      return response.success(
+        res,
+        null,
+        'Mot de passe réinitialisé avec succès ! Vous pouvez maintenant vous connecter.'
+      );
     } catch (err) {
       console.error(err);
-      return response.error(res, "Erreur lors de la réinitialisation du mot de passe.", 500);
+      return response.error(res, 'Erreur lors de la réinitialisation du mot de passe.', 500);
     }
-  }
+  },
 };
 
 module.exports = authController;
-

@@ -3,7 +3,6 @@ const response = require('../utils/response');
 const db = require('../config/db');
 
 const etablissementController = {
-
   async getAuditLog(req, res) {
     const { classe_id, trimestre, annee_scolaire } = req.query;
     try {
@@ -59,7 +58,8 @@ const etablissementController = {
 
       const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
 
-      const { rows } = await db.query(`
+      const { rows } = await db.query(
+        `
         SELECT
           hn.id,
           hn.note_id,
@@ -97,12 +97,14 @@ const etablissementController = {
         ${whereClause}
         ORDER BY hn.date_modification DESC
         LIMIT 500
-      `, params);
+      `,
+        params
+      );
 
       return res.json(rows);
     } catch (err) {
       console.error(err);
-      return response.error(res, 'Erreur lors de la récupération du journal d\'audit.', 500);
+      return response.error(res, "Erreur lors de la récupération du journal d'audit.", 500);
     }
   },
   async getProfile(req, res, next) {
@@ -134,7 +136,14 @@ const etablissementController = {
 
     try {
       const updatedProfile = await EtablissementModel.updateProfileByAdminId(
-        req.user.id, nom, region, ville, code_etablissement, signature_url, cachet_url, nom_directeur
+        req.user.id,
+        nom,
+        region,
+        ville,
+        code_etablissement,
+        signature_url,
+        cachet_url,
+        nom_directeur
       );
       if (!updatedProfile) {
         return response.error(res, 'Établissement non trouvé.', 404);
@@ -241,7 +250,8 @@ const etablissementController = {
 
       const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
 
-      const { rows } = await db.query(`
+      const { rows } = await db.query(
+        `
         SELECT 
           a.id,
           a.date_absence,
@@ -272,7 +282,9 @@ const etablissementController = {
         ${whereClause}
         ORDER BY a.date_absence DESC, el.nom ASC
         LIMIT 500
-      `, params);
+      `,
+        params
+      );
 
       return res.json(rows);
     } catch (err) {
@@ -289,28 +301,34 @@ const etablissementController = {
       if (!etab) return response.error(res, 'Établissement non trouvé.', 404);
 
       // Verify that this absence belongs to this establishment
-      const { rows: check } = await db.query(`
+      const { rows: check } = await db.query(
+        `
         SELECT a.id 
         FROM absences a
         JOIN inscription_classes ic ON a.eleve_id = ic.eleve_id
         JOIN classes cl ON ic.classe_id = cl.id
         WHERE a.id = $1 AND cl.etablissement_id = $2
-      `, [id, etab.id]);
+      `,
+        [id, etab.id]
+      );
 
       if (check.length === 0) {
         return response.error(res, 'Absence non trouvée ou accès refusé.', 403);
       }
 
-      await db.query(`
+      await db.query(
+        `
         UPDATE absences 
         SET justifiee = TRUE, motif_justification = $1 
         WHERE id = $2
-      `, [motif_justification || 'Justifié par l\'administration', id]);
+      `,
+        [motif_justification || "Justifié par l'administration", id]
+      );
 
       return res.json({ message: 'Absence justifiée avec succès.' });
     } catch (err) {
       console.error(err);
-      return response.error(res, 'Erreur lors de la justification de l\'absence.', 500);
+      return response.error(res, "Erreur lors de la justification de l'absence.", 500);
     }
   },
 
@@ -361,16 +379,14 @@ const etablissementController = {
       const prop = check[0];
       const newStatus = action === 'VALIDER' ? 'VALIDE' : 'REFUSE';
 
-      await db.query(
-        `UPDATE examens_planification SET statut = $1 WHERE id = $2`,
-        [newStatus, id]
-      );
+      await db.query(`UPDATE examens_planification SET statut = $1 WHERE id = $2`, [newStatus, id]);
 
       if (prop.professeur_id) {
         const notifTitle = action === 'VALIDER' ? 'Proposition de devoir validée' : 'Proposition de devoir refusée';
-        const notifDesc = action === 'VALIDER'
-          ? `L'administrateur a validé votre devoir pour la classe ${prop.classe_nom} (${prop.matiere_nom}) le ${new Date(prop.date_examen).toLocaleDateString('fr-FR')}.`
-          : `L'administrateur a refusé votre proposition de devoir pour la classe ${prop.classe_nom} (${prop.matiere_nom}) le ${new Date(prop.date_examen).toLocaleDateString('fr-FR')}.`;
+        const notifDesc =
+          action === 'VALIDER'
+            ? `L'administrateur a validé votre devoir pour la classe ${prop.classe_nom} (${prop.matiere_nom}) le ${new Date(prop.date_examen).toLocaleDateString('fr-FR')}.`
+            : `L'administrateur a refusé votre proposition de devoir pour la classe ${prop.classe_nom} (${prop.matiere_nom}) le ${new Date(prop.date_examen).toLocaleDateString('fr-FR')}.`;
 
         await db.query(
           `INSERT INTO notifications (user_id, titre, description, type, lu)
@@ -392,7 +408,7 @@ const etablissementController = {
       const client = await db.pool.connect();
       try {
         await client.query('BEGIN');
-        
+
         // 1. Fetch modification details
         const auditRes = await client.query('SELECT * FROM historique_notes WHERE id = $1', [id]);
         if (auditRes.rows.length === 0) {
@@ -463,7 +479,7 @@ const etablissementController = {
       console.error(err);
       return response.error(res, 'Erreur lors du rejet de la modification.', 500);
     }
-  }
+  },
 };
 
 module.exports = etablissementController;

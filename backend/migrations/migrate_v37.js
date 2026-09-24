@@ -3,7 +3,7 @@ const db = require('../src/config/db');
 
 async function migrate() {
   try {
-    console.log("🚀 Migration v37 : Ajout des colonnes motif et statut à historique_notes...");
+    console.log('🚀 Migration v37 : Ajout des colonnes motif et statut à historique_notes...');
 
     await db.query(`
       CREATE TABLE IF NOT EXISTS historique_notes (

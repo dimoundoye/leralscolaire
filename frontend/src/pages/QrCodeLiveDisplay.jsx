@@ -22,10 +22,10 @@ export default function QrCodeLiveDisplay() {
         setSecondsRemaining(data.expiresInSeconds || 20);
         setError(null);
       } else {
-        setError('Impossible d\'obtenir le QR code d\'émargement.');
+        setError("Impossible d'obtenir le QR code d'émargement.");
       }
     } catch (err) {
-      setError('Erreur de connexion au serveur d\'émargement TOTP');
+      setError("Erreur de connexion au serveur d'émargement TOTP");
     } finally {
       setLoading(false);
     }
@@ -57,30 +57,33 @@ export default function QrCodeLiveDisplay() {
   const progressPercent = ((20 - secondsRemaining) / 20) * 100;
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #090d16 0%, #111827 50%, #0f172a 100%)',
-      color: '#ffffff',
-      fontFamily: 'Poppins, system-ui, sans-serif',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px',
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
-
-      {/* Header Info */}
-      <div style={{
-        position: 'absolute',
-        top: '24px',
-        left: '32px',
-        right: '32px',
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #090d16 0%, #111827 50%, #0f172a 100%)',
+        color: '#ffffff',
+        fontFamily: 'Poppins, system-ui, sans-serif',
         display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Header Info */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '24px',
+          left: '32px',
+          right: '32px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <ShieldCheck size={32} color="#818cf8" />
           <div>
@@ -93,15 +96,17 @@ export default function QrCodeLiveDisplay() {
           </div>
         </div>
 
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.06)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          padding: '8px 16px',
-          borderRadius: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px'
-        }}>
+        <div
+          style={{
+            background: 'rgba(255, 255, 255, 0.06)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            padding: '8px 16px',
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+          }}
+        >
           <Clock size={18} color="#38bdf8" />
           <span style={{ fontSize: '18px', fontWeight: 900, fontFamily: 'monospace', color: '#38bdf8' }}>
             {currentTimeStr || '00:00:00'}
@@ -110,32 +115,36 @@ export default function QrCodeLiveDisplay() {
       </div>
 
       {/* Giant QR Card */}
-      <div style={{
-        background: 'rgba(15, 23, 42, 0.85)',
-        backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255, 255, 255, 0.15)',
-        borderRadius: '32px',
-        padding: '36px 48px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
-        maxWidth: '620px',
-        width: '100%'
-      }}>
+      <div
+        style={{
+          background: 'rgba(15, 23, 42, 0.85)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          borderRadius: '32px',
+          padding: '36px 48px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
+          maxWidth: '620px',
+          width: '100%',
+        }}
+      >
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <span style={{
-            fontSize: '11px',
-            fontWeight: 800,
-            letterSpacing: '1px',
-            color: '#38bdf8',
-            background: 'rgba(56, 189, 248, 0.12)',
-            padding: '6px 14px',
-            borderRadius: '20px',
-            textTransform: 'uppercase',
-            display: 'inline-block',
-            marginBottom: '8px'
-          }}>
+          <span
+            style={{
+              fontSize: '11px',
+              fontWeight: 800,
+              letterSpacing: '1px',
+              color: '#38bdf8',
+              background: 'rgba(56, 189, 248, 0.12)',
+              padding: '6px 14px',
+              borderRadius: '20px',
+              textTransform: 'uppercase',
+              display: 'inline-block',
+              marginBottom: '8px',
+            }}
+          >
             Scannez avec votre application Enseignant
           </span>
           <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 800, color: '#ffffff' }}>
@@ -144,51 +153,97 @@ export default function QrCodeLiveDisplay() {
         </div>
 
         {/* QR Code Container */}
-        <div style={{
-          background: '#ffffff',
-          padding: '24px',
-          borderRadius: '24px',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: '24px',
-          border: '4px solid #38bdf8'
-        }}>
+        <div
+          style={{
+            background: '#ffffff',
+            padding: '24px',
+            borderRadius: '24px',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '24px',
+            border: '4px solid #38bdf8',
+          }}
+        >
           {loading ? (
-            <div style={{ width: '380px', height: '380px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyCenter: 'center', color: '#0f172a' }}>
+            <div
+              style={{
+                width: '380px',
+                height: '380px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyCenter: 'center',
+                color: '#0f172a',
+              }}
+            >
               <RefreshCw className="animate-spin" size={48} style={{ color: '#4f46e5', margin: 'auto' }} />
             </div>
           ) : error ? (
-            <div style={{ width: '380px', height: '380px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#ef4444', textAlign: 'center' }}>
+            <div
+              style={{
+                width: '380px',
+                height: '380px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#ef4444',
+                textAlign: 'center',
+              }}
+            >
               <AlertCircle size={48} />
               <p style={{ marginTop: 12, fontWeight: 700, fontSize: '14px' }}>{error}</p>
             </div>
           ) : (
-            <QRCodeSVG
-              value={qrToken}
-              size={380}
-              level="H"
-              includeMargin={false}
-            />
+            <QRCodeSVG value={qrToken} size={380} level="H" includeMargin={false} />
           )}
         </div>
 
         {/* Progress Bar 20s */}
         <div style={{ width: '100%', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', fontSize: '12px', fontWeight: 700 }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '8px',
+              fontSize: '12px',
+              fontWeight: 700,
+            }}
+          >
             <span style={{ color: '#94a3b8' }}>Expiration du code actuel</span>
-            <span style={{ color: secondsRemaining <= 5 ? '#f87171' : '#38bdf8', fontFamily: 'monospace', fontSize: '14px' }}>
+            <span
+              style={{
+                color: secondsRemaining <= 5 ? '#f87171' : '#38bdf8',
+                fontFamily: 'monospace',
+                fontSize: '14px',
+              }}
+            >
               {secondsRemaining}s
             </span>
           </div>
-          <div style={{ width: '100%', height: '8px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '4px', overflow: 'hidden' }}>
-            <div style={{
-              width: `${progressPercent}%`,
-              height: '100%',
-              background: secondsRemaining <= 5 ? 'linear-gradient(90deg, #f87171, #ef4444)' : 'linear-gradient(90deg, #38bdf8, #818cf8)',
-              transition: 'width 1s linear'
-            }} />
+          <div
+            style={{
+              width: '100%',
+              height: '8px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '4px',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                width: `${progressPercent}%`,
+                height: '100%',
+                background:
+                  secondsRemaining <= 5
+                    ? 'linear-gradient(90deg, #f87171, #ef4444)'
+                    : 'linear-gradient(90deg, #38bdf8, #818cf8)',
+                transition: 'width 1s linear',
+              }}
+            />
           </div>
         </div>
       </div>

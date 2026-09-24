@@ -2,10 +2,7 @@ const db = require('../config/db');
 
 const ProfModel = {
   async getEtablissementIdByAdminId(adminId) {
-    const { rows } = await db.query(
-      'SELECT id FROM etablissements WHERE admin_id = $1',
-      [adminId]
-    );
+    const { rows } = await db.query('SELECT id FROM etablissements WHERE admin_id = $1', [adminId]);
     return rows[0]?.id;
   },
 
@@ -18,17 +15,19 @@ const ProfModel = {
   },
 
   async listProfesseurs(etablissementId) {
-    const { rows } = await db.query(`
+    const { rows } = await db.query(
+      `
       SELECT u.id, u.email, u.identifiant_national, p.nom, p.prenom, p.telephone, p.matiere_principale, pe.statut, pe.date_invitation, pe.droit_envoi_message
       FROM users u
       LEFT JOIN professeurs p ON u.id = p.id
       JOIN professeurs_etablissements pe ON u.id = pe.professeur_id
       WHERE pe.etablissement_id = $1 AND u.role = 'PROFESSEUR'
       ORDER BY p.nom ASC, p.prenom ASC
-    `, [etablissementId]);
+    `,
+      [etablissementId]
+    );
     return rows;
   },
-
 
   async checkUserExists(email) {
     const { rows } = await db.query('SELECT * FROM users WHERE email = $1', [email]);
@@ -54,10 +53,10 @@ const ProfModel = {
   },
 
   async unlinkProfFromEtablissement(profId, etablissementId) {
-    await db.query(
-      'DELETE FROM professeurs_etablissements WHERE professeur_id = $1 AND etablissement_id = $2',
-      [profId, etablissementId]
-    );
+    await db.query('DELETE FROM professeurs_etablissements WHERE professeur_id = $1 AND etablissement_id = $2', [
+      profId,
+      etablissementId,
+    ]);
     return true;
   },
 
@@ -97,7 +96,6 @@ const ProfModel = {
     );
     return true;
   },
-
 
   async getInvitations(profId) {
     const { rows } = await db.query(
@@ -188,7 +186,7 @@ const ProfModel = {
       { start: '10:00:00', end: '12:00:00', label: '10h00 - 12h00' },
       { start: '12:00:00', end: '14:00:00', label: '12h00 - 14h00' },
       { start: '15:00:00', end: '17:00:00', label: '15h00 - 17h00' },
-      { start: '17:00:00', end: '19:00:00', label: '17h00 - 19h00' }
+      { start: '17:00:00', end: '19:00:00', label: '17h00 - 19h00' },
     ];
 
     const { rows: occupied } = await db.query(
@@ -198,28 +196,28 @@ const ProfModel = {
       [profId, jourSemaine]
     );
 
-    const freeSlots = standardSlots.filter(std => {
+    const freeSlots = standardSlots.filter((std) => {
       const [stdSh, stdSm] = std.start.split(':').map(Number);
       const [stdEh, stdEm] = std.end.split(':').map(Number);
       const stdStart = stdSh * 60 + stdSm;
       const stdEnd = stdEh * 60 + stdEm;
 
-      return !occupied.some(occ => {
+      return !occupied.some((occ) => {
         const [occSh, occSm] = occ.heure_debut.split(':').map(Number);
         const [occEh, occEm] = occ.heure_fin.split(':').map(Number);
         const occStart = occSh * 60 + occSm;
         const occEnd = occEh * 60 + occEm;
 
-        return (stdStart < occEnd && stdEnd > occStart);
+        return stdStart < occEnd && stdEnd > occStart;
       });
     });
 
-    return freeSlots.map(s => s.label);
+    return freeSlots.map((s) => s.label);
   },
 
   // À n'appeler qu'après avoir vérifié que profId est un professeur de l'établissement
   async updateProfUser(profId, email, passwordHash = null) {
-    let query = "UPDATE users SET email = $1";
+    let query = 'UPDATE users SET email = $1';
     const params = [email];
 
     if (passwordHash) {
@@ -278,7 +276,7 @@ const ProfModel = {
     // 3. Get total students count taught by teacher
     let studentsCount = 0;
     if (classes.length > 0) {
-      const classIds = classes.map(c => c.classe_id);
+      const classIds = classes.map((c) => c.classe_id);
       const { rows } = await db.query(
         `SELECT COUNT(DISTINCT eleve_id) as count 
          FROM inscription_classes 
@@ -291,7 +289,7 @@ const ProfModel = {
     return {
       schoolsCount,
       classesCount,
-      studentsCount
+      studentsCount,
     };
   },
 
@@ -320,7 +318,7 @@ const ProfModel = {
        GROUP BY ic.classe_id`
     );
     const studentCountsMap = {};
-    studentCounts.forEach(r => {
+    studentCounts.forEach((r) => {
       studentCountsMap[r.classe_id] = parseInt(r.count || 0);
     });
 
@@ -338,35 +336,41 @@ const ProfModel = {
     );
 
     // Map counts and compute averages back to classes
-    const classesWithStats = classes.map(c => {
+    const classesWithStats = classes.map((c) => {
       const totalStudents = studentCountsMap[c.classe_id] || 0;
-      
+
       // Filter note entries for this class and subject
-      const entries = noteCounts.filter(n => n.classe_id === c.classe_id && n.matiere_id === c.matiere_id);
-      
-      const validNotes = entries.filter(n => n.valeur !== null && n.valeur !== undefined);
-      const avgGrade = validNotes.length > 0 
-        ? Math.round((validNotes.reduce((acc, curr) => acc + parseFloat(curr.valeur), 0) / validNotes.length) * 100) / 100 
-        : null;
+      const entries = noteCounts.filter((n) => n.classe_id === c.classe_id && n.matiere_id === c.matiere_id);
+
+      const validNotes = entries.filter((n) => n.valeur !== null && n.valeur !== undefined);
+      const avgGrade =
+        validNotes.length > 0
+          ? Math.round((validNotes.reduce((acc, curr) => acc + parseFloat(curr.valeur), 0) / validNotes.length) * 100) /
+            100
+          : null;
 
       // Let's compute rates per period (S1, S2)
       const periodStats = {};
-      [1, 2].forEach(pNum => {
-        const pEntries = entries.filter(n => n.trimestre === pNum || n.semestre === pNum);
-        const validPeriodNotes = pEntries.filter(n => n.valeur !== null && n.valeur !== undefined);
-        const periodAvg = validPeriodNotes.length > 0 
-          ? Math.round((validPeriodNotes.reduce((acc, curr) => acc + parseFloat(curr.valeur), 0) / validPeriodNotes.length) * 100) / 100 
-          : null;
-        
+      [1, 2].forEach((pNum) => {
+        const pEntries = entries.filter((n) => n.trimestre === pNum || n.semestre === pNum);
+        const validPeriodNotes = pEntries.filter((n) => n.valeur !== null && n.valeur !== undefined);
+        const periodAvg =
+          validPeriodNotes.length > 0
+            ? Math.round(
+                (validPeriodNotes.reduce((acc, curr) => acc + parseFloat(curr.valeur), 0) / validPeriodNotes.length) *
+                  100
+              ) / 100
+            : null;
+
         const totalEntered = pEntries.length;
         const expected = totalStudents * 2;
         const rate = expected > 0 ? Math.round((totalEntered / expected) * 100) : 100;
-        
+
         periodStats[`S${pNum}`] = {
           entered: totalEntered,
           expected: expected,
           rate: rate,
-          average: periodAvg
+          average: periodAvg,
         };
       });
 
@@ -375,7 +379,7 @@ const ProfModel = {
         total_students: totalStudents,
         period_stats: periodStats,
         moyenne_matiere: avgGrade,
-        total_notes: validNotes.length
+        total_notes: validNotes.length,
       };
     });
 
@@ -432,12 +436,12 @@ const ProfModel = {
 
     // Filter pending exams (where entered grades < total students)
     const pendingExams = exams
-      .map(e => ({
+      .map((e) => ({
         ...e,
         total_students: parseInt(e.total_students || 0),
-        entered_students: parseInt(e.entered_students || 0)
+        entered_students: parseInt(e.entered_students || 0),
       }))
-      .filter(e => e.entered_students < e.total_students);
+      .filter((e) => e.entered_students < e.total_students);
 
     return {
       profile,
@@ -445,11 +449,10 @@ const ProfModel = {
       classes: classesWithStats,
       alerts: {
         unreadMessagesCount,
-        pendingExams
-      }
+        pendingExams,
+      },
     };
-  }
+  },
 };
 
 module.exports = ProfModel;
-

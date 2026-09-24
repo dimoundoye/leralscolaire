@@ -17,7 +17,7 @@ const upload = multer({
     },
     filename: (req, file, cb) => {
       cb(null, safeFileName(file.originalname));
-    }
+    },
   }),
   // Signature et cachet : images uniquement
   fileFilter: (req, file, cb) => {
@@ -26,17 +26,22 @@ const upload = multer({
     }
     cb(null, true);
   },
-  limits: { fileSize: 5 * 1024 * 1024 }
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 
 // Get profile details
 router.get('/profile', auth, etablissementController.getProfile);
 
 // Update profile details
-router.put('/profile', auth, upload.fields([
-  { name: 'signature', maxCount: 1 },
-  { name: 'cachet', maxCount: 1 }
-]), etablissementController.updateProfile);
+router.put(
+  '/profile',
+  auth,
+  upload.fields([
+    { name: 'signature', maxCount: 1 },
+    { name: 'cachet', maxCount: 1 },
+  ]),
+  etablissementController.updateProfile
+);
 
 // Géolocalisation de l'émargement : position de l'établissement et terrains d'EPS
 const adminOnly = requireRole('ADMIN_ETABLISSEMENT');

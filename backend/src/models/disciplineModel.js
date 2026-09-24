@@ -16,7 +16,7 @@ class DisciplineModel {
       date_rendez_vous,
       lieu_rendez_vous,
       notifie_email,
-      notifie_sms
+      notifie_sms,
     } = data;
 
     const query = `
@@ -31,10 +31,20 @@ class DisciplineModel {
     `;
 
     const values = [
-      etablissement_id, eleve_id, auteur_id, auteur_type || 'PROFESSEUR',
-      type_action, gravite || 'INFO', matiere_code || null, matiere_nom || null,
-      motif, description || null, date_rendez_vous || null, lieu_rendez_vous || null,
-      notifie_email || false, notifie_sms || false
+      etablissement_id,
+      eleve_id,
+      auteur_id,
+      auteur_type || 'PROFESSEUR',
+      type_action,
+      gravite || 'INFO',
+      matiere_code || null,
+      matiere_nom || null,
+      motif,
+      description || null,
+      date_rendez_vous || null,
+      lieu_rendez_vous || null,
+      notifie_email || false,
+      notifie_sms || false,
     ];
 
     const { rows } = await db.query(query, values);
@@ -103,12 +113,15 @@ class DisciplineModel {
     const { rows } = await db.query(query, [eleveId]);
 
     if (isStudentView) {
-      return rows.map(r => ({
+      return rows.map((r) => ({
         ...r,
         // Masquer le nom complet du prof pour l'élève si c'est un enseignant
-        auteur_nom_complet: r.auteur_type === 'PROFESSEUR'
-          ? (r.matiere_nom ? `Professeur de ${r.matiere_nom}` : 'Professeur')
-          : 'Administration / Établissement'
+        auteur_nom_complet:
+          r.auteur_type === 'PROFESSEUR'
+            ? r.matiere_nom
+              ? `Professeur de ${r.matiere_nom}`
+              : 'Professeur'
+            : 'Administration / Établissement',
       }));
     }
 
@@ -147,7 +160,7 @@ class DisciplineModel {
 
     return {
       eleve: eleveData,
-      signalements: signalements
+      signalements: signalements,
     };
   }
 }

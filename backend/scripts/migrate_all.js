@@ -19,8 +19,9 @@ async function runAll() {
 
     // 2. Trouver et trier toutes les migrations
     const migrationsDir = path.join(__dirname, '../migrations');
-    const files = fs.readdirSync(migrationsDir)
-      .filter(f => f.startsWith('migrate_v') && f.endsWith('.js'))
+    const files = fs
+      .readdirSync(migrationsDir)
+      .filter((f) => f.startsWith('migrate_v') && f.endsWith('.js'))
       .sort((a, b) => {
         const numA = parseInt(a.replace('migrate_v', '').replace('.js', ''), 10);
         const numB = parseInt(b.replace('migrate_v', '').replace('.js', ''), 10);
@@ -35,7 +36,7 @@ async function runAll() {
         execSync(`node "${path.join(migrationsDir, file)}"`, {
           cwd: path.join(__dirname, '..'),
           stdio: 'inherit',
-          env: process.env
+          env: process.env,
         });
       } catch (err) {
         console.warn(`⚠️ Avertissement lors de ${file} (peut-être déjà appliqué):`, err.message);
@@ -52,7 +53,7 @@ async function runAll() {
           execSync(`node "${fullPath}"`, {
             cwd: path.join(__dirname, '..'),
             stdio: 'inherit',
-            env: process.env
+            env: process.env,
           });
         } catch (err) {
           console.warn(`⚠️ Avertissement lors de ${file}:`, err.message);

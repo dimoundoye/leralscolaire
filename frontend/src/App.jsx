@@ -1,22 +1,22 @@
-import React from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import LandingPage from './pages/LandingPage'
-import AboutPage from './pages/AboutPage'
-import Auth from './pages/Auth'
-import Dashboard from './pages/Dashboard'
-import StudentDashboard from './pages/StudentDashboard'
-import TeacherDashboard from './pages/TeacherDashboard'
-import PublicRegistration from './pages/PublicRegistration'
-import OfficeBacDashboard from './pages/OfficeBacDashboard'
-import PublicOfficeRegistration from './pages/PublicOfficeRegistration'
-import JuryDeliberationDashboard from './pages/JuryDeliberationDashboard'
-import QrCodeLiveDisplay from './pages/QrCodeLiveDisplay'
-import ProfCarteIdentiteOfficeBac from './pages/ProfCarteIdentiteOfficeBac'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import LandingPage from './pages/LandingPage';
+import AboutPage from './pages/AboutPage';
+import Auth from './pages/Auth';
+import Dashboard from './pages/Dashboard';
+import StudentDashboard from './pages/StudentDashboard';
+import TeacherDashboard from './pages/TeacherDashboard';
+import PublicRegistration from './pages/PublicRegistration';
+import OfficeBacDashboard from './pages/OfficeBacDashboard';
+import PublicOfficeRegistration from './pages/PublicOfficeRegistration';
+import JuryDeliberationDashboard from './pages/JuryDeliberationDashboard';
+import QrCodeLiveDisplay from './pages/QrCodeLiveDisplay';
+import ProfCarteIdentiteOfficeBac from './pages/ProfCarteIdentiteOfficeBac';
 
-import { AuthProvider } from './contexts/AuthContext'
-import { OfflineProvider } from './contexts/OfflineContext'
-import OfflineBanner from './components/common/OfflineBanner'
-import InstallPwaBanner from './components/common/InstallPwaBanner'
+import { AuthProvider } from './contexts/AuthContext';
+import { OfflineProvider } from './contexts/OfflineContext';
+import OfflineBanner from './components/common/OfflineBanner';
+import InstallPwaBanner from './components/common/InstallPwaBanner';
 
 function App() {
   return (
@@ -35,7 +35,10 @@ function App() {
               <Route path="/register/class/:classId" element={<PublicRegistration />} />
               <Route path="/emargement/live-qr/:etablissementId" element={<QrCodeLiveDisplay />} />
               <Route path="/office/professeurs/carte-identite" element={<ProfCarteIdentiteOfficeBac />} />
-              <Route path="/professeur/emargement" element={<Navigate to="/professeur/dashboard/emargement" replace />} />
+              <Route
+                path="/professeur/emargement"
+                element={<Navigate to="/professeur/dashboard/emargement" replace />}
+              />
               <Route path="/dashboard" element={<Navigate to="/dashboard/overview" replace />} />
               <Route path="/dashboard/:tab" element={<Dashboard />} />
               <Route path="/student/dashboard" element={<Navigate to="/student/dashboard/overview" replace />} />
@@ -50,7 +53,7 @@ function App() {
         </AuthProvider>
       </OfflineProvider>
     </Router>
-  )
+  );
 }
 
-export default App
+export default App;

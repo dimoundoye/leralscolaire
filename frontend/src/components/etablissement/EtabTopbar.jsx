@@ -14,15 +14,20 @@ const EtabTopbar = ({ profile, notificationsCount, onShowMessages, selectedYear,
           <span>Espace Administratif</span>
         </div>
       </div>
-      
+
       <div className="topbar-right">
         {/* Academic Year Selector */}
         {availableYears && availableYears.length > 0 && (
-          <div className="year-selector-container" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginRight: '8px' }}>
+          <div
+            className="year-selector-container"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', marginRight: '8px' }}
+          >
             <Calendar size={14} className="text-slate-500" style={{ color: 'var(--primary-color)' }} />
-            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--slate-500)', textTransform: 'uppercase' }}>Année :</span>
-            <select 
-              value={selectedYear} 
+            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--slate-500)', textTransform: 'uppercase' }}>
+              Année :
+            </span>
+            <select
+              value={selectedYear}
               onChange={(e) => onYearChange(e.target.value)}
               style={{
                 padding: '4px 24px 4px 8px',
@@ -39,20 +44,20 @@ const EtabTopbar = ({ profile, notificationsCount, onShowMessages, selectedYear,
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'right 6px center',
                 backgroundSize: '12px',
-                minWidth: '100px'
+                minWidth: '100px',
               }}
             >
-              {availableYears.map(y => (
-                <option key={y} value={y}>{y}</option>
+              {availableYears.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
               ))}
             </select>
           </div>
         )}
 
         {/* School Name Badge */}
-        <span className="school-badge">
-          {profile?.nom || 'LeralScolaire'}
-        </span>
+        <span className="school-badge">{profile?.nom || 'LeralScolaire'}</span>
 
         {/* Bouton Borne Émargement QR Code Externe */}
         <button
@@ -80,7 +85,7 @@ const EtabTopbar = ({ profile, notificationsCount, onShowMessages, selectedYear,
             border: 'none',
             cursor: 'pointer',
             boxShadow: '0 2px 8px rgba(79, 70, 229, 0.3)',
-            marginRight: '8px'
+            marginRight: '8px',
           }}
           title="Ouvrir la borne d'émargement QR Code dynamique 20s en plein écran pour le second écran / vidéo-projecteur"
         >
@@ -89,15 +94,9 @@ const EtabTopbar = ({ profile, notificationsCount, onShowMessages, selectedYear,
         </button>
 
         {/* Notifications Icon */}
-        <button 
-          className="topbar-action-btn relative"
-          onClick={onShowMessages}
-          title="Messagerie"
-        >
+        <button className="topbar-action-btn relative" onClick={onShowMessages} title="Messagerie">
           <Bell size={18} />
-          {notificationsCount > 0 && (
-            <span className="topbar-badge-dot" />
-          )}
+          {notificationsCount > 0 && <span className="topbar-badge-dot" />}
         </button>
 
         {/* User avatar and logout */}
@@ -105,11 +104,7 @@ const EtabTopbar = ({ profile, notificationsCount, onShowMessages, selectedYear,
           <div className="avatar av-pink" style={{ width: 32, height: 32, fontSize: 11 }}>
             {firstLetter}
           </div>
-          <button 
-            className="logout-btn" 
-            onClick={logout}
-            title="Se déconnecter"
-          >
+          <button className="logout-btn" onClick={logout} title="Se déconnecter">
             <LogOut size={16} />
           </button>
         </div>

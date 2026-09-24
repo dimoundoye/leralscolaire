@@ -5,9 +5,11 @@ const db = require('../src/config/db');
 async function migrate() {
   try {
     console.log('--- Migration v20: Adding classe_id to notes table & backfilling ---');
-    
+
     // 1. Add column if not exists
-    await db.query(`ALTER TABLE notes ADD COLUMN IF NOT EXISTS classe_id UUID REFERENCES classes(id) ON DELETE SET NULL`);
+    await db.query(
+      `ALTER TABLE notes ADD COLUMN IF NOT EXISTS classe_id UUID REFERENCES classes(id) ON DELETE SET NULL`
+    );
 
     // 2. Update existing notes matching date_saisie and annee_scolaire
     const res1 = await db.query(`

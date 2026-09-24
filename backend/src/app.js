@@ -49,17 +49,20 @@ app.use(express.urlencoded({ limit: BODY_LIMIT, extended: true }));
 // Images et PDF restent affichables ; tout autre type (.html, .svg...) est forcé en
 // téléchargement et isolé, pour qu'il ne puisse pas exécuter de code sur le domaine.
 const INLINE_UPLOAD_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.pdf']);
-app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
-  dotfiles: 'deny',
-  index: false,
-  setHeaders: (res, filePath) => {
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    if (!INLINE_UPLOAD_EXTENSIONS.has(path.extname(filePath).toLowerCase())) {
-      res.setHeader('Content-Disposition', 'attachment');
-      res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
-    }
-  },
-}));
+app.use(
+  '/uploads',
+  express.static(path.join(__dirname, '../uploads'), {
+    dotfiles: 'deny',
+    index: false,
+    setHeaders: (res, filePath) => {
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      if (!INLINE_UPLOAD_EXTENSIONS.has(path.extname(filePath).toLowerCase())) {
+        res.setHeader('Content-Disposition', 'attachment');
+        res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
+      }
+    },
+  })
+);
 
 // Request logger middleware
 app.use((req, res, next) => {

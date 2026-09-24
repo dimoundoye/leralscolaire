@@ -1,12 +1,28 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {
-  LayoutDashboard, Building, Users, Mail, Calendar, BookOpenCheck,
-  BookOpen, FileText, Clock, MessageSquare, Settings, LogOut, X,
-  ShieldCheck, BookMarked, Scale, Award, ClipboardList, ChevronLeft, ChevronRight,
-  QrCode
+  LayoutDashboard,
+  Building,
+  Users,
+  Mail,
+  Calendar,
+  BookOpenCheck,
+  BookOpen,
+  FileText,
+  Clock,
+  MessageSquare,
+  Settings,
+  LogOut,
+  X,
+  ShieldCheck,
+  BookMarked,
+  Scale,
+  Award,
+  ClipboardList,
+  ChevronLeft,
+  ChevronRight,
+  QrCode,
 } from 'lucide-react';
-
 
 const TeacherSidebar = ({
   profile,
@@ -16,7 +32,7 @@ const TeacherSidebar = ({
   isMobileMenuOpen,
   setIsMobileMenuOpen,
   handleLogout,
-  isCollapsed,        // reçu du parent TeacherDashboard
+  isCollapsed, // reçu du parent TeacherDashboard
 }) => {
   return (
     <>
@@ -38,7 +54,7 @@ const TeacherSidebar = ({
           />
           {/* Drawer panel */}
           <div
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
             style={{
               position: 'fixed',
               top: 0,
@@ -59,38 +75,93 @@ const TeacherSidebar = ({
             }}
           >
             {/* Header drawer */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                borderBottom: '1px solid #e2e8f0',
+                paddingBottom: '12px',
+              }}
+            >
               <div
-                onClick={() => { navigate('/'); setIsMobileMenuOpen(false); }}
+                onClick={() => {
+                  navigate('/');
+                  setIsMobileMenuOpen(false);
+                }}
                 style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
                 title="Retour à l'accueil"
               >
-                <img src="/logo_leralscolaire.png" alt="LeralScolaire" style={{ width: '24px', height: '24px', objectFit: 'contain', borderRadius: '4px' }} />
+                <img
+                  src="/logo_leralscolaire.png"
+                  alt="LeralScolaire"
+                  style={{ width: '24px', height: '24px', objectFit: 'contain', borderRadius: '4px' }}
+                />
                 <span style={{ fontWeight: 800, fontSize: '16px', color: '#131e6c' }}>LéralScolaire</span>
               </div>
               <button
                 type="button"
                 onClick={() => setIsMobileMenuOpen(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#64748b', lineHeight: 1 }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  color: '#64748b',
+                  lineHeight: 1,
+                }}
               >
                 <X size={22} />
               </button>
             </div>
 
             {/* Profile mini card */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#f8fafc', padding: '12px', borderRadius: '12px' }}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(19,30,108,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: 'var(--primary-blue)', fontSize: '16px', flexShrink: 0, overflow: 'hidden' }}>
-                {profile?.photo_url
-                  ? <img src={`${profile.photo_url}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <span>{profile?.prenom ? `${profile.prenom[0]}${profile.nom[0]}`.toUpperCase() : 'ENS'}</span>
-                }
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                background: '#f8fafc',
+                padding: '12px',
+                borderRadius: '12px',
+              }}
+            >
+              <div
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '50%',
+                  background: 'rgba(19,30,108,0.08)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 800,
+                  color: 'var(--primary-blue)',
+                  fontSize: '16px',
+                  flexShrink: 0,
+                  overflow: 'hidden',
+                }}
+              >
+                {profile?.photo_url ? (
+                  <img
+                    src={`${profile.photo_url}`}
+                    alt=""
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <span>{profile?.prenom ? `${profile.prenom[0]}${profile.nom[0]}`.toUpperCase() : 'ENS'}</span>
+                )}
               </div>
               <div>
                 <div style={{ fontWeight: 700, fontSize: '13px', color: '#0f172a' }}>
                   {profile?.sexe === 'F' ? 'Mme.' : 'Mr.'} {profile?.prenom} {profile?.nom}
                 </div>
-                <div style={{ fontSize: '10.5px', color: '#64748b', fontFamily: 'monospace' }}>{profile?.identifiant_national}</div>
-                <div style={{ fontSize: '11px', color: 'var(--primary-blue)', fontWeight: 600 }}>{profile?.matiere_principale || 'Matière non définie'}</div>
+                <div style={{ fontSize: '10.5px', color: '#64748b', fontFamily: 'monospace' }}>
+                  {profile?.identifiant_national}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--primary-blue)', fontWeight: 600 }}>
+                  {profile?.matiere_principale || 'Matière non définie'}
+                </div>
               </div>
             </div>
 
@@ -100,9 +171,24 @@ const TeacherSidebar = ({
                 { tab: 'overview', path: 'overview', icon: <LayoutDashboard size={18} />, label: 'Aperçu' },
                 { tab: 'emargement', path: 'emargement', icon: <QrCode size={18} />, label: 'Émargement (QR Code)' },
                 { tab: 'attendance', path: 'attendance', icon: <Clock size={18} />, label: "Faire l'Appel" },
-                { tab: 'partner-schools', path: 'partner-schools', icon: <Building size={18} />, label: 'Établissements Partenaires' },
-                { tab: 'attached-classes', path: 'attached-classes', icon: <Users size={18} />, label: 'Classes Rattachées' },
-                { tab: 'invitations', path: 'invitations', icon: <Mail size={18} />, label: `Invitations${invitations?.length > 0 ? ` (${invitations.length})` : ''}` },
+                {
+                  tab: 'partner-schools',
+                  path: 'partner-schools',
+                  icon: <Building size={18} />,
+                  label: 'Établissements Partenaires',
+                },
+                {
+                  tab: 'attached-classes',
+                  path: 'attached-classes',
+                  icon: <Users size={18} />,
+                  label: 'Classes Rattachées',
+                },
+                {
+                  tab: 'invitations',
+                  path: 'invitations',
+                  icon: <Mail size={18} />,
+                  label: `Invitations${invitations?.length > 0 ? ` (${invitations.length})` : ''}`,
+                },
                 { tab: 'schedule', path: 'schedule', icon: <Calendar size={18} />, label: 'Emploi du Temps' },
                 { tab: 'grades', path: 'grades', icon: <BookOpenCheck size={18} />, label: 'Saisie des Notes' },
                 { tab: 'cahier-texte', path: 'cahier-texte', icon: <BookMarked size={18} />, label: 'Cahier de Texte' },
@@ -116,7 +202,10 @@ const TeacherSidebar = ({
                   key={tab}
                   type="button"
                   className={`nav-item ${activeTab === tab ? 'active' : ''}`}
-                  onClick={() => { navigate(`/professeur/dashboard/${path}`); setIsMobileMenuOpen(false); }}
+                  onClick={() => {
+                    navigate(`/professeur/dashboard/${path}`);
+                    setIsMobileMenuOpen(false);
+                  }}
                 >
                   {icon} <span>{label}</span>
                 </button>
@@ -127,7 +216,19 @@ const TeacherSidebar = ({
             <button
               type="button"
               onClick={handleLogout}
-              style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '8px', background: '#fee2e2', border: 'none', cursor: 'pointer', color: '#b91c1c', fontWeight: 700, fontSize: '13px' }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 12px',
+                borderRadius: '8px',
+                background: '#fee2e2',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#b91c1c',
+                fontWeight: 700,
+                fontSize: '13px',
+              }}
             >
               <LogOut size={18} /> Déconnexion
             </button>
@@ -153,20 +254,21 @@ const TeacherSidebar = ({
           display: 'flex',
           flexDirection: 'column',
           flexShrink: 0,
-          overflow: 'visible',   /* PAS overflow:hidden ni auto — le scroll est sur le div enfant */
+          overflow: 'visible' /* PAS overflow:hidden ni auto — le scroll est sur le div enfant */,
         }}
       >
         {/* Zone de contenu scrollable — c'est ici que le scroll est appliqué, pas sur l'aside */}
-        <div style={{
-          padding: isCollapsed ? '16px 8px' : '16px',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: isCollapsed ? 'center' : 'stretch',
-          overflow: 'hidden',    /* Clip seulement le contenu, pas l'aside entier */
-        }}>
+        <div
+          style={{
+            padding: isCollapsed ? '16px 8px' : '16px',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: isCollapsed ? 'center' : 'stretch',
+            overflow: 'hidden' /* Clip seulement le contenu, pas l'aside entier */,
+          }}
+        >
           <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', scrollbarWidth: 'none', width: '100%' }}>
-
             {/* Logo + Nom cliquable vers la page d'accueil */}
             <div
               onClick={() => navigate('/')}
@@ -182,8 +284,8 @@ const TeacherSidebar = ({
                 userSelect: 'none',
                 transition: 'opacity 0.2s ease',
               }}
-              onMouseEnter={e => e.currentTarget.style.opacity = '0.82'}
-              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.82')}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
             >
               <img
                 src="/logo_leralscolaire.png"
@@ -192,19 +294,29 @@ const TeacherSidebar = ({
               />
               {!isCollapsed && (
                 <div>
-                  <div style={{
-                    fontWeight: 800,
-                    fontSize: '16px',
-                    background: 'var(--gradient-primary)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                  }}>
+                  <div
+                    style={{
+                      fontWeight: 800,
+                      fontSize: '16px',
+                      background: 'var(--gradient-primary)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                    }}
+                  >
                     LeralScolaire
                   </div>
-                  <div style={{ fontSize: '9px', color: 'var(--text-slate-500)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 600 }}>
+                  <div
+                    style={{
+                      fontSize: '9px',
+                      color: 'var(--text-slate-500)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.07em',
+                      fontWeight: 600,
+                    }}
+                  >
                     Espace Enseignant
                   </div>
                 </div>
@@ -212,22 +324,51 @@ const TeacherSidebar = ({
             </div>
 
             {/* Navigation */}
-            <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%', alignItems: isCollapsed ? 'center' : 'stretch' }}>
+            <nav
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px',
+                width: '100%',
+                alignItems: isCollapsed ? 'center' : 'stretch',
+              }}
+            >
               {[
-                { tab: 'overview',        path: 'overview',        icon: <LayoutDashboard size={20} />, label: 'Aperçu' },
-                { tab: 'emargement',       path: 'emargement',       icon: <QrCode size={20} />,          label: 'Émargement' },
-                { tab: 'attendance',      path: 'attendance',      icon: <Clock size={20} />,           label: "Faire l'Appel" },
-                { tab: 'partner-schools', path: 'partner-schools', icon: <Building size={20} />,        label: 'Établissements' },
-                { tab: 'attached-classes',path: 'attached-classes',icon: <Users size={20} />,           label: 'Classes Rattachées' },
-                { tab: 'invitations',     path: 'invitations',     icon: <Mail size={20} />,            label: 'Invitations', badge: invitations?.length },
-                { tab: 'schedule',        path: 'schedule',        icon: <Calendar size={20} />,        label: 'Emploi du Temps' },
-                { tab: 'grades',          path: 'grades',          icon: <BookOpenCheck size={20} />,   label: 'Saisie des Notes' },
-                { tab: 'cahier-texte',    path: 'cahier-texte',    icon: <BookMarked size={20} />,      label: 'Cahier de Texte' },
-                { tab: 'pedagogy',        path: 'pedagogy',        icon: <BookOpen size={20} />,        label: 'Suivi Pédagogique' },
-                { tab: 'planning',        path: 'planning',        icon: <ClipboardList size={20} />,   label: 'Planification & Devoirs' },
-                { tab: 'discipline',      path: 'discipline',      icon: <Scale size={20} />,           label: 'Remarques Élève' },
-                { tab: 'messages',        path: 'messages',        icon: <MessageSquare size={20} />,   label: 'Messagerie & Alertes' },
-                { tab: 'profile',         path: 'profile',         icon: <Settings size={20} />,        label: 'Mon Profil' },
+                { tab: 'overview', path: 'overview', icon: <LayoutDashboard size={20} />, label: 'Aperçu' },
+                { tab: 'emargement', path: 'emargement', icon: <QrCode size={20} />, label: 'Émargement' },
+                { tab: 'attendance', path: 'attendance', icon: <Clock size={20} />, label: "Faire l'Appel" },
+                {
+                  tab: 'partner-schools',
+                  path: 'partner-schools',
+                  icon: <Building size={20} />,
+                  label: 'Établissements',
+                },
+                {
+                  tab: 'attached-classes',
+                  path: 'attached-classes',
+                  icon: <Users size={20} />,
+                  label: 'Classes Rattachées',
+                },
+                {
+                  tab: 'invitations',
+                  path: 'invitations',
+                  icon: <Mail size={20} />,
+                  label: 'Invitations',
+                  badge: invitations?.length,
+                },
+                { tab: 'schedule', path: 'schedule', icon: <Calendar size={20} />, label: 'Emploi du Temps' },
+                { tab: 'grades', path: 'grades', icon: <BookOpenCheck size={20} />, label: 'Saisie des Notes' },
+                { tab: 'cahier-texte', path: 'cahier-texte', icon: <BookMarked size={20} />, label: 'Cahier de Texte' },
+                { tab: 'pedagogy', path: 'pedagogy', icon: <BookOpen size={20} />, label: 'Suivi Pédagogique' },
+                {
+                  tab: 'planning',
+                  path: 'planning',
+                  icon: <ClipboardList size={20} />,
+                  label: 'Planification & Devoirs',
+                },
+                { tab: 'discipline', path: 'discipline', icon: <Scale size={20} />, label: 'Remarques Élève' },
+                { tab: 'messages', path: 'messages', icon: <MessageSquare size={20} />, label: 'Messagerie & Alertes' },
+                { tab: 'profile', path: 'profile', icon: <Settings size={20} />, label: 'Mon Profil' },
               ].map(({ tab, path, icon, label, badge }) => {
                 const isActive = activeTab === tab;
                 return (
@@ -256,49 +397,71 @@ const TeacherSidebar = ({
                       position: 'relative',
                       flexShrink: 0,
                     }}
-                    onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'rgba(28,38,128,0.06)'; e.currentTarget.style.color = 'var(--text-slate-900)'; } }}
-                    onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-slate-500)'; } }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.background = 'rgba(28,38,128,0.06)';
+                        e.currentTarget.style.color = 'var(--text-slate-900)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = 'var(--text-slate-500)';
+                      }
+                    }}
                   >
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: isCollapsed ? 'center' : 'flex-start',
-                      gap: '12px',
-                      minWidth: 0,
-                      width: isCollapsed ? '100%' : 'auto'
-                    }}>
-                      <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{icon}</span>
-                      {!isCollapsed && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: isCollapsed ? 'center' : 'flex-start',
+                        gap: '12px',
+                        minWidth: 0,
+                        width: isCollapsed ? '100%' : 'auto',
+                      }}
+                    >
+                      <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {icon}
+                      </span>
+                      {!isCollapsed && (
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {label}
+                        </span>
+                      )}
                     </div>
                     {!isCollapsed && badge > 0 && (
-                      <span style={{
-                        background: 'var(--accent-red)',
-                        color: 'white',
-                        borderRadius: '10px',
-                        padding: '1px 7px',
-                        fontSize: '10px',
-                        fontWeight: 700,
-                        flexShrink: 0,
-                      }}>
+                      <span
+                        style={{
+                          background: 'var(--accent-red)',
+                          color: 'white',
+                          borderRadius: '10px',
+                          padding: '1px 7px',
+                          fontSize: '10px',
+                          fontWeight: 700,
+                          flexShrink: 0,
+                        }}
+                      >
                         {badge}
                       </span>
                     )}
                     {isCollapsed && badge > 0 && (
-                      <span style={{
-                        position: 'absolute',
-                        top: '4px',
-                        right: '4px',
-                        background: 'var(--accent-red)',
-                        color: 'white',
-                        borderRadius: '50%',
-                        width: '16px',
-                        height: '16px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '9px',
-                        fontWeight: 700,
-                      }}>
+                      <span
+                        style={{
+                          position: 'absolute',
+                          top: '4px',
+                          right: '4px',
+                          background: 'var(--accent-red)',
+                          color: 'white',
+                          borderRadius: '50%',
+                          width: '16px',
+                          height: '16px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '9px',
+                          fontWeight: 700,
+                        }}
+                      >
                         {badge}
                       </span>
                     )}
@@ -339,7 +502,14 @@ const TeacherSidebar = ({
             </nav>
 
             {/* Déconnexion */}
-            <div style={{ display: 'flex', justifyContent: isCollapsed ? 'center' : 'stretch', width: '100%', marginTop: '32px' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: isCollapsed ? 'center' : 'stretch',
+                width: '100%',
+                marginTop: '32px',
+              }}
+            >
               <button
                 type="button"
                 onClick={handleLogout}
@@ -362,17 +532,21 @@ const TeacherSidebar = ({
                   color: 'var(--text-slate-500)',
                   flexShrink: 0,
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(244,63,46,0.07)'; e.currentTarget.style.color = 'var(--accent-red)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-slate-500)'; }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(244,63,46,0.07)';
+                  e.currentTarget.style.color = 'var(--accent-red)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = 'var(--text-slate-500)';
+                }}
               >
                 <LogOut size={20} />
                 {!isCollapsed && <span>Déconnexion</span>}
               </button>
             </div>
-
           </div>
         </div>
-
       </aside>
     </>
   );

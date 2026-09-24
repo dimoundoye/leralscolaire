@@ -16,7 +16,7 @@ const upload = multer({
       return cb(new Error('Format non pris en charge : utilisez un fichier Excel (.xlsx) ou CSV.'));
     }
     cb(null, true);
-  }
+  },
 });
 
 let photoAndJustifStorage;
@@ -40,7 +40,7 @@ if (isCloudinaryConfigured) {
     },
     filename: (req, file, cb) => {
       cb(null, safeFileName(file.originalname));
-    }
+    },
   });
 }
 
@@ -55,12 +55,12 @@ const photoAndJustifUpload = multer({
     }
     cb(null, true);
   },
-  limits: { fileSize: 10 * 1024 * 1024 } // 10 MB max
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB max
 });
 
 const fileFields = photoAndJustifUpload.fields([
   { name: 'photo', maxCount: 1 },
-  { name: 'justificatif_inapte', maxCount: 1 }
+  { name: 'justificatif_inapte', maxCount: 1 },
 ]);
 
 // List all students

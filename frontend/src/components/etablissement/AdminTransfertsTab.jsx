@@ -12,7 +12,7 @@ const AdminTransfertsTab = ({
   handleAcceptTransfer,
   handleRejectTransfer,
   handleCancelTransfer,
-  loading
+  loading,
 }) => {
   return (
     <div className="transferts-view animate-fade-in">
@@ -29,7 +29,10 @@ const AdminTransfertsTab = ({
       </div>
 
       {/* Sub-tabs: Demandes Reçues vs Demandes Envoyées */}
-      <div className="sub-tabs-bar mb-4" style={{ display: 'flex', gap: '1rem', borderBottom: '2px solid #e2e8f0', paddingBottom: '0.5rem' }}>
+      <div
+        className="sub-tabs-bar mb-4"
+        style={{ display: 'flex', gap: '1rem', borderBottom: '2px solid #e2e8f0', paddingBottom: '0.5rem' }}
+      >
         <button
           type="button"
           className={`sub-tab-btn ${transferSubTab === 'incoming' ? 'active' : ''}`}
@@ -46,12 +49,21 @@ const AdminTransfertsTab = ({
             marginBottom: '-0.6rem',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px'
+            gap: '8px',
           }}
         >
           Demandes Reçues (Entrantes)
           {incomingTransfers.length > 0 && (
-            <span style={{ background: '#ef4444', color: '#fff', fontSize: '11px', fontWeight: 800, padding: '2px 8px', borderRadius: '12px' }}>
+            <span
+              style={{
+                background: '#ef4444',
+                color: '#fff',
+                fontSize: '11px',
+                fontWeight: 800,
+                padding: '2px 8px',
+                borderRadius: '12px',
+              }}
+            >
               {incomingTransfers.length}
             </span>
           )}
@@ -73,11 +85,20 @@ const AdminTransfertsTab = ({
             marginBottom: '-0.6rem',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px'
+            gap: '8px',
           }}
         >
           Demandes Envoyées (Sortantes)
-          <span style={{ background: '#cbd5e1', color: '#334155', fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '12px' }}>
+          <span
+            style={{
+              background: '#cbd5e1',
+              color: '#334155',
+              fontSize: '11px',
+              fontWeight: 700,
+              padding: '2px 8px',
+              borderRadius: '12px',
+            }}
+          >
             {outgoingTransfers.length}
           </span>
         </button>
@@ -89,7 +110,8 @@ const AdminTransfertsTab = ({
             <div className="table-block-title">
               <h3>Demandes de Transfert Entrantes ({incomingTransfers.length})</h3>
               <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>
-                Ces élèves ont demandé un transfert vers votre établissement. Vous pouvez consulter leur livret avant d'accepter.
+                Ces élèves ont demandé un transfert vers votre établissement. Vous pouvez consulter leur livret avant
+                d'accepter.
               </p>
             </div>
           </div>
@@ -107,26 +129,50 @@ const AdminTransfertsTab = ({
                 </tr>
               </thead>
               <tbody>
-                {incomingTransfers.map(t => (
+                {incomingTransfers.map((t) => (
                   <tr key={t.id}>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         {t.photo_url ? (
                           <img src={`${t.photo_url}`} alt="Photo" className="student-photo-mini" />
                         ) : (
-                          <div className="user-avatar-small"><User size={14}/></div>
+                          <div className="user-avatar-small">
+                            <User size={14} />
+                          </div>
                         )}
-                        <strong style={{ fontSize: '13px' }}>{t.eleve_nom} {t.eleve_prenom}</strong>
+                        <strong style={{ fontSize: '13px' }}>
+                          {t.eleve_nom} {t.eleve_prenom}
+                        </strong>
                       </div>
                     </td>
-                    <td><code className="text-orange" style={{ fontSize: '11px' }}>{t.identifiant_national}</code></td>
-                    <td><strong>{t.ancien_etablissement_nom}</strong></td>
                     <td>
-                      <button 
-                        type="button" 
+                      <code className="text-orange" style={{ fontSize: '11px' }}>
+                        {t.identifiant_national}
+                      </code>
+                    </td>
+                    <td>
+                      <strong>{t.ancien_etablissement_nom}</strong>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
                         className="btn btn-outline"
-                        onClick={() => setViewTransferMotifModal({ eleveNom: `${t.eleve_nom} ${t.eleve_prenom}`, motif: t.motif })}
-                        style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '5px', background: '#f8fafc', color: '#334155', border: '1px solid #cbd5e1', cursor: 'pointer', fontWeight: 600 }}
+                        onClick={() =>
+                          setViewTransferMotifModal({ eleveNom: `${t.eleve_nom} ${t.eleve_prenom}`, motif: t.motif })
+                        }
+                        style={{
+                          fontSize: '11px',
+                          padding: '4px 10px',
+                          borderRadius: '8px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          background: '#f8fafc',
+                          color: '#334155',
+                          border: '1px solid #cbd5e1',
+                          cursor: 'pointer',
+                          fontWeight: 600,
+                        }}
                         title="Cliquer pour voir le motif"
                       >
                         <FileText size={12} style={{ color: '#475569' }} /> Voir motif
@@ -135,40 +181,70 @@ const AdminTransfertsTab = ({
                     <td style={{ fontSize: '12px' }}>{new Date(t.date_transfert).toLocaleDateString('fr-SN')}</td>
                     <td>
                       <div className="flex gap-2 flex-wrap" style={{ alignItems: 'center' }}>
-                        <button 
+                        <button
                           type="button"
                           className="btn-action-text dossier"
-                          onClick={() => handleOpenDossierPreview({ id: t.eleve_id, nom: t.eleve_nom, prenom: t.eleve_prenom, identifiant_national: t.identifiant_national })}
+                          onClick={() =>
+                            handleOpenDossierPreview({
+                              id: t.eleve_id,
+                              nom: t.eleve_nom,
+                              prenom: t.eleve_prenom,
+                              identifiant_national: t.identifiant_national,
+                            })
+                          }
                           title="Visualiser le livret complet avant décision"
                           style={{ borderColor: '#3b82f6', color: '#2563eb' }}
                         >
                           <FileText size={13} /> <span> Aperçu du Livret</span>
                         </button>
-                        <button 
+                        <button
                           type="button"
                           className="btn btn-primary"
-                          onClick={() => setConfirmTransferModal({ 
-                            type: 'accept', 
-                            transferId: t.id, 
-                            eleveNom: `${t.eleve_nom} ${t.eleve_prenom}`, 
-                            onConfirm: () => handleAcceptTransfer(t.id) 
-                          })}
+                          onClick={() =>
+                            setConfirmTransferModal({
+                              type: 'accept',
+                              transferId: t.id,
+                              eleveNom: `${t.eleve_nom} ${t.eleve_prenom}`,
+                              onConfirm: () => handleAcceptTransfer(t.id),
+                            })
+                          }
                           disabled={loading}
-                          style={{ background: '#10b981', borderColor: '#059669', fontSize: '11px', padding: '5px 12px', color: '#fff', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}
+                          style={{
+                            background: '#10b981',
+                            borderColor: '#059669',
+                            fontSize: '11px',
+                            padding: '5px 12px',
+                            color: '#fff',
+                            fontWeight: 700,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
                         >
                           <CheckCircle size={13} /> Accepter
                         </button>
-                        <button 
+                        <button
                           type="button"
                           className="btn btn-outline"
-                          onClick={() => setConfirmTransferModal({ 
-                            type: 'reject', 
-                            transferId: t.id, 
-                            eleveNom: `${t.eleve_nom} ${t.eleve_prenom}`, 
-                            onConfirm: () => handleRejectTransfer(t.id) 
-                          })}
+                          onClick={() =>
+                            setConfirmTransferModal({
+                              type: 'reject',
+                              transferId: t.id,
+                              eleveNom: `${t.eleve_nom} ${t.eleve_prenom}`,
+                              onConfirm: () => handleRejectTransfer(t.id),
+                            })
+                          }
                           disabled={loading}
-                          style={{ borderColor: '#ef4444', color: '#dc2626', fontSize: '11px', padding: '5px 12px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}
+                          style={{
+                            borderColor: '#ef4444',
+                            color: '#dc2626',
+                            fontSize: '11px',
+                            padding: '5px 12px',
+                            fontWeight: 700,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
                         >
                           <XCircle size={13} /> Refuser
                         </button>
@@ -212,17 +288,41 @@ const AdminTransfertsTab = ({
                 </tr>
               </thead>
               <tbody>
-                {outgoingTransfers.map(t => (
+                {outgoingTransfers.map((t) => (
                   <tr key={t.id}>
-                    <td><strong>{t.eleve_nom} {t.eleve_prenom}</strong></td>
-                    <td><code className="text-orange" style={{ fontSize: '11px' }}>{t.identifiant_national}</code></td>
-                    <td><strong>{t.nouveau_etablissement_nom}</strong></td>
+                    <td>
+                      <strong>
+                        {t.eleve_nom} {t.eleve_prenom}
+                      </strong>
+                    </td>
+                    <td>
+                      <code className="text-orange" style={{ fontSize: '11px' }}>
+                        {t.identifiant_national}
+                      </code>
+                    </td>
+                    <td>
+                      <strong>{t.nouveau_etablissement_nom}</strong>
+                    </td>
                     <td style={{ fontSize: '12px' }}>
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         className="btn btn-outline"
-                        onClick={() => setViewTransferMotifModal({ eleveNom: `${t.eleve_nom} ${t.eleve_prenom}`, motif: t.motif })}
-                        style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '5px', background: '#f8fafc', color: '#334155', border: '1px solid #cbd5e1', cursor: 'pointer', fontWeight: 600 }}
+                        onClick={() =>
+                          setViewTransferMotifModal({ eleveNom: `${t.eleve_nom} ${t.eleve_prenom}`, motif: t.motif })
+                        }
+                        style={{
+                          fontSize: '11px',
+                          padding: '4px 10px',
+                          borderRadius: '8px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          background: '#f8fafc',
+                          color: '#334155',
+                          border: '1px solid #cbd5e1',
+                          cursor: 'pointer',
+                          fontWeight: 600,
+                        }}
                         title="Cliquer pour voir le motif"
                       >
                         <FileText size={12} style={{ color: '#475569' }} /> Voir motif
@@ -230,26 +330,43 @@ const AdminTransfertsTab = ({
                     </td>
                     <td style={{ fontSize: '12px' }}>{new Date(t.date_transfert).toLocaleDateString('fr-SN')}</td>
                     <td>
-                      <span className={`status-pill ${
-                        t.statut_transfert === 'VALIDE' ? 'status-pass' : 
-                        t.statut_transfert === 'REJETE' ? 'status-fail' : ''
-                      }`} style={t.statut_transfert === 'EN_ATTENTE' ? { background: '#fff7ed', color: '#c2410c', border: '1px solid #fed7aa' } : {}}>
+                      <span
+                        className={`status-pill ${
+                          t.statut_transfert === 'VALIDE'
+                            ? 'status-pass'
+                            : t.statut_transfert === 'REJETE'
+                              ? 'status-fail'
+                              : ''
+                        }`}
+                        style={
+                          t.statut_transfert === 'EN_ATTENTE'
+                            ? { background: '#fff7ed', color: '#c2410c', border: '1px solid #fed7aa' }
+                            : {}
+                        }
+                      >
                         {t.statut_transfert === 'EN_ATTENTE' ? 'EN ATTENTE' : t.statut_transfert}
                       </span>
                     </td>
                     <td>
                       {t.statut_transfert === 'EN_ATTENTE' && (
-                        <button 
+                        <button
                           type="button"
                           className="btn-action-text delete-btn"
-                          onClick={() => setConfirmTransferModal({ 
-                            type: 'cancel', 
-                            transferId: t.id, 
-                            eleveNom: `${t.eleve_nom} ${t.eleve_prenom}`, 
-                            onConfirm: () => handleCancelTransfer(t.id) 
-                          })}
+                          onClick={() =>
+                            setConfirmTransferModal({
+                              type: 'cancel',
+                              transferId: t.id,
+                              eleveNom: `${t.eleve_nom} ${t.eleve_prenom}`,
+                              onConfirm: () => handleCancelTransfer(t.id),
+                            })
+                          }
                           disabled={loading}
-                          style={{ color: '#ef4444', borderColor: 'rgba(239,68,68,0.2)', padding: '4px 8px', fontSize: '11px' }}
+                          style={{
+                            color: '#ef4444',
+                            borderColor: 'rgba(239,68,68,0.2)',
+                            padding: '4px 8px',
+                            fontSize: '11px',
+                          }}
                         >
                           Annuler la demande
                         </button>

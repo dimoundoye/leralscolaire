@@ -2,13 +2,26 @@
  * Service de Notification pour la Vie Scolaire (Email & SMS)
  */
 
-async function sendParentNotification({ type_action, eleve_nom, eleve_prenom, parent_email, parent_telephone, motif, description, date_rendez_vous, lieu_rendez_vous, etablissement_nom }) {
+async function sendParentNotification({
+  type_action,
+  eleve_nom,
+  eleve_prenom,
+  parent_email,
+  parent_telephone,
+  motif,
+  description,
+  date_rendez_vous,
+  lieu_rendez_vous,
+  etablissement_nom,
+}) {
   const result = {
     emailSent: false,
-    smsSent: false
+    smsSent: false,
   };
 
-  const formattedDate = date_rendez_vous ? new Date(date_rendez_vous).toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'short' }) : null;
+  const formattedDate = date_rendez_vous
+    ? new Date(date_rendez_vous).toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'short' })
+    : null;
 
   // 1. Simulation / Envoi Email Parent
   if (parent_email) {
@@ -17,7 +30,9 @@ async function sendParentNotification({ type_action, eleve_nom, eleve_prenom, pa
     console.log(`   Établissement : ${etablissement_nom || 'LeralScolaire'}`);
     console.log(`   Objet : [${type_action}] Concernant l'élève ${eleve_prenom} ${eleve_nom}`);
     if (type_action === 'CONVOCATION') {
-      console.log(`   Message : Vous êtes convoqué(e) à l'établissement le ${formattedDate} à ${lieu_rendez_vous || 'Administration'}.`);
+      console.log(
+        `   Message : Vous êtes convoqué(e) à l'établissement le ${formattedDate} à ${lieu_rendez_vous || 'Administration'}.`
+      );
     }
     console.log(`   Motif : ${motif}`);
     if (description) console.log(`   Détails : ${description}`);
@@ -45,5 +60,5 @@ async function sendParentNotification({ type_action, eleve_nom, eleve_prenom, pa
 }
 
 module.exports = {
-  sendParentNotification
+  sendParentNotification,
 };

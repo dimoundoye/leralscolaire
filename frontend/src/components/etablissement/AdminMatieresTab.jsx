@@ -1,12 +1,7 @@
 import React from 'react';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 
-const AdminMatieresTab = ({
-  matieres,
-  setEditingMatiere,
-  setShowMatiereModal,
-  handleDeleteMatiere
-}) => {
+const AdminMatieresTab = ({ matieres, setEditingMatiere, setShowMatiereModal, handleDeleteMatiere }) => {
   return (
     <div className="matieres-view">
       <div className="page-header">
@@ -14,7 +9,19 @@ const AdminMatieresTab = ({
           <h1 className="page-title">Matières</h1>
           <p className="page-subtitle">{matieres.length} matières configurées</p>
         </div>
-        <button className="btn btn-primary" onClick={() => {setEditingMatiere(null); setShowMatiereModal(true);}} style={{ background: 'var(--accent-color)', borderColor: 'var(--accent-color)', fontSize: '11px', padding: '6px 14px' }}>
+        <button
+          className="btn btn-primary"
+          onClick={() => {
+            setEditingMatiere(null);
+            setShowMatiereModal(true);
+          }}
+          style={{
+            background: 'var(--accent-color)',
+            borderColor: 'var(--accent-color)',
+            fontSize: '11px',
+            padding: '6px 14px',
+          }}
+        >
           <Plus size={16} /> Nouvelle Matière
         </button>
       </div>
@@ -36,23 +43,45 @@ const AdminMatieresTab = ({
               </tr>
             </thead>
             <tbody>
-              {matieres.map(m => (
+              {matieres.map((m) => (
                 <tr key={m.id}>
                   <td className="font-bold">{m.nom}</td>
-                  <td><code className="text-orange" style={{fontSize: '11px'}}>{m.code_matiere}</code></td>
+                  <td>
+                    <code className="text-orange" style={{ fontSize: '11px' }}>
+                      {m.code_matiere}
+                    </code>
+                  </td>
                   <td>
                     <div className="flex gap-2">
-                      <button className="btn-action-text modifier" onClick={() => {setEditingMatiere(m); setShowMatiereModal(true);}} title="Modifier">
+                      <button
+                        className="btn-action-text modifier"
+                        onClick={() => {
+                          setEditingMatiere(m);
+                          setShowMatiereModal(true);
+                        }}
+                        title="Modifier"
+                      >
                         <Edit size={12} /> <span>Modifier</span>
                       </button>
-                      <button className="btn-action-text delete-btn" onClick={() => handleDeleteMatiere(m.id)} title="Supprimer" style={{ color: '#ef4444', borderColor: 'rgba(239,68,68,0.2)' }}>
+                      <button
+                        className="btn-action-text delete-btn"
+                        onClick={() => handleDeleteMatiere(m.id)}
+                        title="Supprimer"
+                        style={{ color: '#ef4444', borderColor: 'rgba(239,68,68,0.2)' }}
+                      >
                         <Trash2 size={12} /> <span>Supprimer</span>
                       </button>
                     </div>
                   </td>
                 </tr>
               ))}
-              {matieres.length === 0 && <tr><td colSpan="3" className="text-center py-8 text-slate-400">Aucune matière définie.</td></tr>}
+              {matieres.length === 0 && (
+                <tr>
+                  <td colSpan="3" className="text-center py-8 text-slate-400">
+                    Aucune matière définie.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

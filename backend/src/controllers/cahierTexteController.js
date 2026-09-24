@@ -17,7 +17,7 @@ const cahierTexteController = {
       travail_a_faire,
       date_remise_devoir,
       fichier_url,
-      fichier_nom
+      fichier_nom,
     } = req.body;
 
     if (!classe_id || !matiere_id || !titre_lecon || !contenu_seance) {
@@ -26,7 +26,7 @@ const cahierTexteController = {
 
     try {
       if (req.user.role !== 'PROFESSEUR' || !(await isProfOfClasse(req.user.id, classe_id, matiere_id))) {
-        return response.error(res, 'Accès refusé. Vous n\'enseignez pas cette matière dans cette classe.', 403);
+        return response.error(res, "Accès refusé. Vous n'enseignez pas cette matière dans cette classe.", 403);
       }
 
       // Fetch etablissement_id from class
@@ -57,17 +57,17 @@ const cahierTexteController = {
           travail_a_faire || null,
           date_remise_devoir || null,
           fichier_url || null,
-          fichier_nom || null
+          fichier_nom || null,
         ]
       );
 
       return res.status(201).json({
         message: 'Séance enregistrée avec succès dans le Cahier de Texte.',
-        entry: rows[0]
+        entry: rows[0],
       });
     } catch (err) {
       console.error('Erreur création cahier de texte:', err);
-      return response.error(res, 'Erreur lors de l\'enregistrement de la séance.', 500);
+      return response.error(res, "Erreur lors de l'enregistrement de la séance.", 500);
     }
   },
 
@@ -80,7 +80,7 @@ const cahierTexteController = {
       // URL Cloudinary si configuré, sinon chemin local /uploads/cahier_texte/...
       return res.json({
         fichier_url: getUploadedFileUrl(req.file, 'cahier_texte'),
-        fichier_nom: req.file.originalname
+        fichier_nom: req.file.originalname,
       });
     } catch (err) {
       console.error('Erreur upload support cahier de texte:', err);
@@ -133,7 +133,7 @@ const cahierTexteController = {
 
       // Find all enrolled classes of the student
       const classRes = await db.query('SELECT classe_id FROM inscription_classes WHERE eleve_id = $1', [eleveId]);
-      const classIds = classRes.rows.map(r => r.classe_id);
+      const classIds = classRes.rows.map((r) => r.classe_id);
 
       if (classIds.length === 0) {
         // Élève sans classe : aucune séance à afficher
@@ -225,7 +225,7 @@ const cahierTexteController = {
 
       return res.json({
         message: newVisa ? 'Visa administratif apposé.' : 'Visa administratif retiré.',
-        entry: rows[0]
+        entry: rows[0],
       });
     } catch (err) {
       console.error('Erreur visa cahier de texte:', err);
@@ -245,10 +245,11 @@ const cahierTexteController = {
       const entry = entryRes.rows[0];
       // Suppression réservée à l'auteur de la séance ou à l'administration de son établissement
       const isAuteur = req.user.role === 'PROFESSEUR' && entry.professeur_id === req.user.id;
-      const isEtablissement = req.user.role === 'ADMIN_ETABLISSEMENT'
-        && entry.etablissement_id === (await getAdminEtablissementId(req.user.id));
+      const isEtablissement =
+        req.user.role === 'ADMIN_ETABLISSEMENT' &&
+        entry.etablissement_id === (await getAdminEtablissementId(req.user.id));
       if (!isAuteur && !isEtablissement) {
-        return response.error(res, 'Seul l\'auteur de la séance ou son établissement peut la supprimer.', 403);
+        return response.error(res, "Seul l'auteur de la séance ou son établissement peut la supprimer.", 403);
       }
 
       await db.query('DELETE FROM cahier_de_texte WHERE id = $1', [id]);
@@ -257,7 +258,7 @@ const cahierTexteController = {
       console.error('Erreur suppression cahier de texte:', err);
       return response.error(res, 'Erreur lors de la suppression de la séance.', 500);
     }
-  }
+  },
 };
 
 module.exports = cahierTexteController;

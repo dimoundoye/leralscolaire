@@ -8,7 +8,7 @@ export const db = new Dexie('LeralScolaireOfflineDB');
 // cacheStore: cache clé-valeur pour les données de lecture (classes, élèves, etc.)
 db.version(1).stores({
   outbox: '++id, clientMutationId, endpoint, method, status, createdAt',
-  cacheStore: 'key, updatedAt'
+  cacheStore: 'key, updatedAt',
 });
 
 export default db;

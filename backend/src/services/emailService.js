@@ -17,7 +17,7 @@ const POSSIBLE_LOGO_PATHS = [
   path.join(__dirname, '../../uploads/logo_leralscolaire.png'),
   path.join(__dirname, '../../../frontend/public/logo_leralscolaire.png'),
   path.join(process.cwd(), 'src/assets/logo_leralscolaire.png'),
-  path.join(process.cwd(), 'assets/logo_leralscolaire.png')
+  path.join(process.cwd(), 'assets/logo_leralscolaire.png'),
 ];
 
 function getExistingLogoPath() {
@@ -34,15 +34,15 @@ const transporter = nodemailer.createTransport({
   secure: SMTP_SECURE, // true pour le port 465, false pour 587
   auth: {
     user: SMTP_USER,
-    pass: SMTP_PASS
+    pass: SMTP_PASS,
   },
   tls: {
     // Évite les rejets de certificats auto-signés éventuels sur certains serveurs SMTP
-    rejectUnauthorized: false
+    rejectUnauthorized: false,
   },
   pool: true,
   maxConnections: 5,
-  maxMessages: 100
+  maxMessages: 100,
 });
 
 // Envoi d'email avec logo CID embarqué garanti (ou fallback URL publique si absent)
@@ -55,7 +55,7 @@ async function sendMailWithLogo(mailOptions) {
     attachments.push({
       filename: 'logo_leralscolaire.png',
       path: logoPath,
-      cid: 'logo_leralscolaire'
+      cid: 'logo_leralscolaire',
     });
   } else {
     // Si le logo local n'est pas trouvé, utiliser l'URL web absolue
@@ -69,14 +69,20 @@ async function sendMailWithLogo(mailOptions) {
     ...mailOptions,
     from: fromClean,
     html,
-    attachments
+    attachments,
   });
 }
 
 /**
  * Gabarit de base HTML responsive pour les emails LeralScolaire
  */
-function getEmailLayout({ title, subtitle, contentHtml, ctaText = 'Accéder à LeralScolaire', ctaLink = `${FRONTEND_URL}/auth` }) {
+function getEmailLayout({
+  title,
+  subtitle,
+  contentHtml,
+  ctaText = 'Accéder à LeralScolaire',
+  ctaLink = `${FRONTEND_URL}/auth`,
+}) {
   return `
 <!DOCTYPE html>
 <html lang="fr">
@@ -237,10 +243,14 @@ function getEmailLayout({ title, subtitle, contentHtml, ctaText = 'Accéder à L
       </div>
       <div class="body-content">
         ${contentHtml}
-        ${ctaText ? `
+        ${
+          ctaText
+            ? `
         <div class="btn-container">
           <a href="${ctaLink}" class="btn-cta" target="_blank">${ctaText}</a>
-        </div>` : ''}
+        </div>`
+            : ''
+        }
         <div class="security-notice">
           <strong>Sécurité :</strong> Ce mot de passe est provisoire. Vous pouvez et devez le modifier dès votre première connexion dans les paramètres de votre compte. Ne partagez jamais vos identifiants.
         </div>
@@ -307,14 +317,14 @@ const emailService = {
         subtitle: 'Espace Corps Enseignant',
         contentHtml,
         ctaText: 'Accéder au Portail Enseignant',
-        ctaLink: `${FRONTEND_URL}/auth`
+        ctaLink: `${FRONTEND_URL}/auth`,
       });
 
       const info = await sendMailWithLogo({
         from: EMAIL_FROM,
         to,
         subject: `[LéralScolaire] Vos accès Enseignant - IUP : ${iupProf}`,
-        html
+        html,
       });
 
       console.log(`✉️ Email professeur envoyé à ${to} (MessageId: ${info.messageId})`);
@@ -333,9 +343,11 @@ const emailService = {
       const displayEleve = [prenom, nom].filter(Boolean).join(' ') || "l'élève";
       const contentHtml = `
         <div class="greeting">${isParent ? 'Bonjour cher Parent / Tuteur,' : `Bonjour ${displayEleve},`}</div>
-        <p>${isParent 
-          ? `L'inscription scolaire de votre enfant <strong>${displayEleve}</strong> a été enregistrée avec succès` 
-          : `Votre inscription scolaire a été enregistrée avec succès`}
+        <p>${
+          isParent
+            ? `L'inscription scolaire de votre enfant <strong>${displayEleve}</strong> a été enregistrée avec succès`
+            : `Votre inscription scolaire a été enregistrée avec succès`
+        }
           ${nomEtablissement ? ` à l'établissement <strong>${nomEtablissement}</strong>` : ''}
           ${classeNom ? ` (Classe : <strong>${classeNom}</strong>)` : ''}.
         </p>
@@ -358,17 +370,17 @@ const emailService = {
 
       const html = getEmailLayout({
         title: 'Vos identifiants LéralScolaire',
-        subtitle: 'Livret Numérique de l\'Élève',
+        subtitle: "Livret Numérique de l'Élève",
         contentHtml,
-        ctaText: 'Consulter l\'espace Élève',
-        ctaLink: `${FRONTEND_URL}/auth`
+        ctaText: "Consulter l'espace Élève",
+        ctaLink: `${FRONTEND_URL}/auth`,
       });
 
       const info = await sendMailWithLogo({
         from: EMAIL_FROM,
         to,
         subject: `[LéralScolaire] Identifiants d'accès scolaire pour ${displayEleve} (IUP : ${iupEleve})`,
-        html
+        html,
       });
 
       console.log(`✉️ Email élève envoyé à ${to} (MessageId: ${info.messageId})`);
@@ -405,14 +417,14 @@ const emailService = {
         subtitle: 'Sécurité et Accès au Compte',
         contentHtml,
         ctaText: 'Retourner sur LéralScolaire',
-        ctaLink: `${FRONTEND_URL}/auth`
+        ctaLink: `${FRONTEND_URL}/auth`,
       });
 
       const info = await sendMailWithLogo({
         from: EMAIL_FROM,
         to,
         subject: `[LéralScolaire] Code de réinitialisation : ${code}`,
-        html
+        html,
       });
 
       console.log(`✉️ Code de réinitialisation envoyé à ${to} (MessageId: ${info.messageId})`);
@@ -429,7 +441,7 @@ const emailService = {
   async sendDemandeReception({ to, nom, typeDemande, referenceId }) {
     if (!to) return;
     try {
-      const typeLabel = typeDemande === 'ETABLISSEMENT' ? "Établissement Scolaire" : "Enseignant / Professeur";
+      const typeLabel = typeDemande === 'ETABLISSEMENT' ? 'Établissement Scolaire' : 'Enseignant / Professeur';
       const contentHtml = `
         <div class="greeting">Bonjour ${nom || ''},</div>
         <p>Votre demande de <strong>pré-inscription (${typeLabel})</strong> a été reçue avec succès par les services de l'<strong>Office du Baccalauréat du Sénégal</strong>.</p>
@@ -458,15 +470,15 @@ const emailService = {
         title: 'Accusé de réception de votre demande',
         subtitle: 'Office du Baccalauréat - Sénégal',
         contentHtml,
-        ctaText: 'Suivre l\'actualité LéralScolaire',
-        ctaLink: `${FRONTEND_URL}/`
+        ctaText: "Suivre l'actualité LéralScolaire",
+        ctaLink: `${FRONTEND_URL}/`,
       });
 
       const info = await sendMailWithLogo({
         from: EMAIL_FROM,
         to,
         subject: `[Office du BAC] Accusé de réception de votre demande de pré-inscription (${typeLabel})`,
-        html
+        html,
       });
 
       console.log(`✉️ Accusé de réception pré-inscription envoyé à ${to} (MessageId: ${info.messageId})`);
@@ -483,7 +495,7 @@ const emailService = {
     if (!to) return;
     try {
       const isEtab = typeDemande === 'ETABLISSEMENT';
-      const typeLabel = isEtab ? "Établissement Scolaire" : "Enseignant / Professeur";
+      const typeLabel = isEtab ? 'Établissement Scolaire' : 'Enseignant / Professeur';
 
       const contentHtml = `
         <div class="greeting">Félicitations ${nom || ''} !</div>
@@ -496,11 +508,15 @@ const emailService = {
             <div class="credential-label">Identifiant Unique (IUP ${isEtab ? 'Établissement' : 'Enseignant'})</div>
             <div class="credential-value">${iup}</div>
           </div>
-          ${tempPassword ? `
+          ${
+            tempPassword
+              ? `
           <div class="credential-item">
             <div class="credential-label">Mot de passe temporaire</div>
             <div class="credential-value" style="letter-spacing: 2px;">${tempPassword}</div>
-          </div>` : ''}
+          </div>`
+              : ''
+          }
         </div>
 
         <div class="alert-box">
@@ -515,14 +531,14 @@ const emailService = {
         subtitle: 'Office du Baccalauréat - Sénégal',
         contentHtml,
         ctaText: 'Se Connecter à LéralScolaire',
-        ctaLink: `${FRONTEND_URL}/auth`
+        ctaLink: `${FRONTEND_URL}/auth`,
       });
 
       const info = await sendMailWithLogo({
         from: EMAIL_FROM,
         to,
         subject: `[Office du BAC] Demande approuvée - Vos identifiants officiels (${iup})`,
-        html
+        html,
       });
 
       console.log(`✉️ Notification validation demande envoyée à ${to} (MessageId: ${info.messageId})`);
@@ -538,7 +554,7 @@ const emailService = {
   async sendDemandeRejetee({ to, nom, typeDemande, motifRejet }) {
     if (!to) return;
     try {
-      const typeLabel = typeDemande === 'ETABLISSEMENT' ? "Établissement Scolaire" : "Enseignant / Professeur";
+      const typeLabel = typeDemande === 'ETABLISSEMENT' ? 'Établissement Scolaire' : 'Enseignant / Professeur';
 
       const contentHtml = `
         <div class="greeting">Bonjour ${nom || ''},</div>
@@ -548,7 +564,7 @@ const emailService = {
           <div class="credential-item">
             <div class="credential-label" style="color: #991b1b; font-weight: 700;">MOTIF DU REFUS / OBSERVATIONS DE L'OFFICE DU BAC :</div>
             <div style="font-size: 15px; color: #7f1d1d; margin-top: 6px; white-space: pre-wrap; line-height: 1.5;">
-              ${motifRejet || "Pièces justificatives incomplètes ou non conformes aux critères ministériels."}
+              ${motifRejet || 'Pièces justificatives incomplètes ou non conformes aux critères ministériels.'}
             </div>
           </div>
         </div>
@@ -562,14 +578,14 @@ const emailService = {
         subtitle: 'Office du Baccalauréat - Sénégal',
         contentHtml,
         ctaText: 'Accéder au Portail de Pré-inscription',
-        ctaLink: `${FRONTEND_URL}/inscription-nationale?type=${typeDemande}`
+        ctaLink: `${FRONTEND_URL}/inscription-nationale?type=${typeDemande}`,
       });
 
       const info = await sendMailWithLogo({
         from: EMAIL_FROM,
         to,
         subject: `[Office du BAC] Décision relative à votre demande de pré-inscription (${typeLabel})`,
-        html
+        html,
       });
 
       console.log(`✉️ Notification refus pré-inscription envoyée à ${to} (MessageId: ${info.messageId})`);
@@ -577,9 +593,7 @@ const emailService = {
     } catch (err) {
       console.error(`⚠️ Erreur envoi refus pré-inscription à ${to}:`, err.message);
     }
-  }
+  },
 };
 
 module.exports = emailService;
-
-

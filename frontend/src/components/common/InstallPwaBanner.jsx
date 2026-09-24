@@ -7,7 +7,8 @@ export default function InstallPwaBanner() {
   const [isDismissed, setIsDismissed] = useState(false);
 
   useEffect(() => {
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     if (isStandalone) {
       return;
     }
@@ -58,24 +59,26 @@ export default function InstallPwaBanner() {
   }
 
   return (
-    <div style={{
-      position: 'fixed',
-      bottom: '24px',
-      left: '24px',
-      zIndex: 99998,
-      maxWidth: '380px',
-      backgroundColor: '#0f172a',
-      color: '#ffffff',
-      border: '1px solid rgba(59, 130, 246, 0.3)',
-      borderRadius: '16px',
-      padding: '16px',
-      boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '14px',
-      animation: 'slideUp 0.35s ease-out',
-      fontFamily: 'Inter, system-ui, sans-serif'
-    }}>
+    <div
+      style={{
+        position: 'fixed',
+        bottom: '24px',
+        left: '24px',
+        zIndex: 99998,
+        maxWidth: '380px',
+        backgroundColor: '#0f172a',
+        color: '#ffffff',
+        border: '1px solid rgba(59, 130, 246, 0.3)',
+        borderRadius: '16px',
+        padding: '16px',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '14px',
+        animation: 'slideUp 0.35s ease-out',
+        fontFamily: 'Inter, system-ui, sans-serif',
+      }}
+    >
       <img
         src="/android-chrome-192x192.png"
         alt="LéralScolaire"
@@ -85,17 +88,24 @@ export default function InstallPwaBanner() {
           borderRadius: '10px',
           objectFit: 'contain',
           backgroundColor: '#ffffff',
-          padding: '2px'
+          padding: '2px',
         }}
       />
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: '600', fontSize: '14px', color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div
+          style={{
+            fontWeight: '600',
+            fontSize: '14px',
+            color: '#f8fafc',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
           Installer LéralScolaire
         </div>
-        <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
-          Accès direct & mode hors-ligne
-        </div>
+        <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>Accès direct & mode hors-ligne</div>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -114,10 +124,10 @@ export default function InstallPwaBanner() {
             alignItems: 'center',
             gap: '6px',
             transition: 'background 0.2s',
-            whiteSpace: 'nowrap'
+            whiteSpace: 'nowrap',
           }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1d4ed8')}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#2563eb')}
         >
           <Download size={14} />
           <span>Installer</span>
@@ -134,10 +144,10 @@ export default function InstallPwaBanner() {
             padding: '4px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
           }}
-          onMouseEnter={(e) => e.currentTarget.style.color = '#cbd5e1'}
-          onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
+          onMouseEnter={(e) => (e.currentTarget.style.color = '#cbd5e1')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
         >
           <X size={16} />
         </button>

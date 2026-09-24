@@ -30,7 +30,6 @@ const StudentExamsTab = ({ examResults, profile }) => {
       ) : (
         resultats.map((res) => (
           <div key={res.id} className="bac-exam-block">
-
             {/* === SECTION 1 : CARTE CANDIDAT === */}
             <div className="bac-candidat-card">
               <div className="bac-card-stripe" />
@@ -39,7 +38,7 @@ const StudentExamsTab = ({ examResults, profile }) => {
                   <div className="bac-type-badge">{res.type_examen}</div>
                   <div className="bac-session-label">Session {res.annee}</div>
                   <div className="bac-candidat-name">
-                    {eleveBAC ? `${eleveBAC.prenom} ${eleveBAC.nom}` : (profile?.prenom + ' ' + profile?.nom)}
+                    {eleveBAC ? `${eleveBAC.prenom} ${eleveBAC.nom}` : profile?.prenom + ' ' + profile?.nom}
                   </div>
                   <div className="bac-candidat-id">
                     {eleveBAC?.identifiant_national || profile?.identifiant_national || '—'}
@@ -70,13 +69,17 @@ const StudentExamsTab = ({ examResults, profile }) => {
                     </div>
                     <div className="bac-info-item">
                       <span className="bac-info-label">Établissement</span>
-                      <span className="bac-info-val">{eleveBAC?.etablissement_nom || profile?.etablissement_nom || '—'}</span>
+                      <span className="bac-info-val">
+                        {eleveBAC?.etablissement_nom || profile?.etablissement_nom || '—'}
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 {/* Badge statut candidat */}
-                <div className={`bac-statut-badge bac-statut-${(res.statut_candidat || 'CONVOQUÉ').toLowerCase().replace('é', 'e').replace('é', 'e')}`}>
+                <div
+                  className={`bac-statut-badge bac-statut-${(res.statut_candidat || 'CONVOQUÉ').toLowerCase().replace('é', 'e').replace('é', 'e')}`}
+                >
                   {res.statut_candidat === 'ADMIS' && <CheckCircle size={14} />}
                   {res.statut_candidat === 'AJOURNÉ' && <AlertCircle size={14} />}
                   {res.statut_candidat === 'EXCLU' && <XCircle size={14} />}
@@ -92,40 +95,77 @@ const StudentExamsTab = ({ examResults, profile }) => {
                 <Clock size={20} />
                 <div>
                   <strong>Résultats en attente de publication</strong>
-                  <p>Les résultats de la session {res.annee} n'ont pas encore été publiés par l'Office du Baccalauréat. Vous serez notifié dès la publication officielle.</p>
+                  <p>
+                    Les résultats de la session {res.annee} n'ont pas encore été publiés par l'Office du Baccalauréat.
+                    Vous serez notifié dès la publication officielle.
+                  </p>
                 </div>
               </div>
             ) : (
               <>
                 {/* Résultat officiel */}
                 {(() => {
-                  const statutFinal = (res.statut_deliberation || res.statut_candidat || res.statut_resultat || '').toUpperCase();
+                  const statutFinal = (
+                    res.statut_deliberation ||
+                    res.statut_candidat ||
+                    res.statut_resultat ||
+                    ''
+                  ).toUpperCase();
                   const isAdmis = statutFinal === 'ADMIS';
                   const isSecondTour = statutFinal === 'SECOND_TOUR' || statutFinal === 'CONVOQUÉ';
                   const isAjourne = statutFinal === 'AJOURNÉ';
 
                   return (
-                    <div className={`bac-resultat-section bac-res-${isAdmis ? 'admis' : isSecondTour ? 'rattrapage' : 'ajourne'}`}>
+                    <div
+                      className={`bac-resultat-section bac-res-${isAdmis ? 'admis' : isSecondTour ? 'rattrapage' : 'ajourne'}`}
+                    >
                       <div className="bac-resultat-main">
                         <div className="bac-moyenne-circle">
                           <span className="bac-moy-val">{res.moyenne ? parseFloat(res.moyenne).toFixed(2) : '—'}</span>
                           <span className="bac-moy-denom">/20</span>
                         </div>
                         <div className="bac-resultat-meta">
-                          <div className={`bac-verdict bac-verdict-${isAdmis ? 'admis' : isSecondTour ? 'rattrapage' : 'ajourne'}`} style={{ fontSize: 16, fontWeight: 900 }}>
-                            {isAdmis && <><CheckCircle size={20} /> ADMIS (1ER TOUR)</>}
-                            {isSecondTour && <><Clock size={20} /> ADMIS AU 2ND TOUR (RATTRAPAGE)</>}
-                            {isAjourne && <><AlertCircle size={20} /> AJOURNÉ</>}
-                            {!isAdmis && !isSecondTour && !isAjourne && <><Activity size={20} /> {statutFinal || 'DÉLIBÉRÉ'}</>}
+                          <div
+                            className={`bac-verdict bac-verdict-${isAdmis ? 'admis' : isSecondTour ? 'rattrapage' : 'ajourne'}`}
+                            style={{ fontSize: 16, fontWeight: 900 }}
+                          >
+                            {isAdmis && (
+                              <>
+                                <CheckCircle size={20} /> ADMIS (1ER TOUR)
+                              </>
+                            )}
+                            {isSecondTour && (
+                              <>
+                                <Clock size={20} /> ADMIS AU 2ND TOUR (RATTRAPAGE)
+                              </>
+                            )}
+                            {isAjourne && (
+                              <>
+                                <AlertCircle size={20} /> AJOURNÉ
+                              </>
+                            )}
+                            {!isAdmis && !isSecondTour && !isAjourne && (
+                              <>
+                                <Activity size={20} /> {statutFinal || 'DÉLIBÉRÉ'}
+                              </>
+                            )}
                           </div>
                           {res.mention && (
-                            <div className="bac-mention-pill" style={{ background: '#dcfce7', color: '#15803d', fontWeight: 800 }}>
+                            <div
+                              className="bac-mention-pill"
+                              style={{ background: '#dcfce7', color: '#15803d', fontWeight: 800 }}
+                            >
                               <Award size={14} /> Mention {res.mention.replace('_', ' ')}
                             </div>
                           )}
                           {res.date_deliberation && (
                             <div className="bac-delib-date">
-                              Délibéré le {new Date(res.date_deliberation).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                              Délibéré le{' '}
+                              {new Date(res.date_deliberation).toLocaleDateString('fr-FR', {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric',
+                              })}
                             </div>
                           )}
                         </div>
@@ -152,7 +192,7 @@ const StudentExamsTab = ({ examResults, profile }) => {
                   let totalCoeff = 0;
 
                   const listToRender = hasNotesGrid
-                    ? res.notes.map(n => {
+                    ? res.notes.map((n) => {
                         const val = parseFloat(n.note || 0);
                         const coef = parseInt(n.coefficient || 1);
                         if (n.statut_presence === 'PRESENT' && n.note !== '' && n.note !== null) {
@@ -189,18 +229,27 @@ const StudentExamsTab = ({ examResults, profile }) => {
                               const pct = Math.min((m.note / 20) * 100, 100);
                               return (
                                 <tr key={i}>
-                                  <td className="bac-ep-name"><strong>{m.name}</strong></td>
+                                  <td className="bac-ep-name">
+                                    <strong>{m.name}</strong>
+                                  </td>
                                   <td className="bac-ep-coeff">Coef {m.coef}</td>
-                                  <td className={`bac-ep-note ${m.pres === 'ABI' ? 'note-ko' : m.note >= 10 ? 'note-ok' : 'note-ko'}`}>
+                                  <td
+                                    className={`bac-ep-note ${m.pres === 'ABI' ? 'note-ko' : m.note >= 10 ? 'note-ok' : 'note-ko'}`}
+                                  >
                                     {m.pres === 'ABI' ? 'ABI' : m.note.toFixed(2) + '/20'}
                                   </td>
                                   <td className="bac-ep-pts">{m.pres === 'ABI' ? 0 : pts.toFixed(2)} pts</td>
                                   <td className="bac-ep-bar-cell">
                                     {m.pres === 'ABI' ? (
-                                      <span style={{ color: '#b91c1c', fontWeight: 700, fontSize: 11 }}>Absence Injustifiée</span>
+                                      <span style={{ color: '#b91c1c', fontWeight: 700, fontSize: 11 }}>
+                                        Absence Injustifiée
+                                      </span>
                                     ) : (
                                       <div className="bac-ep-bar-track">
-                                        <div className={`bac-ep-bar-fill ${m.note >= 10 ? 'bar-ok' : 'bar-ko'}`} style={{ width: `${pct}%` }} />
+                                        <div
+                                          className={`bac-ep-bar-fill ${m.note >= 10 ? 'bar-ok' : 'bar-ko'}`}
+                                          style={{ width: `${pct}%` }}
+                                        />
                                       </div>
                                     )}
                                   </td>
@@ -210,9 +259,17 @@ const StudentExamsTab = ({ examResults, profile }) => {
                           </tbody>
                           <tfoot>
                             <tr className="bac-ep-total-row">
-                              <td colSpan={2}><strong>TOTAL GÉNÉRAL DU BAC</strong></td>
-                              <td><strong>{totalCoeff > 0 ? (totalPoints / totalCoeff).toFixed(2) : '—'}/20</strong></td>
-                              <td colSpan={2}><strong>{totalPoints.toFixed(2)} Points / {totalCoeff} Coefs</strong></td>
+                              <td colSpan={2}>
+                                <strong>TOTAL GÉNÉRAL DU BAC</strong>
+                              </td>
+                              <td>
+                                <strong>{totalCoeff > 0 ? (totalPoints / totalCoeff).toFixed(2) : '—'}/20</strong>
+                              </td>
+                              <td colSpan={2}>
+                                <strong>
+                                  {totalPoints.toFixed(2)} Points / {totalCoeff} Coefs
+                                </strong>
+                              </td>
                             </tr>
                           </tfoot>
                         </table>

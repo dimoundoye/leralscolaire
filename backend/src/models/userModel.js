@@ -2,10 +2,7 @@ const db = require('../config/db');
 
 const User = {
   async findByEmailOrIdentifiant(identifier) {
-    const { rows } = await db.query(
-      'SELECT * FROM users WHERE email = $1 OR identifiant_national = $1',
-      [identifier]
-    );
+    const { rows } = await db.query('SELECT * FROM users WHERE email = $1 OR identifiant_national = $1', [identifier]);
     return rows[0];
   },
 
@@ -17,7 +14,7 @@ const User = {
   async findEleveUserIdByIdentifiant(identifiant) {
     const { rows } = await db.query('SELECT user_id FROM eleves WHERE identifiant_national = $1', [identifiant]);
     return rows[0];
-  }
+  },
 };
 
 module.exports = User;

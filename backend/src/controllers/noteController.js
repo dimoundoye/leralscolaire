@@ -38,7 +38,8 @@ async function allElevesInEtablissement(eleveIds, etablissementId) {
 
 const ELEVES_HORS_ETABLISSEMENT = 'Accès refusé. Certains élèves ne relèvent pas de votre établissement.';
 
-const MATIERE_PARTAGEE = "Cette matière est utilisée par d'autres établissements : elle ne peut pas être modifiée ou supprimée.";
+const MATIERE_PARTAGEE =
+  "Cette matière est utilisée par d'autres établissements : elle ne peut pas être modifiée ou supprimée.";
 
 function getClasseSuivante(niveau, decision) {
   if (decision === 'REDOUBLEMENT') return niveau;
@@ -116,9 +117,9 @@ const noteController = {
       const etablissementId = await NoteModel.getEtablissementIdByAdminId(req.user.id);
       const notes = await NoteModel.getStudentNotesByClassAndMatiere(classeId, matiereId, semestre);
 
-      const result = notes.map(n => ({
+      const result = notes.map((n) => ({
         ...n,
-        readonly: n.etablissement_origine_id && n.etablissement_origine_id !== etablissementId
+        readonly: n.etablissement_origine_id && n.etablissement_origine_id !== etablissementId,
       }));
 
       return res.json(result);
@@ -140,7 +141,12 @@ const noteController = {
       if (!Array.isArray(notes)) {
         return response.error(res, 'Liste de notes invalide.', 400);
       }
-      if (!(await allElevesInEtablissement(notes.map(n => n.eleve_id), etablissementId))) {
+      if (
+        !(await allElevesInEtablissement(
+          notes.map((n) => n.eleve_id),
+          etablissementId
+        ))
+      ) {
         return response.error(res, ELEVES_HORS_ETABLISSEMENT, 403);
       }
 
@@ -152,7 +158,14 @@ const noteController = {
           if (item.valeur === '' || item.valeur === null || item.valeur === undefined) continue;
 
           // Check if note exists and its origin
-          const oldNote = await NoteModel.checkExistingNote(item.eleve_id, matiere_id, semestre, trimestre, type_note, client);
+          const oldNote = await NoteModel.checkExistingNote(
+            item.eleve_id,
+            matiere_id,
+            semestre,
+            trimestre,
+            type_note,
+            client
+          );
 
           if (oldNote) {
             // Block modification if the note comes from another establishment
@@ -167,24 +180,35 @@ const noteController = {
             if (oldVal !== newVal || oldNote.appreciation !== item.appreciation) {
               console.log(`Updating note ${oldNote.id}: ${oldVal} -> ${newVal}`);
               // Log history
-              await NoteModel.logNoteHistory(oldNote.id, oldNote.valeur, item.valeur, oldNote.appreciation, item.appreciation, req.user.id, client);
+              await NoteModel.logNoteHistory(
+                oldNote.id,
+                oldNote.valeur,
+                item.valeur,
+                oldNote.appreciation,
+                item.appreciation,
+                req.user.id,
+                client
+              );
               // Update note value
               await NoteModel.updateNote(oldNote.id, item.valeur, item.appreciation, client);
             }
           } else {
             // New note: record origin
             console.log(`Inserting new note for eleve ${item.eleve_id}`);
-            await NoteModel.insertNote({
-              eleveId: item.eleve_id,
-              matiereId: matiere_id,
-              valeur: item.valeur,
-              appreciation: item.appreciation,
-              semestre,
-              trimestre,
-              typeNote: type_note,
-              professeurId: req.user.id,
-              etablissementId
-            }, client);
+            await NoteModel.insertNote(
+              {
+                eleveId: item.eleve_id,
+                matiereId: matiere_id,
+                valeur: item.valeur,
+                appreciation: item.appreciation,
+                semestre,
+                trimestre,
+                typeNote: type_note,
+                professeurId: req.user.id,
+                etablissementId,
+              },
+              client
+            );
           }
         }
 
@@ -210,11 +234,11 @@ const noteController = {
     try {
       const averages = await NoteModel.calculateClassAverages(classeId, semestre);
 
-      const finalResults = averages.map(row => {
+      const finalResults = averages.map((row) => {
         let moyenne = parseFloat(row.moyenne_generale) || 0;
         return {
           ...row,
-          moyenne_finale: Math.max(0, moyenne - (row.total_points_perdus / 10)) // Deduct 1 point for every 10 points lost in absences
+          moyenne_finale: Math.max(0, moyenne - row.total_points_perdus / 10), // Deduct 1 point for every 10 points lost in absences
         };
       });
 
@@ -267,7 +291,12 @@ const noteController = {
         return response.error(res, 'Établissement non trouvé.', 404);
       }
 
-      const result = await NoteModel.savePromotionRules(etablissementId, seuil_passage_direct, seuil_passage, seuil_cours_vacances);
+      const result = await NoteModel.savePromotionRules(
+        etablissementId,
+        seuil_passage_direct,
+        seuil_passage,
+        seuil_cours_vacances
+      );
       return res.json(result);
     } catch (err) {
       console.error(err);
@@ -294,16 +323,20 @@ const noteController = {
       const savedBulletins = await NoteModel.getSavedBulletins(classeId, annee_scolaire);
 
       const savedMap = {};
-      savedBulletins.forEach(b => {
+      savedBulletins.forEach((b) => {
         savedMap[b.eleve_id] = { decision: b.decision, decision_detail: b.decision_detail };
       });
 
       const seuils = [
         { min: parseFloat(regles.seuil_passage), decision: 'PASSAGE', label: 'Passage' },
-        { min: parseFloat(regles.seuil_cours_vacances), decision: 'COURS_VACANCES', label: 'Cours de vacances obligatoires' }
+        {
+          min: parseFloat(regles.seuil_cours_vacances),
+          decision: 'COURS_VACANCES',
+          label: 'Cours de vacances obligatoires',
+        },
       ];
 
-      const decisions = averages.map(row => {
+      const decisions = averages.map((row) => {
         const moy = parseFloat(row.moyenne_annuelle) || 0;
         let decision = 'REDOUBLEMENT';
         let decision_detail = 'Redoublement';
@@ -323,7 +356,7 @@ const noteController = {
           decision: saved ? saved.decision : decision,
           decision_detail: saved ? saved.decision_detail : decision_detail,
           saved: !!saved,
-          niveau_suivant: getClasseSuivante(row.niveau, saved ? saved.decision : decision)
+          niveau_suivant: getClasseSuivante(row.niveau, saved ? saved.decision : decision),
         };
       });
 
@@ -347,7 +380,12 @@ const noteController = {
       if (!etablissementId) {
         return response.error(res, 'Établissement non trouvé.', 404);
       }
-      if (!(await allElevesInEtablissement(decisions.map(d => d.eleve_id), etablissementId))) {
+      if (
+        !(await allElevesInEtablissement(
+          decisions.map((d) => d.eleve_id),
+          etablissementId
+        ))
+      ) {
         return response.error(res, ELEVES_HORS_ETABLISSEMENT, 403);
       }
 
@@ -357,78 +395,109 @@ const noteController = {
 
         for (const d of decisions) {
           await NoteModel.saveBulletinDecision(
-            d.eleve_id, classeId, annee_scolaire, d.moyenne_annuelle, d.decision, d.decision_detail, d.decision_auto !== false, client
+            d.eleve_id,
+            classeId,
+            annee_scolaire,
+            d.moyenne_annuelle,
+            d.decision,
+            d.decision_detail,
+            d.decision_auto !== false,
+            client
           );
 
           if (d.decision_detail && d.decision !== 'EXCLUSION') {
             const nextYear = getNextAcademicYear(annee_scolaire);
-            
+
             // Get current class details
             const currentClassRes = await client.query('SELECT nom, niveau FROM classes WHERE id = $1', [classeId]);
             const currentClass = currentClassRes.rows[0];
-            
+
             if (currentClass) {
               // Resolve target class name: if it's a generic word like 'Passage', compute standard next class name
               let targetClassName = d.decision_detail;
-              const isGeneric = ['passage', 'passage direct', 'redoublement', 'cours de vacances', 'cours de vacances obligatoires'].includes(targetClassName.toLowerCase().trim());
+              const isGeneric = [
+                'passage',
+                'passage direct',
+                'redoublement',
+                'cours de vacances',
+                'cours de vacances obligatoires',
+              ].includes(targetClassName.toLowerCase().trim());
               const nextLevel = getClasseSuivante(currentClass.niveau, d.decision);
-              
+
               if (isGeneric || !targetClassName) {
                 const suffix = currentClass.nom.trim().split(/\s+/).pop();
                 targetClassName = `${nextLevel} ${suffix}`;
               }
 
               // Search for the class in nextYear
-              let targetClassRes = await client.query(`
+              let targetClassRes = await client.query(
+                `
                 SELECT id FROM classes 
                 WHERE nom = $1 AND etablissement_id = $2 AND annee_scolaire = $3
-              `, [targetClassName, etablissementId, nextYear]);
+              `,
+                [targetClassName, etablissementId, nextYear]
+              );
 
               let targetClassId = null;
               if (targetClassRes.rows.length > 0) {
                 targetClassId = targetClassRes.rows[0].id;
               } else {
                 // Class doesn't exist for the next year - auto-create it!
-                const insertRes = await client.query(`
+                const insertRes = await client.query(
+                  `
                   INSERT INTO classes (nom, niveau, etablissement_id, annee_scolaire)
                   VALUES ($1, $2, $3, $4)
                   RETURNING id
-                `, [targetClassName, nextLevel, etablissementId, nextYear]);
+                `,
+                  [targetClassName, nextLevel, etablissementId, nextYear]
+                );
                 targetClassId = insertRes.rows[0].id;
               }
 
               if (targetClassId) {
                 // Check if student already has an inscription for the next school year
-                const existingNextYearIns = await client.query(`
+                const existingNextYearIns = await client.query(
+                  `
                   SELECT ic.id FROM inscription_classes ic
                   JOIN classes c ON ic.classe_id = c.id
                   WHERE ic.eleve_id = $1 AND c.annee_scolaire = $2
-                `, [d.eleve_id, nextYear]);
+                `,
+                  [d.eleve_id, nextYear]
+                );
 
                 if (existingNextYearIns.rows.length > 0) {
-                  await client.query(`
+                  await client.query(
+                    `
                     UPDATE inscription_classes 
                     SET classe_id = $1 
                     WHERE id = $2
-                  `, [targetClassId, existingNextYearIns.rows[0].id]);
+                  `,
+                    [targetClassId, existingNextYearIns.rows[0].id]
+                  );
                 } else {
-                  await client.query(`
+                  await client.query(
+                    `
                     INSERT INTO inscription_classes (eleve_id, classe_id)
                     VALUES ($1, $2)
-                  `, [d.eleve_id, targetClassId]);
+                  `,
+                    [d.eleve_id, targetClassId]
+                  );
                 }
               }
             }
           } else if (d.decision === 'EXCLUSION') {
             const nextYear = getNextAcademicYear(annee_scolaire);
-            await client.query(`
+            await client.query(
+              `
               DELETE FROM inscription_classes 
               WHERE eleve_id = $1 AND id IN (
                 SELECT ic.id FROM inscription_classes ic
                 JOIN classes c ON ic.classe_id = c.id
                 WHERE c.annee_scolaire = $2
               )
-            `, [d.eleve_id, nextYear]);
+            `,
+              [d.eleve_id, nextYear]
+            );
           }
         }
 
@@ -450,14 +519,17 @@ const noteController = {
     const { eleveId } = req.params;
     try {
       // 1. Fetch student info including class school year
-      const studentRes = await db.query(`
+      const studentRes = await db.query(
+        `
         SELECT DISTINCT ON (e.id) e.*, c.nom as classe_nom, ic.classe_id, c.annee_scolaire
         FROM eleves e
         LEFT JOIN inscription_classes ic ON e.id = ic.eleve_id
         LEFT JOIN classes c ON ic.classe_id = c.id
         WHERE e.id = $1
         ORDER BY e.id, ic.date_inscription DESC NULLS LAST
-      `, [eleveId]);
+      `,
+        [eleveId]
+      );
 
       if (studentRes.rows.length === 0) {
         return response.error(res, 'Élève non trouvé.', 404);
@@ -467,18 +539,22 @@ const noteController = {
       // 1b. Fetch jury decision for this student and current class
       let decisionJury = null;
       if (student.classe_id) {
-        const bulletinRes = await db.query(`
+        const bulletinRes = await db.query(
+          `
           SELECT decision, decision_detail, observations_jury, moyenne_generale, decision_auto, appreciations_conseil
           FROM bulletins
           WHERE eleve_id = $1 AND classe_id = $2
-        `, [eleveId, student.classe_id]);
+        `,
+          [eleveId, student.classe_id]
+        );
         if (bulletinRes.rows.length > 0) {
           decisionJury = bulletinRes.rows[0];
         }
       }
 
       // 2. Fetch notes
-      const notesRes = await db.query(`
+      const notesRes = await db.query(
+        `
         SELECT n.*, m.nom as matiere_nom, m.code_matiere, 
                COALESCE(cm.coefficient, n.coefficient, 1) as coefficient,
                COALESCE(c.nom, c_fb.nom) as classe_nom,
@@ -491,11 +567,13 @@ const noteController = {
         LEFT JOIN classe_matieres cm ON cm.classe_id = COALESCE(n.classe_id, ic.classe_id) AND cm.matiere_id = n.matiere_id
         WHERE n.eleve_id = $1
         ORDER BY COALESCE(c.annee_scolaire, c_fb.annee_scolaire) DESC, n.semestre, n.trimestre, m.nom
-      `, [eleveId]);
+      `,
+        [eleveId]
+      );
 
       const reportCard = {};
 
-      notesRes.rows.forEach(row => {
+      notesRes.rows.forEach((row) => {
         const annee = row.annee_scolaire || 'Année inconnue';
         const periode = `Semestre ${row.semestre || row.trimestre || 1}`;
         const codeMat = row.code_matiere;
@@ -503,7 +581,7 @@ const noteController = {
         if (!reportCard[annee]) {
           reportCard[annee] = {
             classe: row.classe_nom || 'Non affectée',
-            periodes: {}
+            periodes: {},
           };
         }
 
@@ -511,7 +589,7 @@ const noteController = {
           reportCard[annee].periodes[periode] = {
             matieres: {},
             moyenne_generale: 0,
-            total_coefficients: 0
+            total_coefficients: 0,
           };
         }
 
@@ -522,7 +600,7 @@ const noteController = {
             nom: row.matiere_nom,
             coefficient: row.coefficient,
             notes: [],
-            appreciation: ''
+            appreciation: '',
           };
         }
 
@@ -531,7 +609,7 @@ const noteController = {
           id: row.id,
           valeur: parseFloat(row.valeur),
           type_note: row.type_note,
-          date: row.date_saisie
+          date: row.date_saisie,
         });
 
         if (row.appreciation) {
@@ -558,26 +636,33 @@ const noteController = {
           }
 
           periodData.total_coefficients = totalCoefficients;
-          periodData.moyenne_generale = totalCoefficients > 0 
-            ? parseFloat((totalPoints / totalCoefficients).toFixed(2)) 
-            : 0;
+          periodData.moyenne_generale =
+            totalCoefficients > 0 ? parseFloat((totalPoints / totalCoefficients).toFixed(2)) : 0;
         }
       }
 
       return res.json({
         student,
         notes: reportCard,
-        decisionJury
+        decisionJury,
       });
     } catch (err) {
       console.error(err);
-      return response.error(res, 'Erreur lors de la récupération des notes de l\'élève.', 500);
+      return response.error(res, "Erreur lors de la récupération des notes de l'élève.", 500);
     }
   },
 
   async saveStudentJuryDecision(req, res, next) {
     const { eleveId } = req.params;
-    const { classeId, anneeScolaire, moyenneGenerale, decision, decisionDetail, observationsJury, appreciationsConseil } = req.body;
+    const {
+      classeId,
+      anneeScolaire,
+      moyenneGenerale,
+      decision,
+      decisionDetail,
+      observationsJury,
+      appreciationsConseil,
+    } = req.body;
 
     try {
       if (!(await canAccessClasse(req.user, classeId))) {
@@ -587,96 +672,123 @@ const noteController = {
       try {
         await client.query('BEGIN');
 
-        await client.query(`
+        await client.query(
+          `
           INSERT INTO bulletins (eleve_id, classe_id, annee_scolaire, moyenne_generale, decision, decision_detail, decision_auto, observations_jury, appreciations_conseil)
           VALUES ($1, $2, $3, $4, $5, $6, false, $7, $8)
           ON CONFLICT (eleve_id, classe_id, annee_scolaire) 
           DO UPDATE SET decision = COALESCE($5, bulletins.decision), decision_detail = COALESCE($6, bulletins.decision_detail), decision_auto = false, observations_jury = $7, moyenne_generale = COALESCE($4, bulletins.moyenne_generale), appreciations_conseil = $8
-        `, [
-          eleveId,
-          classeId,
-          anneeScolaire || '',
-          moyenneGenerale ? parseFloat(moyenneGenerale) : null,
-          decision,
-          decisionDetail,
-          observationsJury || '',
-          appreciationsConseil || ''
-        ]);
+        `,
+          [
+            eleveId,
+            classeId,
+            anneeScolaire || '',
+            moyenneGenerale ? parseFloat(moyenneGenerale) : null,
+            decision,
+            decisionDetail,
+            observationsJury || '',
+            appreciationsConseil || '',
+          ]
+        );
 
         if (decisionDetail && decision !== 'EXCLUSION') {
           const etabRes = await client.query('SELECT etablissement_id FROM eleves WHERE id = $1', [eleveId]);
           const etablissementId = etabRes.rows[0]?.etablissement_id;
-          
+
           if (etablissementId) {
             const nextYear = getNextAcademicYear(anneeScolaire);
-            
+
             // Get current class details
             const currentClassRes = await client.query('SELECT nom, niveau FROM classes WHERE id = $1', [classeId]);
             const currentClass = currentClassRes.rows[0];
-            
+
             if (currentClass) {
               // Resolve target class name: if it's a generic word like 'Passage', compute standard next class name
               let targetClassName = decisionDetail;
-              const isGeneric = ['passage', 'passage direct', 'redoublement', 'cours de vacances', 'cours de vacances obligatoires'].includes(targetClassName.toLowerCase().trim());
+              const isGeneric = [
+                'passage',
+                'passage direct',
+                'redoublement',
+                'cours de vacances',
+                'cours de vacances obligatoires',
+              ].includes(targetClassName.toLowerCase().trim());
               const nextLevel = getClasseSuivante(currentClass.niveau, decision);
-              
+
               if (isGeneric || !targetClassName) {
                 const suffix = currentClass.nom.trim().split(/\s+/).pop();
                 targetClassName = `${nextLevel} ${suffix}`;
               }
 
               // Search for the class in nextYear
-              let targetClassRes = await client.query(`
+              let targetClassRes = await client.query(
+                `
                 SELECT id FROM classes 
                 WHERE nom = $1 AND etablissement_id = $2 AND annee_scolaire = $3
-              `, [targetClassName, etablissementId, nextYear]);
+              `,
+                [targetClassName, etablissementId, nextYear]
+              );
 
               let targetClassId = null;
               if (targetClassRes.rows.length > 0) {
                 targetClassId = targetClassRes.rows[0].id;
               } else {
                 // Class doesn't exist for the next year - auto-create it!
-                const insertRes = await client.query(`
+                const insertRes = await client.query(
+                  `
                   INSERT INTO classes (nom, niveau, etablissement_id, annee_scolaire)
                   VALUES ($1, $2, $3, $4)
                   RETURNING id
-                `, [targetClassName, nextLevel, etablissementId, nextYear]);
+                `,
+                  [targetClassName, nextLevel, etablissementId, nextYear]
+                );
                 targetClassId = insertRes.rows[0].id;
               }
 
               if (targetClassId) {
                 // Check if student already has an inscription for the next school year
-                const existingNextYearIns = await client.query(`
+                const existingNextYearIns = await client.query(
+                  `
                   SELECT ic.id FROM inscription_classes ic
                   JOIN classes c ON ic.classe_id = c.id
                   WHERE ic.eleve_id = $1 AND c.annee_scolaire = $2
-                `, [eleveId, nextYear]);
+                `,
+                  [eleveId, nextYear]
+                );
 
                 if (existingNextYearIns.rows.length > 0) {
-                  await client.query(`
+                  await client.query(
+                    `
                     UPDATE inscription_classes 
                     SET classe_id = $1 
                     WHERE id = $2
-                  `, [targetClassId, existingNextYearIns.rows[0].id]);
+                  `,
+                    [targetClassId, existingNextYearIns.rows[0].id]
+                  );
                 } else {
-                  await client.query(`
+                  await client.query(
+                    `
                     INSERT INTO inscription_classes (eleve_id, classe_id)
                     VALUES ($1, $2)
-                  `, [eleveId, targetClassId]);
+                  `,
+                    [eleveId, targetClassId]
+                  );
                 }
               }
             }
           }
         } else if (decision === 'EXCLUSION') {
           const nextYear = getNextAcademicYear(anneeScolaire);
-          await client.query(`
+          await client.query(
+            `
             DELETE FROM inscription_classes 
             WHERE eleve_id = $1 AND id IN (
               SELECT ic.id FROM inscription_classes ic
               JOIN classes c ON ic.classe_id = c.id
               WHERE c.annee_scolaire = $2
             )
-          `, [eleveId, nextYear]);
+          `,
+            [eleveId, nextYear]
+          );
         }
 
         await client.query('COMMIT');
@@ -689,7 +801,7 @@ const noteController = {
       }
     } catch (err) {
       console.error(err);
-      return response.error(res, 'Erreur lors de l\'enregistrement de la décision du jury.', 500);
+      return response.error(res, "Erreur lors de l'enregistrement de la décision du jury.", 500);
     }
   },
 
@@ -699,13 +811,16 @@ const noteController = {
 
     try {
       // 1. Fetch all students in the class
-      const studentsRes = await db.query(`
+      const studentsRes = await db.query(
+        `
         SELECT e.id, e.nom, e.prenom, e.photo_url, e.identifiant_national
         FROM eleves e
         JOIN inscription_classes ic ON e.id = ic.eleve_id
         WHERE ic.classe_id = $1
         ORDER BY e.nom, e.prenom
-      `, [classeId]);
+      `,
+        [classeId]
+      );
 
       if (studentsRes.rows.length === 0) {
         return res.json([]);
@@ -747,24 +862,27 @@ const noteController = {
       const allNotes = notesRes.rows;
 
       // 3. Fetch saved bulletins to get decisions if any
-      const bulletinsRes = await db.query(`
+      const bulletinsRes = await db.query(
+        `
         SELECT eleve_id, decision, decision_detail
         FROM bulletins
         WHERE classe_id = $1
-      `, [classeId]);
+      `,
+        [classeId]
+      );
       const bulletins = bulletinsRes.rows;
 
       // 4. Compute general average for each student
-      const studentAverages = students.map(student => {
-        const studentNotes = allNotes.filter(n => n.eleve_id === student.id);
-        
+      const studentAverages = students.map((student) => {
+        const studentNotes = allNotes.filter((n) => n.eleve_id === student.id);
+
         // Group notes by code_matiere
         const matieres = {};
-        studentNotes.forEach(n => {
+        studentNotes.forEach((n) => {
           if (!matieres[n.code_matiere]) {
             matieres[n.code_matiere] = {
               coefficient: n.coefficient,
-              notes: []
+              notes: [],
             };
           }
           matieres[n.code_matiere].notes.push(parseFloat(n.valeur));
@@ -784,11 +902,9 @@ const noteController = {
           }
         }
 
-        const average = totalCoefficients > 0 
-          ? parseFloat((totalPoints / totalCoefficients).toFixed(2)) 
-          : null;
+        const average = totalCoefficients > 0 ? parseFloat((totalPoints / totalCoefficients).toFixed(2)) : null;
 
-        const savedB = bulletins.find(b => b.eleve_id === student.id);
+        const savedB = bulletins.find((b) => b.eleve_id === student.id);
 
         return {
           id: student.id,
@@ -799,7 +915,7 @@ const noteController = {
           moyenne_generale: average,
           total_coefficients: totalCoefficients,
           has_notes: hasNotes,
-          decision_detail: savedB ? savedB.decision_detail : ''
+          decision_detail: savedB ? savedB.decision_detail : '',
         };
       });
 
@@ -843,7 +959,8 @@ const noteController = {
         return response.error(res, 'Établissement non trouvé.', 404);
       }
 
-      const { rows } = await db.query(`
+      const { rows } = await db.query(
+        `
         SELECT 
           c.id as classe_id,
           c.nom as classe_nom,
@@ -883,7 +1000,9 @@ const noteController = {
         LEFT JOIN bulletins_autorises ba ON ba.classe_id = c.id AND ba.semestre = $1 AND ba.annee_scolaire = c.annee_scolaire
         WHERE c.etablissement_id = $2 AND (c.annee_scolaire = $3 OR $3 IS NULL)
         ORDER BY c.niveau, c.nom
-      `, [sem, etablissementId, annee_scolaire || null]);
+      `,
+        [sem, etablissementId, annee_scolaire || null]
+      );
 
       return res.json(rows);
     } catch (err) {
@@ -896,10 +1015,13 @@ const noteController = {
     const { classeId } = req.params;
     const { annee_scolaire } = req.query;
     try {
-      const { rows } = await db.query(`
+      const { rows } = await db.query(
+        `
         SELECT semestre, autorise FROM bulletins_autorises 
         WHERE classe_id = $1 AND annee_scolaire = $2
-      `, [classeId, annee_scolaire]);
+      `,
+        [classeId, annee_scolaire]
+      );
       return res.json(rows);
     } catch (err) {
       console.error(err);
@@ -911,18 +1033,21 @@ const noteController = {
     const { classeId } = req.params;
     const { semestre, annee_scolaire, autorise } = req.body;
     try {
-      await db.query(`
+      await db.query(
+        `
         INSERT INTO bulletins_autorises (classe_id, semestre, annee_scolaire, autorise)
         VALUES ($1, $2, $3, $4)
         ON CONFLICT (classe_id, semestre, annee_scolaire)
         DO UPDATE SET autorise = EXCLUDED.autorise
-      `, [classeId, semestre, annee_scolaire, autorise]);
+      `,
+        [classeId, semestre, annee_scolaire, autorise]
+      );
       return res.json({ message: 'Statut de publication enregistré avec succès.' });
     } catch (err) {
       console.error(err);
-      return response.error(res, 'Erreur lors de l\'enregistrement de l\'autorisation.', 500);
+      return response.error(res, "Erreur lors de l'enregistrement de l'autorisation.", 500);
     }
-  }
+  },
 };
 
 module.exports = noteController;

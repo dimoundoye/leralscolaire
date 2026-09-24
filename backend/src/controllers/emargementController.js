@@ -33,7 +33,8 @@ const EmargementController = {
   async scanEmargement(req, res) {
     try {
       const profId = req.user.id;
-      const { token, classeId, matiereCode, matiereNom, heureDebut, heureFin, latitude, longitude, precision } = req.body;
+      const { token, classeId, matiereCode, matiereNom, heureDebut, heureFin, latitude, longitude, precision } =
+        req.body;
 
       if (!token) {
         return res.status(400).json({ success: false, error: 'Token QR Code manquant' });
@@ -56,13 +57,15 @@ const EmargementController = {
       }
 
       if (!(await isProfAffiliated(profId, etablissementId))) {
-        return res.status(403).json({ success: false, error: 'Vous n\'êtes pas rattaché à cet établissement.' });
+        return res.status(403).json({ success: false, error: "Vous n'êtes pas rattaché à cet établissement." });
       }
 
       // Le professeur doit se trouver dans le rayon autorisé autour de l'établissement
       const position = parsePosition(latitude, longitude, precision);
       if (!position) {
-        return res.status(400).json({ success: false, error: 'Position GPS requise : autorisez la localisation pour émarger.' });
+        return res
+          .status(400)
+          .json({ success: false, error: 'Position GPS requise : autorisez la localisation pour émarger.' });
       }
       const { rows: etabRows } = await db.query(
         'SELECT latitude, longitude, rayon_emargement_metres FROM etablissements WHERE id = $1',
@@ -72,34 +75,48 @@ const EmargementController = {
       if (!etab || etab.latitude === null || etab.longitude === null) {
         return res.status(409).json({
           success: false,
-          error: 'La position GPS de l\'établissement n\'est pas encore enregistrée. Contactez l\'administration.'
+          error: "La position GPS de l'établissement n'est pas encore enregistrée. Contactez l'administration.",
         });
       }
-      const geo = checkInsideRadius(position, etab, etab.rayon_emargement_metres, 'de l\'établissement');
+      const geo = checkInsideRadius(position, etab, etab.rayon_emargement_metres, "de l'établissement");
       if (!geo.ok) {
         return res.status(403).json({ success: false, error: geo.message });
       }
 
       // Classe retenue uniquement si le professeur y enseigne
-      const targetClasseId = isValidUuid(classeId) && await isProfOfClasse(profId, classeId) ? classeId : null;
+      const targetClasseId = isValidUuid(classeId) && (await isProfOfClasse(profId, classeId)) ? classeId : null;
 
       const seance = await EmargementModel.findOrCreateSeance(
-        profId, etablissementId, targetClasseId, matiereCode || 'GEN', matiereNom || 'Cours Général', heureDebut || '08:00', heureFin || '10:00', 'REGULIER'
+        profId,
+        etablissementId,
+        targetClasseId,
+        matiereCode || 'GEN',
+        matiereNom || 'Cours Général',
+        heureDebut || '08:00',
+        heureFin || '10:00',
+        'REGULIER'
       );
 
       const emargement = await EmargementModel.createEmargement(
-        seance.id, profId, etablissementId, 'QR_SCAN_20S', position.latitude, position.longitude, geo.distance, token
+        seance.id,
+        profId,
+        etablissementId,
+        'QR_SCAN_20S',
+        position.latitude,
+        position.longitude,
+        geo.distance,
+        token
       );
 
       return res.json({
         success: true,
         message: `Présence physique émargée avec succès (${geo.distance} m de l'établissement) ! N'oubliez pas de renseigner le cahier de texte pour valider définitivement la séance.`,
         seance,
-        emargement
+        emargement,
       });
     } catch (err) {
       console.error('Erreur scanEmargement:', err);
-      return res.status(500).json({ success: false, error: 'Erreur lors de l\'émargement.' });
+      return res.status(500).json({ success: false, error: "Erreur lors de l'émargement." });
     }
   },
 
@@ -111,46 +128,66 @@ const EmargementController = {
       const { terrainId, classeId, heureDebut, heureFin, latitude, longitude, precision } = req.body;
 
       if (!isValidUuid(terrainId)) {
-        return res.status(400).json({ success: false, error: 'Veuillez choisir le terrain d\'EPS où se déroule la séance.' });
+        return res
+          .status(400)
+          .json({ success: false, error: "Veuillez choisir le terrain d'EPS où se déroule la séance." });
       }
       const { rows: terrainRows } = await db.query('SELECT * FROM terrains_eps WHERE id = $1', [terrainId]);
       const terrain = terrainRows[0];
       if (!terrain) {
-        return res.status(404).json({ success: false, error: 'Terrain d\'EPS introuvable.' });
+        return res.status(404).json({ success: false, error: "Terrain d'EPS introuvable." });
       }
       if (!(await isProfAffiliated(profId, terrain.etablissement_id))) {
-        return res.status(403).json({ success: false, error: 'Vous n\'êtes pas rattaché à l\'établissement de ce terrain.' });
+        return res
+          .status(403)
+          .json({ success: false, error: "Vous n'êtes pas rattaché à l'établissement de ce terrain." });
       }
 
       const position = parsePosition(latitude, longitude, precision);
       if (!position) {
-        return res.status(400).json({ success: false, error: 'Position GPS requise : autorisez la localisation pour émarger.' });
+        return res
+          .status(400)
+          .json({ success: false, error: 'Position GPS requise : autorisez la localisation pour émarger.' });
       }
       const geo = checkInsideRadius(position, terrain, terrain.rayon_metres, `du terrain « ${terrain.nom} »`);
       if (!geo.ok) {
         return res.status(403).json({ success: false, error: geo.message });
       }
 
-      const targetClasseId = isValidUuid(classeId) && await isProfOfClasse(profId, classeId) ? classeId : null;
+      const targetClasseId = isValidUuid(classeId) && (await isProfOfClasse(profId, classeId)) ? classeId : null;
 
       const seance = await EmargementModel.findOrCreateSeance(
-        profId, terrain.etablissement_id, targetClasseId, 'EPS', 'Éducation Physique & Sportive',
-        heureDebut || '08:00', heureFin || '10:00', 'EPS_OUTDOOR'
+        profId,
+        terrain.etablissement_id,
+        targetClasseId,
+        'EPS',
+        'Éducation Physique & Sportive',
+        heureDebut || '08:00',
+        heureFin || '10:00',
+        'EPS_OUTDOOR'
       );
 
       const emargement = await EmargementModel.createEmargement(
-        seance.id, profId, terrain.etablissement_id, 'EPS_GPS_TERRAIN', position.latitude, position.longitude, geo.distance, 'EPS_GPS_VALIDATED', terrain.id
+        seance.id,
+        profId,
+        terrain.etablissement_id,
+        'EPS_GPS_TERRAIN',
+        position.latitude,
+        position.longitude,
+        geo.distance,
+        'EPS_GPS_VALIDATED',
+        terrain.id
       );
 
       return res.json({
         success: true,
         message: `Émargement EPS validé sur le terrain « ${terrain.nom} » (${geo.distance} m).`,
         seance,
-        emargement
+        emargement,
       });
     } catch (err) {
       console.error('Erreur emargerEpsTerrain:', err);
-      return res.status(500).json({ success: false, error: 'Erreur lors de l\'émargement EPS.' });
+      return res.status(500).json({ success: false, error: "Erreur lors de l'émargement EPS." });
     }
   },
 
@@ -164,7 +201,7 @@ const EmargementController = {
       return res.json({ success: true, terrains: rows });
     } catch (err) {
       console.error('Erreur listTerrainsEps:', err);
-      return res.status(500).json({ success: false, error: 'Erreur lors du chargement des terrains d\'EPS.' });
+      return res.status(500).json({ success: false, error: "Erreur lors du chargement des terrains d'EPS." });
     }
   },
 
@@ -178,12 +215,18 @@ const EmargementController = {
         return res.status(400).json({ success: false, error: 'Titre et contenu du cahier de texte obligatoires.' });
       }
 
-      const updatedSeance = await EmargementModel.completeSeanceCahierTexte(seanceId, profId, titre, contenu, devoirs || '');
+      const updatedSeance = await EmargementModel.completeSeanceCahierTexte(
+        seanceId,
+        profId,
+        titre,
+        contenu,
+        devoirs || ''
+      );
 
       return res.json({
         success: true,
         message: 'Cahier de texte enregistré ! La séance est désormais validée à 100%.',
-        seance: updatedSeance
+        seance: updatedSeance,
       });
     } catch (err) {
       console.error('Erreur completeCahierTexte:', err);
@@ -198,13 +241,21 @@ const EmargementController = {
       const { etablissementId, classeId, matiereCode, matiereNom, dateSeance, heureDebut, heureFin, motif } = req.body;
 
       const rattrapage = await EmargementModel.demandRattrapage(
-        profId, etablissementId, classeId, matiereCode, matiereNom, dateSeance, heureDebut, heureFin, motif
+        profId,
+        etablissementId,
+        classeId,
+        matiereCode,
+        matiereNom,
+        dateSeance,
+        heureDebut,
+        heureFin,
+        motif
       );
 
       return res.json({
         success: true,
         message: 'Demande de cours de rattrapage transmise au Censeur pour validation.',
-        rattrapage
+        rattrapage,
       });
     } catch (err) {
       console.error('Erreur requestRattrapage:', err);
@@ -218,15 +269,15 @@ const EmargementController = {
       const { seanceId } = req.body;
       // L'établissement est celui de l'administrateur connecté, jamais celui envoyé par le client
       const etablissementId = await getAdminEtablissementId(req.user.id);
-      const approved = etablissementId && await EmargementModel.approveRattrapage(seanceId, etablissementId);
+      const approved = etablissementId && (await EmargementModel.approveRattrapage(seanceId, etablissementId));
       if (!approved) {
         return res.status(404).json({ success: false, error: 'Séance introuvable dans votre établissement.' });
       }
 
       return res.json({
         success: true,
-        message: 'Cours de rattrapage approuvé et ajouté à l\'emploi du temps !',
-        seance: approved
+        message: "Cours de rattrapage approuvé et ajouté à l'emploi du temps !",
+        seance: approved,
       });
     } catch (err) {
       console.error('Erreur approveRattrapage:', err);
@@ -247,25 +298,31 @@ const EmargementController = {
       const crypto = require('crypto');
       const eleveHash = crypto.createHash('sha256').update(`${eleveId}:leral_anonyme_2026`).digest('hex');
 
-      const { rows: campagne } = await db.query(`
+      const { rows: campagne } = await db.query(
+        `
         SELECT id FROM campagnes_evaluation_eleves 
         WHERE etablissement_id = $1 AND statut = 'OUVERTE' 
           AND CURRENT_TIMESTAMP BETWEEN date_ouverture AND date_limite
         LIMIT 1
-      `, [etablissementId]);
+      `,
+        [etablissementId]
+      );
 
       const campagneId = campagne[0]?.id || null;
 
-      await db.query(`
+      await db.query(
+        `
         INSERT INTO evaluations_eleves (
           campagne_id, professeur_id, etablissement_id, eleve_hash,
           q1_pedagogie, q2_assiduite, q3_ecoute, q4_corrections, q5_climat, commentaire
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-      `, [campagneId, profId, etablissementId, eleveHash, q1, q2, q3, q4, q5, commentaire || '']);
+      `,
+        [campagneId, profId, etablissementId, eleveHash, q1, q2, q3, q4, q5, commentaire || '']
+      );
 
       return res.json({
         success: true,
-        message: 'Votre évaluation anonyme a été enregistrée avec succès. Merci !'
+        message: 'Votre évaluation anonyme a été enregistrée avec succès. Merci !',
       });
     } catch (err) {
       console.error('Erreur submitStudentEvaluation:', err);
@@ -323,10 +380,12 @@ const EmargementController = {
 
       const { rows: profs } = await db.query(sql, params);
 
-      const profsWithScore = await Promise.all(profs.map(async (p) => {
-        const scoreInfo = await EmargementModel.calculateProfScore1000(p.id);
-        return { ...p, scoreInfo };
-      }));
+      const profsWithScore = await Promise.all(
+        profs.map(async (p) => {
+          const scoreInfo = await EmargementModel.calculateProfScore1000(p.id);
+          return { ...p, scoreInfo };
+        })
+      );
 
       return res.json({ success: true, professeurs: profsWithScore });
     } catch (err) {
@@ -344,7 +403,8 @@ const EmargementController = {
       const scoreData = await EmargementModel.calculateProfScore1000(profId);
 
       // 2. Statistiques des séances
-      const { rows: statsRows } = await db.query(`
+      const { rows: statsRows } = await db.query(
+        `
         SELECT 
           COUNT(*) as total_seances,
           COUNT(*) filter (where statut IN ('EMARGE_PRESENCE', 'VALIDE_COMPLET')) as seances_effectuees,
@@ -352,7 +412,9 @@ const EmargementController = {
           COUNT(*) filter (where date_seance = CURRENT_DATE) as seances_aujourdhui
         FROM seances_cours 
         WHERE professeur_id = $1
-      `, [profId]);
+      `,
+        [profId]
+      );
 
       const stat = statsRows[0] || {};
       const totalSeances = parseInt(stat.total_seances || 0, 10);
@@ -360,13 +422,14 @@ const EmargementController = {
       const cahiersComplets = parseInt(stat.cahiers_complets || 0, 10);
 
       // Calcul des heures (2h par séance en moyenne)
-      const quotaHeures = totalSeances > 0 ? (totalSeances * 2) : 0;
+      const quotaHeures = totalSeances > 0 ? totalSeances * 2 : 0;
       const heuresEffectuees = seancesEffectuees * 2;
       const tauxEmargement = totalSeances > 0 ? Math.round((seancesEffectuees / totalSeances) * 100) : null;
       const tauxCahier = seancesEffectuees > 0 ? Math.round((cahiersComplets / seancesEffectuees) * 100) : null;
 
       // 3. Dernières séances & émargements
-      const { rows: recentSeances } = await db.query(`
+      const { rows: recentSeances } = await db.query(
+        `
         SELECT s.*, e.mode_emargement, e.horodatage_scan, e.statut as statut_emargement,
                c.nom as classe_nom, c.niveau as classe_niveau, et.nom as nom_etablissement
         FROM seances_cours s
@@ -376,17 +439,22 @@ const EmargementController = {
         WHERE s.professeur_id = $1
         ORDER BY s.date_seance DESC, s.heure_debut DESC
         LIMIT 10
-      `, [profId]);
+      `,
+        [profId]
+      );
 
       // 4. Séances du jour
-      const { rows: todaySeances } = await db.query(`
+      const { rows: todaySeances } = await db.query(
+        `
         SELECT s.*, c.nom as classe_nom, et.nom as nom_etablissement
         FROM seances_cours s
         LEFT JOIN classes c ON s.classe_id = c.id
         LEFT JOIN etablissements et ON s.etablissement_id = et.id
         WHERE s.professeur_id = $1 AND s.date_seance = CURRENT_DATE
         ORDER BY s.heure_debut ASC
-      `, [profId]);
+      `,
+        [profId]
+      );
 
       return res.json({
         success: true,
@@ -400,16 +468,16 @@ const EmargementController = {
           totalVotes: scoreData.breakdown?.totalVotes ?? 0,
           totalSeances,
           seancesEffectuees,
-          cahiersComplets
+          cahiersComplets,
         },
         recentSeances,
-        todaySeances
+        todaySeances,
       });
     } catch (err) {
       console.error('Erreur getMyStats:', err);
       return res.status(500).json({ success: false, error: err.message });
     }
-  }
+  },
 };
 
 module.exports = EmargementController;

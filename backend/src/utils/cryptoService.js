@@ -16,13 +16,10 @@ function computeLivretHash(payload, secretKey = JWT_SECRET) {
     iup: payload.iup || payload.identifiant_national,
     notes: payload.historique_notes || payload.notes,
     absences: payload.bilan_absences || payload.absences,
-    annee: payload.annee_scolaire || payload.annee
+    annee: payload.annee_scolaire || payload.annee,
   });
-  
-  return crypto
-    .createHmac('sha256', secretKey)
-    .update(dataString)
-    .digest('hex');
+
+  return crypto.createHmac('sha256', secretKey).update(dataString).digest('hex');
 }
 
 /**
@@ -39,5 +36,5 @@ function verifyLivretHash(payload, expectedHash, secretKey) {
 
 module.exports = {
   computeLivretHash,
-  verifyLivretHash
+  verifyLivretHash,
 };

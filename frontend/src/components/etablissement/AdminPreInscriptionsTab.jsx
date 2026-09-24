@@ -6,7 +6,7 @@ const AdminPreInscriptionsTab = ({
   setEditingPreInscription,
   setShowPreModal,
   handleValidatePreInscription,
-  handleRejectPreInscription
+  handleRejectPreInscription,
 }) => {
   return (
     <div className="pre-inscriptions-view">
@@ -26,7 +26,15 @@ const AdminPreInscriptionsTab = ({
 
         <div className="table-container" style={{ border: 'none', boxShadow: 'none' }}>
           {preInscriptions.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '30px 20px', color: 'var(--slate-400)', fontSize: '13px', fontWeight: 500 }}>
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '30px 20px',
+                color: 'var(--slate-400)',
+                fontSize: '13px',
+                fontWeight: 500,
+              }}
+            >
               Aucune pré-inscription en attente.
             </div>
           ) : (
@@ -44,10 +52,26 @@ const AdminPreInscriptionsTab = ({
                 </tr>
               </thead>
               <tbody>
-                {preInscriptions.map(p => (
+                {preInscriptions.map((p) => (
                   <tr key={p.id}>
-                    <td className="font-bold">{p.prenom} {p.nom}</td>
-                    <td><span className="badge av-blue" style={{ background: 'rgba(19,30,108,0.06)', color: 'var(--primary-color)', padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 600 }}>{p.classe_nom}</span></td>
+                    <td className="font-bold">
+                      {p.prenom} {p.nom}
+                    </td>
+                    <td>
+                      <span
+                        className="badge av-blue"
+                        style={{
+                          background: 'rgba(19,30,108,0.06)',
+                          color: 'var(--primary-color)',
+                          padding: '2px 8px',
+                          borderRadius: '10px',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {p.classe_nom}
+                      </span>
+                    </td>
                     <td>
                       {p.identifiant_existant ? (
                         <span className="status-pill status-fail">Transfert</span>
@@ -55,21 +79,54 @@ const AdminPreInscriptionsTab = ({
                         <span className="status-pill status-pass">Nouvel Élève</span>
                       )}
                     </td>
-                    <td><code className="text-orange" style={{fontSize: '11px'}}>{p.identifiant_existant || '-'}</code></td>
                     <td>
-                      {p.date_naissance ? new Date(p.date_naissance).toLocaleDateString('fr-FR') : 'N/A'} à {p.lieu_naissance || 'N/A'}
+                      <code className="text-orange" style={{ fontSize: '11px' }}>
+                        {p.identifiant_existant || '-'}
+                      </code>
                     </td>
-                    <td><div className="text-xs" style={{maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}} title={p.coordonnees_parent}>{p.coordonnees_parent}</div></td>
-                    <td><span className={`status-pill ${p.statut === 'APTE' ? 'status-pass' : 'status-fail'}`}>{p.statut}</span></td>
+                    <td>
+                      {p.date_naissance ? new Date(p.date_naissance).toLocaleDateString('fr-FR') : 'N/A'} à{' '}
+                      {p.lieu_naissance || 'N/A'}
+                    </td>
+                    <td>
+                      <div
+                        className="text-xs"
+                        style={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                        title={p.coordonnees_parent}
+                      >
+                        {p.coordonnees_parent}
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`status-pill ${p.statut === 'APTE' ? 'status-pass' : 'status-fail'}`}>
+                        {p.statut}
+                      </span>
+                    </td>
                     <td>
                       <div className="flex gap-2 flex-wrap">
-                        <button className="btn-action-text modifier" title="Modifier" onClick={() => { setEditingPreInscription(p); setShowPreModal(true); }}>
+                        <button
+                          className="btn-action-text modifier"
+                          title="Modifier"
+                          onClick={() => {
+                            setEditingPreInscription(p);
+                            setShowPreModal(true);
+                          }}
+                        >
                           <Edit size={12} /> <span>Modifier</span>
                         </button>
-                        <button className="btn-action-text bulletin" title="Valider & Créer compte" onClick={() => handleValidatePreInscription(p.id)}>
+                        <button
+                          className="btn-action-text bulletin"
+                          title="Valider & Créer compte"
+                          onClick={() => handleValidatePreInscription(p.id)}
+                        >
                           <Check size={12} /> <span>Valider</span>
                         </button>
-                        <button className="btn-action-text delete-btn" title="Rejeter" onClick={() => handleRejectPreInscription(p.id)} style={{ color: '#ef4444', borderColor: 'rgba(239,68,68,0.2)' }}>
+                        <button
+                          className="btn-action-text delete-btn"
+                          title="Rejeter"
+                          onClick={() => handleRejectPreInscription(p.id)}
+                          style={{ color: '#ef4444', borderColor: 'rgba(239,68,68,0.2)' }}
+                        >
                           <X size={12} /> <span>Rejeter</span>
                         </button>
                       </div>

@@ -22,7 +22,7 @@ async function migrate() {
     await db.query(`
       ALTER TABLE messages DROP CONSTRAINT IF EXISTS messages_destinataire_type_check;
     `);
-    
+
     // 4. Add updated check constraint to allow ADMIN_ETABLISSEMENT
     await db.query(`
       ALTER TABLE messages 

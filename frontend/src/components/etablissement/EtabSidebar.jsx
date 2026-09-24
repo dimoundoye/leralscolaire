@@ -1,17 +1,17 @@
 import React from 'react';
-import { 
-  LayoutDashboard, 
-  School, 
-  Users, 
-  UserPlus, 
-  Book, 
-  User, 
-  BookOpenCheck, 
-  Clock, 
-  CalendarDays, 
-  Calendar, 
-  Mail, 
-  Share2, 
+import {
+  LayoutDashboard,
+  School,
+  Users,
+  UserPlus,
+  Book,
+  User,
+  BookOpenCheck,
+  Clock,
+  CalendarDays,
+  Calendar,
+  Mail,
+  Share2,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -21,11 +21,20 @@ import {
   UserX,
   BookMarked,
   ArrowRightLeft,
-  Scale
+  Scale,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const EtabSidebar = ({ activeTab, profile, elevesCount, preInscriptionsCount, unreadPartagesCount, transfersCount, isCollapsed, onToggleCollapse }) => {
+const EtabSidebar = ({
+  activeTab,
+  profile,
+  elevesCount,
+  preInscriptionsCount,
+  unreadPartagesCount,
+  transfersCount,
+  isCollapsed,
+  onToggleCollapse,
+}) => {
   const navigate = useNavigate();
   const firstLetter = (profile?.nom || 'A')[0].toUpperCase();
 
@@ -34,11 +43,23 @@ const EtabSidebar = ({ activeTab, profile, elevesCount, preInscriptionsCount, un
     { id: 'overview', label: 'Tableau de Bord', icon: LayoutDashboard, path: '/dashboard/overview' },
     { id: 'classes', label: 'Mes Classes', icon: School, path: '/dashboard/classes' },
     { id: 'eleves', label: 'Liste des Élèves', icon: Users, path: '/dashboard/eleves', badge: elevesCount },
-    { id: 'transferts', label: 'Transferts de Dossiers', icon: ArrowRightLeft, path: '/dashboard/transferts', badge: transfersCount },
-    { id: 'pre-inscriptions', label: 'Pré-inscriptions', icon: UserPlus, path: '/dashboard/pre-inscriptions', badge: preInscriptionsCount },
+    {
+      id: 'transferts',
+      label: 'Transferts de Dossiers',
+      icon: ArrowRightLeft,
+      path: '/dashboard/transferts',
+      badge: transfersCount,
+    },
+    {
+      id: 'pre-inscriptions',
+      label: 'Pré-inscriptions',
+      icon: UserPlus,
+      path: '/dashboard/pre-inscriptions',
+      badge: preInscriptionsCount,
+    },
     { id: 'matieres', label: 'Matières', icon: Book, path: '/dashboard/matieres' },
     { id: 'profs', label: 'Corps Enseignant', icon: User, path: '/dashboard/profs' },
-    
+
     { section: 'Pédagogie' },
     { id: 'emargement-live', label: 'Borne QR Code Live 20s', icon: ShieldCheck, path: '/emargement/live-qr/default' },
     { id: 'notes', label: 'Notes & Bulletins', icon: BookOpenCheck, path: '/dashboard/notes' },
@@ -50,30 +71,35 @@ const EtabSidebar = ({ activeTab, profile, elevesCount, preInscriptionsCount, un
     { id: 'exams', label: 'Examens', icon: CalendarDays, path: '/dashboard/exams' },
     { id: 'calendar', label: 'Calendrier', icon: Calendar, path: '/dashboard/calendar' },
     { id: 'attestations', label: "Attestations d'Inscription", icon: FileText, path: '/dashboard/attestations' },
-    
+
     { section: 'Communication & Outils' },
     { id: 'messages', label: 'Messagerie', icon: Mail, path: '/dashboard/messages' },
-    { id: 'partages', label: 'Documents Partagés', icon: Share2, path: '/dashboard/partages', badge: unreadPartagesCount },
-    { id: 'settings', label: 'Paramètres', icon: Settings, path: '/dashboard/settings' }
+    {
+      id: 'partages',
+      label: 'Documents Partagés',
+      icon: Share2,
+      path: '/dashboard/partages',
+      badge: unreadPartagesCount,
+    },
+    { id: 'settings', label: 'Paramètres', icon: Settings, path: '/dashboard/settings' },
   ];
 
   return (
     <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       {/* Brand logo space at the top */}
-      <div className="sidebar-brand" style={{ cursor: 'pointer' }} onClick={() => navigate('/')} title="Retour à l'accueil">
-        <img 
-          src="/logo_leralscolaire.png" 
-          alt="LeralScolaire" 
-          className="sidebar-brand-logo" 
-        />
+      <div
+        className="sidebar-brand"
+        style={{ cursor: 'pointer' }}
+        onClick={() => navigate('/')}
+        title="Retour à l'accueil"
+      >
+        <img src="/logo_leralscolaire.png" alt="LeralScolaire" className="sidebar-brand-logo" />
         {!isCollapsed && <span className="brand-name">LeralScolaire</span>}
       </div>
 
       {/* User Info Profile Card */}
       <div className="user-card">
-        <div className="avatar av-blue">
-          {firstLetter}
-        </div>
+        <div className="avatar av-blue">{firstLetter}</div>
         {!isCollapsed && (
           <div className="user-info">
             <div className="user-name">{profile?.nom || 'Admin'}</div>
@@ -87,7 +113,9 @@ const EtabSidebar = ({ activeTab, profile, elevesCount, preInscriptionsCount, un
         {menuItems.map((item, idx) => {
           if (item.section) {
             return !isCollapsed ? (
-              <div key={idx} className="sb-section">{item.section}</div>
+              <div key={idx} className="sb-section">
+                {item.section}
+              </div>
             ) : (
               <div key={idx} className="sb-section-divider" />
             );
@@ -105,19 +133,17 @@ const EtabSidebar = ({ activeTab, profile, elevesCount, preInscriptionsCount, un
             >
               <Icon size={18} />
               {!isCollapsed && <span className="sb-label">{item.label}</span>}
-              {!isCollapsed && item.badge > 0 && (
-                <span className="badge">{item.badge}</span>
-              )}
+              {!isCollapsed && item.badge > 0 && <span className="badge">{item.badge}</span>}
             </button>
           );
         })}
       </div>
 
       {/* Floating Toggle Button from Samalocation */}
-      <button 
+      <button
         className="sidebar-toggle-btn"
         onClick={onToggleCollapse}
-        title={isCollapsed ? "Afficher le menu" : "Réduire le menu"}
+        title={isCollapsed ? 'Afficher le menu' : 'Réduire le menu'}
       >
         {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>

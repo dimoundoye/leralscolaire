@@ -14,21 +14,41 @@ router.post('/scan', authenticateToken, requireRole('PROFESSEUR'), EmargementCon
 router.post('/eps-terrain', authenticateToken, requireRole('PROFESSEUR'), EmargementController.emargerEpsTerrain);
 
 // Terrains d'EPS d'un établissement de rattachement (choix du terrain par le professeur)
-router.get('/terrains-eps/:etablissementId', authenticateToken, requireProfAffiliation('etablissementId'), EmargementController.listTerrainsEps);
+router.get(
+  '/terrains-eps/:etablissementId',
+  authenticateToken,
+  requireProfAffiliation('etablissementId'),
+  EmargementController.listTerrainsEps
+);
 
 // 4. Cahier de Texte complet (Validation 100%)
 router.post('/cahier-texte-complete', authenticateToken, EmargementController.completeCahierTexte);
 
 // 5. Demande & Validation de Rattrapage
 router.post('/rattrapage/demande', authenticateToken, EmargementController.requestRattrapage);
-router.post('/rattrapage/approuver', authenticateToken, requireRole('ADMIN_ETABLISSEMENT'), EmargementController.approveRattrapage);
+router.post(
+  '/rattrapage/approuver',
+  authenticateToken,
+  requireRole('ADMIN_ETABLISSEMENT'),
+  EmargementController.approveRattrapage
+);
 
 // 6. Évaluation Élève anonyme 5 questions
 router.post('/evaluation-eleve', authenticateToken, requireRole('ELEVE'), EmargementController.submitStudentEvaluation);
 
 // 7. Recherche & Fiche d'Identité Enseignant (Office du BAC)
-router.get('/office/search', authenticateToken, requireRole('OFFICE_BAC'), EmargementController.searchProfesseursOfficeBac);
-router.get('/office/carte-identite/:profId', authenticateToken, requireRole('OFFICE_BAC'), EmargementController.getProfCarteIdentiteOfficeBac);
+router.get(
+  '/office/search',
+  authenticateToken,
+  requireRole('OFFICE_BAC'),
+  EmargementController.searchProfesseursOfficeBac
+);
+router.get(
+  '/office/carte-identite/:profId',
+  authenticateToken,
+  requireRole('OFFICE_BAC'),
+  EmargementController.getProfCarteIdentiteOfficeBac
+);
 
 // 8. Statistiques et séances du professeur connecté
 router.get('/my-stats', authenticateToken, EmargementController.getMyStats);

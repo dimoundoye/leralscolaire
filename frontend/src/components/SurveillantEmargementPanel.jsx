@@ -18,17 +18,19 @@ export default function SurveillantEmargementPanel({ etablissementId }) {
   };
 
   return (
-    <div style={{
-      background: 'linear-gradient(135deg, #131e6c 0%, #1e1b4b 100%)',
-      borderRadius: '16px',
-      padding: '20px 24px',
-      color: '#ffffff',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: '16px',
-      boxShadow: '0 4px 15px rgba(19, 30, 108, 0.2)'
-    }}>
+    <div
+      style={{
+        background: 'linear-gradient(135deg, #131e6c 0%, #1e1b4b 100%)',
+        borderRadius: '16px',
+        padding: '20px 24px',
+        color: '#ffffff',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '16px',
+        boxShadow: '0 4px 15px rgba(19, 30, 108, 0.2)',
+      }}
+    >
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
         <div style={{ background: 'rgba(255, 255, 255, 0.1)', padding: '12px', borderRadius: '12px' }}>
           <ShieldCheck size={28} color="#818cf8" />
@@ -58,7 +60,7 @@ export default function SurveillantEmargementPanel({ etablissementId }) {
           border: 'none',
           cursor: 'pointer',
           whiteSpace: 'nowrap',
-          boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)'
+          boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)',
         }}
       >
         <ExternalLink size={16} /> Afficher le QR Code en Externe

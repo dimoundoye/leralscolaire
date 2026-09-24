@@ -35,7 +35,7 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
         motif: motif.trim(),
         description: description.trim(),
         date_rendez_vous: typeAction === 'CONVOCATION' && dateRendezVous ? dateRendezVous : null,
-        lieu_rendez_vous: typeAction === 'CONVOCATION' ? lieuRendezVous : null
+        lieu_rendez_vous: typeAction === 'CONVOCATION' ? lieuRendezVous : null,
       });
 
       if (onSuccess) onSuccess();
@@ -49,21 +49,14 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
   };
 
   return (
-    <div
-      className="discipline-modal-overlay"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
+    <div className="discipline-modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="discipline-modal-container">
         {/* Header - Native LeralScolaire Style */}
         <div className="discipline-modal-header">
           <h3>
             <Scale size={22} color="#131e6c" /> Nouvelle Action Vie Scolaire
           </h3>
-          <button
-            onClick={onClose}
-            className="discipline-modal-close-btn"
-            title="Fermer"
-          >
+          <button onClick={onClose} className="discipline-modal-close-btn" title="Fermer">
             <X size={18} />
           </button>
         </div>
@@ -71,20 +64,31 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
         {/* Form */}
         <form onSubmit={handleSubmit} className="discipline-modal-form">
           {error && (
-            <div style={{ padding: '12px 16px', backgroundColor: '#fef2f2', color: '#f93f2d', borderRadius: '10px', fontSize: '0.875rem', border: '1px solid #fecaca', fontWeight: 600 }}>
+            <div
+              style={{
+                padding: '12px 16px',
+                backgroundColor: '#fef2f2',
+                color: '#f93f2d',
+                borderRadius: '10px',
+                fontSize: '0.875rem',
+                border: '1px solid #fecaca',
+                fontWeight: 600,
+              }}
+            >
               {error}
             </div>
           )}
 
           {/* Sélection Type d'action */}
           <div>
-            <label className="discipline-modal-label">
-              Type d'Action *
-            </label>
+            <label className="discipline-modal-label">Type d'Action *</label>
             <div className="discipline-type-grid">
               <button
                 type="button"
-                onClick={() => { setTypeAction('SIGNALEMENT'); setGravite('AVERTISSEMENT'); }}
+                onClick={() => {
+                  setTypeAction('SIGNALEMENT');
+                  setGravite('AVERTISSEMENT');
+                }}
                 className="discipline-type-btn"
                 style={{
                   border: typeAction === 'SIGNALEMENT' ? '2px solid #ea580c' : '1px solid #e2e8f0',
@@ -97,7 +101,10 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
 
               <button
                 type="button"
-                onClick={() => { setTypeAction('CONVOCATION'); setGravite('GRAVE'); }}
+                onClick={() => {
+                  setTypeAction('CONVOCATION');
+                  setGravite('GRAVE');
+                }}
                 className="discipline-type-btn"
                 style={{
                   border: typeAction === 'CONVOCATION' ? '2px solid #131e6c' : '1px solid #e2e8f0',
@@ -110,7 +117,10 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
 
               <button
                 type="button"
-                onClick={() => { setTypeAction('REMARQUE'); setGravite('ENCOURAGEMENT'); }}
+                onClick={() => {
+                  setTypeAction('REMARQUE');
+                  setGravite('ENCOURAGEMENT');
+                }}
                 className="discipline-type-btn"
                 style={{
                   border: typeAction === 'REMARQUE' ? '2px solid #16a34a' : '1px solid #e2e8f0',
@@ -125,9 +135,7 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
 
           {/* Sélection Élève */}
           <div>
-            <label className="discipline-modal-label">
-              Sélectionner l'Élève *
-            </label>
+            <label className="discipline-modal-label">Sélectionner l'Élève *</label>
             <select
               value={eleveId}
               onChange={(e) => setEleveId(e.target.value)}
@@ -135,13 +143,14 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
               className="discipline-select"
               style={{
                 backgroundColor: defaultEleveId ? '#f1f5f9' : '#ffffff',
-                fontWeight: 500
+                fontWeight: 500,
               }}
             >
               <option value="">-- Choisir un élève --</option>
               {elevesList.map((e) => (
                 <option key={e.id} value={e.id}>
-                  {e.prenom} {e.nom} {e.classe_nom ? `(${e.classe_nom})` : ''} - IUP: {e.identifiant_national || e.ine || 'N/A'}
+                  {e.prenom} {e.nom} {e.classe_nom ? `(${e.classe_nom})` : ''} - IUP:{' '}
+                  {e.identifiant_national || e.ine || 'N/A'}
                 </option>
               ))}
             </select>
@@ -149,9 +158,7 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
 
           {/* Niveau de Gravité */}
           <div>
-            <label className="discipline-modal-label">
-              Niveau de Gravité / Type de remarque
-            </label>
+            <label className="discipline-modal-label">Niveau de Gravité / Type de remarque</label>
             <select
               value={gravite}
               onChange={(e) => setGravite(e.target.value)}
@@ -167,9 +174,7 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
 
           {/* Motif */}
           <div>
-            <label className="discipline-modal-label">
-              Motif du signalement / convocation *
-            </label>
+            <label className="discipline-modal-label">Motif du signalement / convocation *</label>
             <input
               type="text"
               placeholder="ex: Élève exemplaire à encourager, Retards répétés, Insubordination..."
@@ -184,9 +189,7 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
           {typeAction === 'CONVOCATION' && (
             <div className="convocation-fields-grid">
               <div>
-                <label className="discipline-modal-label">
-                  Date & Heure du RDV
-                </label>
+                <label className="discipline-modal-label">Date & Heure du RDV</label>
                 <input
                   type="datetime-local"
                   value={dateRendezVous}
@@ -196,9 +199,7 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
               </div>
 
               <div>
-                <label className="discipline-modal-label">
-                  Lieu du RDV
-                </label>
+                <label className="discipline-modal-label">Lieu du RDV</label>
                 <input
                   type="text"
                   placeholder="ex: Bureau du Censeur, Salle 12"
@@ -212,9 +213,7 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
 
           {/* Description détaillée */}
           <div>
-            <label className="discipline-modal-label">
-              Détails & Description
-            </label>
+            <label className="discipline-modal-label">Détails & Description</label>
             <textarea
               rows={3}
               placeholder="Expliquez en détail les circonstances du signalement ou de l'appréciation..."
@@ -225,24 +224,26 @@ const CreateDisciplineModal = ({ elevesList = [], defaultEleveId = null, onClose
             />
           </div>
 
-          <div style={{ padding: '12px 16px', backgroundColor: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '0.825rem', color: '#64748b' }}>
-             <strong>Notifications automatiques :</strong> Un SMS et un email seront immédiatement transmis aux parents/tuteurs de l'élève.
+          <div
+            style={{
+              padding: '12px 16px',
+              backgroundColor: '#f8fafc',
+              borderRadius: '10px',
+              border: '1px solid #e2e8f0',
+              fontSize: '0.825rem',
+              color: '#64748b',
+            }}
+          >
+            <strong>Notifications automatiques :</strong> Un SMS et un email seront immédiatement transmis aux
+            parents/tuteurs de l'élève.
           </div>
 
           {/* Actions Footer */}
           <div className="discipline-modal-footer">
-            <button
-              type="button"
-              onClick={onClose}
-              className="discipline-btn-cancel"
-            >
+            <button type="button" onClick={onClose} className="discipline-btn-cancel">
               Annuler
             </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="discipline-btn-submit"
-            >
+            <button type="submit" disabled={submitting} className="discipline-btn-submit">
               <Send size={16} /> {submitting ? 'Envoi...' : 'Transmettre & Enregistrer'}
             </button>
           </div>

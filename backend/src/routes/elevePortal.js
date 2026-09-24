@@ -72,10 +72,9 @@ router.put('/profile', auth, checkEleveRole, async (req, res) => {
 router.get('/portfolio', auth, checkEleveRole, async (req, res) => {
   try {
     const eleveId = await getEleveId(req.user.id);
-    const result = await db.query(
-      'SELECT * FROM portfolio_items WHERE eleve_id = $1 ORDER BY date_realisation DESC',
-      [eleveId]
-    );
+    const result = await db.query('SELECT * FROM portfolio_items WHERE eleve_id = $1 ORDER BY date_realisation DESC', [
+      eleveId,
+    ]);
     res.json(result.rows[0] ? result.rows : []);
   } catch (err) {
     console.error(err);
@@ -95,7 +94,7 @@ router.post('/portfolio', auth, checkEleveRole, async (req, res) => {
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur lors de la création de l\'élément du portfolio.' });
+    res.status(500).json({ message: "Erreur lors de la création de l'élément du portfolio." });
   }
 });
 
@@ -117,7 +116,7 @@ router.put('/portfolio/:id', auth, checkEleveRole, async (req, res) => {
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur lors de la modification de l\'élément.' });
+    res.status(500).json({ message: "Erreur lors de la modification de l'élément." });
   }
 });
 
@@ -132,7 +131,7 @@ router.delete('/portfolio/:id', auth, checkEleveRole, async (req, res) => {
     res.json({ message: 'Élément du portfolio supprimé.' });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur lors de la suppression de l\'élément.' });
+    res.status(500).json({ message: "Erreur lors de la suppression de l'élément." });
   }
 });
 
@@ -140,25 +139,31 @@ router.delete('/portfolio/:id', auth, checkEleveRole, async (req, res) => {
 router.get('/cv', auth, checkEleveRole, async (req, res) => {
   try {
     const eleveId = await getEleveId(req.user.id);
-    
+
     // a. Profil
-    const profileRes = await db.query(`
+    const profileRes = await db.query(
+      `
       SELECT e.*, et.nom as etablissement_nom
       FROM eleves e
       LEFT JOIN etablissements et ON e.etablissement_id = et.id
       WHERE e.id = $1
-    `, [eleveId]);
-    
+    `,
+      [eleveId]
+    );
+
     // b. Inscription history
-    const parcoursRes = await db.query(`
+    const parcoursRes = await db.query(
+      `
       SELECT c.nom as classe_nom, c.niveau, c.annee_scolaire, et.nom as etablissement_nom
       FROM inscription_classes ic
       JOIN classes c ON ic.classe_id = c.id
       JOIN etablissements et ON c.etablissement_id = et.id
       WHERE ic.eleve_id = $1
       ORDER BY c.annee_scolaire DESC
-    `, [eleveId]);
-    
+    `,
+      [eleveId]
+    );
+
     // c. Realizations / Portfolio
     const portfolioRes = await db.query(
       'SELECT * FROM portfolio_items WHERE eleve_id = $1 ORDER BY date_realisation DESC',
@@ -175,7 +180,7 @@ router.get('/cv', auth, checkEleveRole, async (req, res) => {
       profile: profileRes.rows[0],
       parcours: parcoursRes.rows,
       portfolio: portfolioRes.rows,
-      examens: examensRes.rows
+      examens: examensRes.rows,
     });
   } catch (err) {
     console.error(err);
@@ -188,7 +193,8 @@ router.get('/notes', auth, checkEleveRole, async (req, res) => {
   try {
     const eleveId = await getEleveId(req.user.id);
 
-    const notesRes = await db.query(`
+    const notesRes = await db.query(
+      `
       SELECT n.*, m.nom as matiere_nom, m.code_matiere, 
              COALESCE(cm.coefficient, n.coefficient, 1) as coefficient,
              COALESCE(c.nom, c_fb.nom) as classe_nom,
@@ -201,11 +207,13 @@ router.get('/notes', auth, checkEleveRole, async (req, res) => {
       LEFT JOIN classe_matieres cm ON cm.classe_id = COALESCE(n.classe_id, ic.classe_id) AND cm.matiere_id = n.matiere_id
       WHERE n.eleve_id = $1
       ORDER BY COALESCE(c.annee_scolaire, c_fb.annee_scolaire) DESC, n.semestre, n.trimestre, m.nom
-    `, [eleveId]);
+    `,
+      [eleveId]
+    );
 
     const reportCard = {};
 
-    notesRes.rows.forEach(row => {
+    notesRes.rows.forEach((row) => {
       const annee = row.annee_scolaire || 'Année inconnue';
       const periode = `Semestre ${row.semestre || row.trimestre || 1}`;
       const codeMat = row.code_matiere;
@@ -213,7 +221,7 @@ router.get('/notes', auth, checkEleveRole, async (req, res) => {
       if (!reportCard[annee]) {
         reportCard[annee] = {
           classe: row.classe_nom || 'Non affectée',
-          periodes: {}
+          periodes: {},
         };
       }
 
@@ -221,7 +229,7 @@ router.get('/notes', auth, checkEleveRole, async (req, res) => {
         reportCard[annee].periodes[periode] = {
           matieres: {},
           moyenne_generale: 0,
-          total_coefficients: 0
+          total_coefficients: 0,
         };
       }
 
@@ -232,7 +240,7 @@ router.get('/notes', auth, checkEleveRole, async (req, res) => {
           nom: row.matiere_nom,
           coefficient: row.coefficient,
           notes: [],
-          appreciation: ''
+          appreciation: '',
         };
       }
 
@@ -241,7 +249,7 @@ router.get('/notes', auth, checkEleveRole, async (req, res) => {
         id: row.id,
         valeur: parseFloat(row.valeur),
         type_note: row.type_note,
-        date: row.date_saisie
+        date: row.date_saisie,
       });
 
       if (row.appreciation) {
@@ -268,9 +276,8 @@ router.get('/notes', auth, checkEleveRole, async (req, res) => {
         }
 
         periodData.total_coefficients = totalCoefficients;
-        periodData.moyenne_generale = totalCoefficients > 0 
-          ? parseFloat((totalPoints / totalCoefficients).toFixed(2)) 
-          : 0;
+        periodData.moyenne_generale =
+          totalCoefficients > 0 ? parseFloat((totalPoints / totalCoefficients).toFixed(2)) : 0;
       }
     }
 
@@ -285,8 +292,9 @@ router.get('/notes', auth, checkEleveRole, async (req, res) => {
 router.get('/notes-evolution', auth, checkEleveRole, async (req, res) => {
   try {
     const eleveId = await getEleveId(req.user.id);
-    
-    const notesRes = await db.query(`
+
+    const notesRes = await db.query(
+      `
       SELECT n.*, m.code_matiere, 
              COALESCE(cm.coefficient, n.coefficient, 1) as coefficient,
              COALESCE(c.annee_scolaire, c_fb.annee_scolaire, '2025-2026') as annee_scolaire
@@ -298,10 +306,12 @@ router.get('/notes-evolution', auth, checkEleveRole, async (req, res) => {
       LEFT JOIN classe_matieres cm ON cm.classe_id = COALESCE(n.classe_id, ic.classe_id) AND cm.matiere_id = n.matiere_id
       WHERE n.eleve_id = $1
       ORDER BY COALESCE(c.annee_scolaire, c_fb.annee_scolaire) ASC, n.semestre ASC
-    `, [eleveId]);
+    `,
+      [eleveId]
+    );
 
     const reportCard = {};
-    notesRes.rows.forEach(row => {
+    notesRes.rows.forEach((row) => {
       const annee = row.annee_scolaire;
       const periode = 'S' + (row.semestre || row.trimestre || 1);
       const codeMat = row.code_matiere;
@@ -315,25 +325,30 @@ router.get('/notes-evolution', auth, checkEleveRole, async (req, res) => {
     });
 
     const formattedData = [];
-    Object.keys(reportCard).sort().forEach(annee => {
-      Object.keys(reportCard[annee]).sort().forEach(periode => {
-        const matieresObj = reportCard[annee][periode];
-        let totalPts = 0, totalCoeff = 0;
-        Object.keys(matieresObj).forEach(mCode => {
-          const m = matieresObj[mCode];
-          const avg = m.notes.reduce((a, b) => a + b, 0) / m.notes.length;
-          totalPts += avg * m.coefficient;
-          totalCoeff += m.coefficient;
-        });
-        const genAvg = totalCoeff > 0 ? parseFloat((totalPts / totalCoeff).toFixed(2)) : 0;
-        formattedData.push({ periode: `${annee} - ${periode}`, moyenne: genAvg });
+    Object.keys(reportCard)
+      .sort()
+      .forEach((annee) => {
+        Object.keys(reportCard[annee])
+          .sort()
+          .forEach((periode) => {
+            const matieresObj = reportCard[annee][periode];
+            let totalPts = 0,
+              totalCoeff = 0;
+            Object.keys(matieresObj).forEach((mCode) => {
+              const m = matieresObj[mCode];
+              const avg = m.notes.reduce((a, b) => a + b, 0) / m.notes.length;
+              totalPts += avg * m.coefficient;
+              totalCoeff += m.coefficient;
+            });
+            const genAvg = totalCoeff > 0 ? parseFloat((totalPts / totalCoeff).toFixed(2)) : 0;
+            formattedData.push({ periode: `${annee} - ${periode}`, moyenne: genAvg });
+          });
       });
-    });
 
     res.json(formattedData);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur lors du calcul de l\'évolution.' });
+    res.status(500).json({ message: "Erreur lors du calcul de l'évolution." });
   }
 });
 
@@ -343,7 +358,8 @@ router.get('/schedule', auth, checkEleveRole, async (req, res) => {
     const eleveId = await getEleveId(req.user.id);
 
     // Timetable across all enrolled classes
-    const timetableRes = await db.query(`
+    const timetableRes = await db.query(
+      `
       SELECT edt.*, m.nom as matiere_nom, m.code_matiere, COALESCE(u.email, 'Enseignant') as professeur_email,
              c.nom as classe_nom, c.annee_scolaire
       FROM emplois_du_temps edt
@@ -361,25 +377,30 @@ router.get('/schedule', auth, checkEleveRole, async (req, res) => {
           WHEN 'Samedi' THEN 6
           ELSE 7
         END, edt.heure_debut
-    `, [eleveId]);
+    `,
+      [eleveId]
+    );
 
     // Exams across all enrolled classes
-    const examsRes = await db.query(`
+    const examsRes = await db.query(
+      `
       SELECT ep.*, m.nom as matiere_nom, m.code_matiere, c.nom as classe_nom, c.annee_scolaire
       FROM examens_planification ep
       JOIN classes c ON ep.classe_id = c.id
       LEFT JOIN matieres m ON ep.matiere_id = m.id
       WHERE ep.classe_id IN (SELECT classe_id FROM inscription_classes WHERE eleve_id = $1)
       ORDER BY ep.date_examen DESC
-    `, [eleveId]);
+    `,
+      [eleveId]
+    );
 
     res.json({
       timetable: timetableRes.rows,
-      exams: examsRes.rows
+      exams: examsRes.rows,
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur lors de la récupération de l\'emploi du temps.' });
+    res.status(500).json({ message: "Erreur lors de la récupération de l'emploi du temps." });
   }
 });
 
@@ -389,18 +410,22 @@ router.get('/exam-results', auth, checkEleveRole, async (req, res) => {
     const eleveId = await getEleveId(req.user.id);
 
     // Récupérer les infos de l'élève pour la carte candidat
-    const eleveRes = await db.query(`
+    const eleveRes = await db.query(
+      `
       SELECT e.nom, e.prenom, e.identifiant_national, e.date_naissance, e.lieu_naissance,
              et.nom as etablissement_nom, et.region as etablissement_region
       FROM eleves e
       LEFT JOIN etablissements et ON e.etablissement_id = et.id
       WHERE e.id = $1
-    `, [eleveId]);
+    `,
+      [eleveId]
+    );
 
     const eleve = eleveRes.rows[0] || null;
 
     // Récupérer TOUS les enregistrements de l'élève (publiés et convocations)
-    const result = await db.query(`
+    const result = await db.query(
+      `
       SELECT 
         id, type_examen, annee, serie, jury, centre_examen, 
         numero_table, statut_candidat, region,
@@ -418,7 +443,9 @@ router.get('/exam-results', auth, checkEleveRole, async (req, res) => {
       FROM resultats_examens_nationaux
       WHERE eleve_id = $1
       ORDER BY annee DESC, created_at DESC
-    `, [eleveId]);
+    `,
+      [eleveId]
+    );
 
     const resultats = [];
     for (const r of result.rows) {
@@ -435,7 +462,7 @@ router.get('/exam-results', auth, checkEleveRole, async (req, res) => {
 
     res.json({
       eleve,
-      resultats
+      resultats,
     });
   } catch (err) {
     console.error(err);
@@ -447,28 +474,37 @@ router.get('/exam-results', auth, checkEleveRole, async (req, res) => {
 router.get('/documents', auth, checkEleveRole, async (req, res) => {
   try {
     const eleveId = await getEleveId(req.user.id);
-    
-    const classesRes = await db.query(`
+
+    const classesRes = await db.query(
+      `
       SELECT ic.classe_id, c.nom as classe_nom, c.annee_scolaire
       FROM inscription_classes ic
       JOIN classes c ON ic.classe_id = c.id
       WHERE ic.eleve_id = $1
       ORDER BY ic.date_inscription DESC
-    `, [eleveId]);
+    `,
+      [eleveId]
+    );
 
     const bulletinsList = [];
     for (const activeClass of classesRes.rows) {
       for (const sem of [1, 2]) {
-        const pubRes = await db.query(`
+        const pubRes = await db.query(
+          `
           SELECT autorise FROM bulletins_autorises 
           WHERE classe_id = $1 AND semestre = $2 AND annee_scolaire = $3
-        `, [activeClass.classe_id, sem, activeClass.annee_scolaire]);
-        
-        const dlRes = await db.query(`
+        `,
+          [activeClass.classe_id, sem, activeClass.annee_scolaire]
+        );
+
+        const dlRes = await db.query(
+          `
           SELECT telecharge_at FROM bulletins_telechargements 
           WHERE eleve_id = $1 AND classe_id = $2 AND semestre = $3 AND annee_scolaire = $4
-        `, [eleveId, activeClass.classe_id, sem, activeClass.annee_scolaire]);
-        
+        `,
+          [eleveId, activeClass.classe_id, sem, activeClass.annee_scolaire]
+        );
+
         const autorise = pubRes.rows.length > 0 ? pubRes.rows[0].autorise : false;
         const telecharge = dlRes.rows.length > 0;
         const date_telechargement = dlRes.rows.length > 0 ? dlRes.rows[0].telecharge_at : null;
@@ -481,14 +517,14 @@ router.get('/documents', auth, checkEleveRole, async (req, res) => {
           annee_scolaire: activeClass.annee_scolaire,
           autorise,
           telecharge,
-          date_telechargement
+          date_telechargement,
         });
       }
     }
 
     res.json({
       bulletins: bulletinsList,
-      attestationDisponible: true
+      attestationDisponible: true,
     });
   } catch (err) {
     console.error(err);
@@ -499,10 +535,9 @@ router.get('/documents', auth, checkEleveRole, async (req, res) => {
 // --- 10. NOTIFICATIONS ---
 router.get('/notifications', auth, checkEleveRole, async (req, res) => {
   try {
-    const result = await db.query(
-      'SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 30',
-      [req.user.id]
-    );
+    const result = await db.query('SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 30', [
+      req.user.id,
+    ]);
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -512,10 +547,7 @@ router.get('/notifications', auth, checkEleveRole, async (req, res) => {
 
 router.post('/notifications/read', auth, checkEleveRole, async (req, res) => {
   try {
-    await db.query(
-      'UPDATE notifications SET lu = TRUE WHERE user_id = $1',
-      [req.user.id]
-    );
+    await db.query('UPDATE notifications SET lu = TRUE WHERE user_id = $1', [req.user.id]);
     res.json({ message: 'Notifications marquées comme lues.' });
   } catch (err) {
     console.error(err);
@@ -527,7 +559,7 @@ router.post('/notifications/read', auth, checkEleveRole, async (req, res) => {
 router.get('/messages', auth, checkEleveRole, async (req, res) => {
   try {
     const eleveId = await getEleveId(req.user.id);
-    
+
     const classeRes = await db.query(
       'SELECT classe_id FROM inscription_classes WHERE eleve_id = $1 ORDER BY date_inscription DESC LIMIT 1',
       [eleveId]
@@ -583,24 +615,27 @@ router.post('/attestations/request', auth, checkEleveRole, async (req, res) => {
   const { motif_demande } = req.body;
   try {
     const eleveId = await getEleveId(req.user.id);
-    
+
     const eleveRes = await db.query('SELECT etablissement_id FROM eleves WHERE id = $1', [eleveId]);
     if (eleveRes.rows.length === 0 || !eleveRes.rows[0].etablissement_id) {
-      return res.status(400).json({ message: 'Vous n\'êtes inscrit dans aucun établissement.' });
+      return res.status(400).json({ message: "Vous n'êtes inscrit dans aucun établissement." });
     }
     const etabId = eleveRes.rows[0].etablissement_id;
 
     // Fetch student's current active class
-    const classeRes = await db.query(`
+    const classeRes = await db.query(
+      `
       SELECT classe_id 
       FROM inscription_classes 
       WHERE eleve_id = $1 
       ORDER BY date_inscription DESC 
       LIMIT 1
-    `, [eleveId]);
+    `,
+      [eleveId]
+    );
 
     if (classeRes.rows.length === 0 || !classeRes.rows[0].classe_id) {
-      return res.status(400).json({ message: 'Vous n\'êtes inscrit dans aucune classe.' });
+      return res.status(400).json({ message: "Vous n'êtes inscrit dans aucune classe." });
     }
     const classeId = classeRes.rows[0].classe_id;
 
@@ -612,13 +647,19 @@ router.post('/attestations/request', auth, checkEleveRole, async (req, res) => {
     if (checkExisting.rows.length > 0) {
       const existing = checkExisting.rows[0];
       if (existing.statut === 'EN_ATTENTE') {
-        return res.status(400).json({ message: 'Vous avez déjà une demande en attente de traitement pour votre classe actuelle.' });
+        return res
+          .status(400)
+          .json({ message: 'Vous avez déjà une demande en attente de traitement pour votre classe actuelle.' });
       }
       if (existing.statut === 'ACCEPTE') {
         if (existing.deja_telecharge) {
-          return res.status(400).json({ message: 'Votre attestation pour votre classe actuelle a déjà été téléchargée.' });
+          return res
+            .status(400)
+            .json({ message: 'Votre attestation pour votre classe actuelle a déjà été téléchargée.' });
         } else {
-          return res.status(400).json({ message: 'Votre attestation pour votre classe actuelle est déjà disponible au téléchargement.' });
+          return res
+            .status(400)
+            .json({ message: 'Votre attestation pour votre classe actuelle est déjà disponible au téléchargement.' });
         }
       }
     }
@@ -629,10 +670,10 @@ router.post('/attestations/request', auth, checkEleveRole, async (req, res) => {
       [eleveId, etabId, classeId, motif_demande || null]
     );
 
-    res.status(201).json({ message: 'Demande d\'attestation soumise avec succès.', demande: result.rows[0] });
+    res.status(201).json({ message: "Demande d'attestation soumise avec succès.", demande: result.rows[0] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur lors de la création de la demande d\'attestation.' });
+    res.status(500).json({ message: "Erreur lors de la création de la demande d'attestation." });
   }
 });
 
@@ -651,7 +692,7 @@ router.get('/attestations/history', auth, checkEleveRole, async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur lors de la récupération de l\'historique des demandes.' });
+    res.status(500).json({ message: "Erreur lors de la récupération de l'historique des demandes." });
   }
 });
 

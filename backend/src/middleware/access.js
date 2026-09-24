@@ -103,8 +103,7 @@ async function canAccessClasse(user, classeId, { allowProf = false } = {}) {
   return false;
 }
 
-const isUuid = (value) =>
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value));
+const isUuid = (value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value));
 
 // Wrapper commun : paramètre invalide ou accès refusé → 403, erreur → 500
 function guard(check, message) {
@@ -113,14 +112,16 @@ function guard(check, message) {
       if (await check(req)) return next();
       return forbidden(res, message);
     } catch (err) {
-      console.error('Erreur contrôle d\'accès :', err.message);
-      return res.status(500).json({ message: 'Erreur lors de la vérification des droits d\'accès.' });
+      console.error("Erreur contrôle d'accès :", err.message);
+      return res.status(500).json({ message: "Erreur lors de la vérification des droits d'accès." });
     }
   };
 }
 
-const requireRole = (...roles) => (req, res, next) =>
-  roles.includes(req.user?.role) ? next() : forbidden(res, 'Accès refusé pour votre rôle.');
+const requireRole =
+  (...roles) =>
+  (req, res, next) =>
+    roles.includes(req.user?.role) ? next() : forbidden(res, 'Accès refusé pour votre rôle.');
 
 // L'élève « me » est résolu par le contrôleur : seul un élève connecté peut l'utiliser.
 const requireEleveAccess = (param, options) =>
@@ -140,7 +141,8 @@ const requireClasseAccess = (param, options) =>
 const OWNER_QUERIES = {
   pre_inscriptions: 'SELECT etablissement_id FROM pre_inscriptions WHERE id = $1',
   cahier_de_texte: 'SELECT etablissement_id FROM cahier_de_texte WHERE id = $1',
-  documents_partages_recu: 'SELECT destinataire_etablissement_id AS etablissement_id FROM documents_partages WHERE id = $1',
+  documents_partages_recu:
+    'SELECT destinataire_etablissement_id AS etablissement_id FROM documents_partages WHERE id = $1',
   historique_notes: `SELECT e.etablissement_id FROM historique_notes h
                      JOIN notes n ON h.note_id = n.id
                      JOIN eleves e ON n.eleve_id = e.id
@@ -165,14 +167,14 @@ const requireProfOfClasse = (classeParam, matiereParam = null) =>
     if (req.user.role !== 'PROFESSEUR' || !isUuid(classeId)) return false;
     if (matiereParam && !isUuid(matiereId)) return false;
     return isProfOfClasse(req.user.id, classeId, matiereId);
-  }, 'Accès refusé. Vous n\'enseignez pas dans cette classe.');
+  }, "Accès refusé. Vous n'enseignez pas dans cette classe.");
 
 // Professeur rattaché à l'établissement passé en paramètre
 const requireProfAffiliation = (param) =>
   guard(async (req) => {
     const id = req.params[param];
     return req.user.role === 'PROFESSEUR' && isUuid(id) && isProfAffiliated(req.user.id, id);
-  }, 'Accès refusé. Vous n\'êtes pas rattaché à cet établissement.');
+  }, "Accès refusé. Vous n'êtes pas rattaché à cet établissement.");
 
 module.exports = {
   requireRole,

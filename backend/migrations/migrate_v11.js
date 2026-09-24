@@ -14,7 +14,7 @@ async function migrate() {
     // Seeder des données d'absences pour les élèves
     const elevesRes = await db.query('SELECT id FROM eleves LIMIT 5');
     if (elevesRes.rows.length > 0) {
-      console.log('Seeding des absences d\'exemple pour le calendrier...');
+      console.log("Seeding des absences d'exemple pour le calendrier...");
       for (const eleve of elevesRes.rows) {
         // Supprimer les absences existantes de l'élève de test pour avoir un set propre
         await db.query('DELETE FROM absences WHERE eleve_id = $1', [eleve.id]);
@@ -36,14 +36,17 @@ async function migrate() {
           { date: '2025-11-13', hrs: 2, just: true },
           { date: '2025-10-05', hrs: 1, just: false },
           { date: '2025-10-06', hrs: 3, just: false },
-          { date: '2025-07-02', hrs: 4, just: false }
+          { date: '2025-07-02', hrs: 4, just: false },
         ];
 
         for (const d of dates) {
-          await db.query(`
+          await db.query(
+            `
             INSERT INTO absences (eleve_id, date_absence, justifiee, points_deduits, heures_absent)
             VALUES ($1, $2, $3, 0, $4)
-          `, [eleve.id, d.date, d.just, d.hrs]);
+          `,
+            [eleve.id, d.date, d.just, d.hrs]
+          );
         }
       }
       console.log('✅ Seeding des absences terminé');

@@ -7,16 +7,19 @@ const aiController = {
     if (!req.file) return response.error(res, 'Image manquante.', 400);
 
     try {
-      const { data: { text } } = await Tesseract.recognize(
+      const {
+        data: { text },
+      } = await Tesseract.recognize(
         req.file.path,
         'fra', // French language
-        { logger: m => console.log(m) }
+        { logger: (m) => console.log(m) }
       );
 
       // Clean lines: split by line, filter out empty ones
-      const names = text.split('\n')
-        .map(line => line.trim())
-        .filter(line => line.length > 2);
+      const names = text
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line.length > 2);
 
       fs.unlinkSync(req.file.path);
       return res.json({ message: 'Scan terminé', names });
@@ -31,17 +34,15 @@ const aiController = {
     if (!req.file) return response.error(res, 'Image manquante.', 400);
 
     try {
-      const { data: { text } } = await Tesseract.recognize(
-        req.file.path,
-        'fra',
-        { logger: m => console.log(m) }
-      );
+      const {
+        data: { text },
+      } = await Tesseract.recognize(req.file.path, 'fra', { logger: (m) => console.log(m) });
 
       // Simple parsing: find "Name: Note" patterns
       const lines = text.split('\n');
       const results = [];
 
-      lines.forEach(line => {
+      lines.forEach((line) => {
         // Regex to match a name followed by a decimal/integer score
         const match = line.match(/([a-zA-Z\s]+)[\s:]+(\d{1,2}[.,]?\d{0,2})/);
         if (match) {
@@ -56,7 +57,7 @@ const aiController = {
       if (req.file) fs.unlinkSync(req.file.path);
       return response.error(res, 'Erreur lors du scan.', 500);
     }
-  }
+  },
 };
 
 module.exports = aiController;

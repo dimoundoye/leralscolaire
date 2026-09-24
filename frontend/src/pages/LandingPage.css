@@ -31,7 +31,13 @@
 }
 
 .landing-modern {
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    'Poppins',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   background-color: var(--ls-bg-page);
   color: var(--ls-text-main);
   line-height: 1.6;
@@ -111,7 +117,8 @@
   white-space: nowrap;
 }
 
-.nav-link:hover, .nav-link.active {
+.nav-link:hover,
+.nav-link.active {
   color: var(--ls-primary);
   font-weight: 600;
 }
@@ -128,7 +135,8 @@
   transition: var(--ls-transition);
 }
 
-.nav-link:hover::after, .nav-link.active::after {
+.nav-link:hover::after,
+.nav-link.active::after {
   width: 100%;
 }
 
@@ -198,8 +206,14 @@
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .mobile-nav-link {
@@ -211,7 +225,8 @@
   border-bottom: 1px solid rgba(226, 232, 240, 0.6);
 }
 
-.mobile-nav-link:hover, .mobile-nav-link.active {
+.mobile-nav-link:hover,
+.mobile-nav-link.active {
   color: var(--ls-primary);
   font-weight: 600;
 }
@@ -252,7 +267,8 @@
   opacity: 0.95;
 }
 
-.hero-ruler-left, .hero-ruler-right {
+.hero-ruler-left,
+.hero-ruler-right {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -262,8 +278,12 @@
   z-index: 1;
 }
 
-.hero-ruler-left { left: 4%; }
-.hero-ruler-right { right: 4%; }
+.hero-ruler-left {
+  left: 4%;
+}
+.hero-ruler-right {
+  right: 4%;
+}
 
 .hero-glow-bg {
   position: absolute;
@@ -408,10 +428,22 @@
   display: flex;
 }
 
-.bar-sn-green { flex: 1; background-color: #00853F; }
-.bar-sn-yellow { flex: 1; background-color: #FDEF42; }
-.bar-sn-red { flex: 1; background-color: #E31B23; }
-.bar-sn-cyan { flex: 1; background-color: #006973; }
+.bar-sn-green {
+  flex: 1;
+  background-color: #00853f;
+}
+.bar-sn-yellow {
+  flex: 1;
+  background-color: #fdef42;
+}
+.bar-sn-red {
+  flex: 1;
+  background-color: #e31b23;
+}
+.bar-sn-cyan {
+  flex: 1;
+  background-color: #006973;
+}
 
 /* --------------------------------------------------------------------------
    NOUVELLES SECTIONS DU BODY (STITCH EDTECH GOVTECH DESIGN)
@@ -438,7 +470,6 @@
 .stitch-head-split {
   display: flex;
   flex-direction: column;
-  md:flex-direction: row;
   justify-content: space-between;
   align-items: flex-start;
   gap: 1.5rem;
@@ -599,20 +630,44 @@
   height: 6px;
 }
 
-.bg-accent-red { background-color: #E31B23; }
-.bg-accent-orange { background-color: #F37021; }
-.bg-accent-green { background-color: #58B947; }
-.bg-accent-cyan { background-color: #00A5B5; }
+.bg-accent-red {
+  background-color: #e31b23;
+}
+.bg-accent-orange {
+  background-color: #f37021;
+}
+.bg-accent-green {
+  background-color: #58b947;
+}
+.bg-accent-cyan {
+  background-color: #00a5b5;
+}
 
-.bg-red-trans { background-color: rgba(227, 27, 35, 0.1); }
-.bg-orange-trans { background-color: rgba(243, 112, 33, 0.1); }
-.bg-green-trans { background-color: rgba(88, 185, 71, 0.1); }
-.bg-cyan-trans { background-color: rgba(0, 165, 181, 0.1); }
+.bg-red-trans {
+  background-color: rgba(227, 27, 35, 0.1);
+}
+.bg-orange-trans {
+  background-color: rgba(243, 112, 33, 0.1);
+}
+.bg-green-trans {
+  background-color: rgba(88, 185, 71, 0.1);
+}
+.bg-cyan-trans {
+  background-color: rgba(0, 165, 181, 0.1);
+}
 
-.text-accent-red { color: #E31B23; }
-.text-accent-orange { color: #F37021; }
-.text-accent-green { color: #006973; }
-.text-accent-cyan { color: #006973; }
+.text-accent-red {
+  color: #e31b23;
+}
+.text-accent-orange {
+  color: #f37021;
+}
+.text-accent-green {
+  color: #006973;
+}
+.text-accent-cyan {
+  color: #006973;
+}
 
 .pole-icon-wrap {
   width: 48px;
@@ -807,7 +862,9 @@
   border: 1px solid rgba(56, 189, 248, 0.25);
   border-radius: 24px;
   padding: 1.75rem;
-  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 165, 181, 0.15);
+  box-shadow:
+    0 20px 50px -10px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(0, 165, 181, 0.15);
   width: 100%;
   max-width: 520px;
 }
@@ -887,7 +944,7 @@
 }
 
 .mesh-line {
-  stroke: #00A5B5;
+  stroke: #00a5b5;
   stroke-width: 2.5;
   stroke-dasharray: 7 5;
   opacity: 0.9;
@@ -913,10 +970,18 @@
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
 }
 
-.node-green { fill: #10b981; }
-.node-cyan { fill: #00A5B5; }
-.node-orange { fill: #f97316; }
-.node-red { fill: #ef4444; }
+.node-green {
+  fill: #10b981;
+}
+.node-cyan {
+  fill: #00a5b5;
+}
+.node-orange {
+  fill: #f97316;
+}
+.node-red {
+  fill: #ef4444;
+}
 
 .hub-center-dot {
   fill: #fbbf24;
@@ -926,7 +991,7 @@
 
 .hub-outer-circle {
   fill: none;
-  stroke: #00A5B5;
+  stroke: #00a5b5;
   stroke-width: 2;
   stroke-dasharray: 4 3;
   animation: hubRotate 12s linear infinite;
@@ -962,7 +1027,10 @@
 }
 
 .mesh-label {
-  font-family: 'Poppins', -apple-system, sans-serif;
+  font-family:
+    'Poppins',
+    -apple-system,
+    sans-serif;
   font-size: 19px;
   font-weight: 700;
   fill: #0f172a;
@@ -1443,8 +1511,15 @@
 }
 
 @keyframes terminalPulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.85); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -1479,10 +1554,18 @@
   display: block;
 }
 
-.text-blue-900 { color: #0c1b33; }
-.text-teal-700 { color: #006973; }
-.text-green-700 { color: #00853F; }
-.text-orange-600 { color: #F37021; }
+.text-blue-900 {
+  color: #0c1b33;
+}
+.text-teal-700 {
+  color: #006973;
+}
+.text-green-700 {
+  color: #00853f;
+}
+.text-orange-600 {
+  color: #f37021;
+}
 
 .metric-stat-name {
   font-size: 0.95rem;
@@ -1498,7 +1581,7 @@
 }
 
 .stitch-sovereign-banner {
-  background: linear-gradient(135deg, #0f1e36 0%, #003B46 60%, #000412 100%);
+  background: linear-gradient(135deg, #0f1e36 0%, #003b46 60%, #000412 100%);
   border-radius: 28px;
   padding: 4rem 3rem;
   color: #ffffff;
@@ -1556,7 +1639,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.85rem 1.85rem;
-  background: #00A5B5;
+  background: #00a5b5;
   color: #ffffff !important;
   font-size: 0.95rem;
   font-weight: 700;
@@ -1644,19 +1727,19 @@
 
 .flag-stripe-green {
   flex: 1;
-  background-color: #00853F;
+  background-color: #00853f;
 }
 
 .flag-stripe-yellow {
   flex: 1;
-  background-color: #FDEF42;
+  background-color: #fdef42;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .flag-star {
-  color: #00853F !important;
+  color: #00853f !important;
   font-size: 10px;
   line-height: 1;
   font-weight: 900;
@@ -1664,7 +1747,7 @@
 
 .flag-stripe-red {
   flex: 1;
-  background-color: #E31B23;
+  background-color: #e31b23;
 }
 
 .footer-ministry-title {
@@ -1749,7 +1832,8 @@
     text-align: center;
     gap: 2rem;
   }
-  .hero-split-left, .hero-split-right {
+  .hero-split-left,
+  .hero-split-right {
     align-items: center;
     text-align: center;
     max-width: 100%;
@@ -1761,7 +1845,8 @@
   .hero-split-right .hero-description-right {
     text-align: center;
   }
-  .hero-split-center-spacer, .hero-split-right-spacer {
+  .hero-split-center-spacer,
+  .hero-split-right-spacer {
     display: none;
   }
   .capsule-nav {
@@ -1816,7 +1901,8 @@
   .hero-title {
     font-size: 2rem;
   }
-  .hero-ruler-left, .hero-ruler-right {
+  .hero-ruler-left,
+  .hero-ruler-right {
     display: none;
   }
   .stitch-section {
@@ -1885,4 +1971,3 @@
     text-align: center;
   }
 }
-

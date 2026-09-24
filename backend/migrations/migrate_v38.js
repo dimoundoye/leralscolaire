@@ -3,13 +3,13 @@ const db = require('../src/config/db');
 
 async function migrate() {
   try {
-    console.log("🚀 Migration v38 : Remplacement de unique_note_per_period par unique_note_per_type sur notes...");
+    console.log('🚀 Migration v38 : Remplacement de unique_note_per_period par unique_note_per_type sur notes...');
 
     // 1. Supprimer l'ancienne contrainte qui empêchait d'avoir à la fois un devoir et une composition
     await db.query(`
       ALTER TABLE notes DROP CONSTRAINT IF EXISTS unique_note_per_period;
     `);
-    console.log("  ✓ Ancienne contrainte unique_note_per_period supprimée.");
+    console.log('  ✓ Ancienne contrainte unique_note_per_period supprimée.');
 
     // 2. Ajouter la nouvelle contrainte incluant le type de note (DEVOIR, COMPOSITION, EXAMEN)
     await db.query(`
@@ -22,7 +22,7 @@ async function migrate() {
         END IF;
       END $$;
     `);
-    console.log("  ✓ Nouvelle contrainte unique_note_per_type assurée.");
+    console.log('  ✓ Nouvelle contrainte unique_note_per_type assurée.');
 
     console.log('✅ Migration v38 exécutée avec succès !');
   } catch (err) {

@@ -8,7 +8,7 @@ const auth = require('../middleware/authMiddleware');
 const upload = multer({
   dest: require('os').tmpdir(),
   limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => cb(null, file.mimetype.startsWith('image/'))
+  fileFilter: (req, file, cb) => cb(null, file.mimetype.startsWith('image/')),
 });
 
 // Scan student list from image

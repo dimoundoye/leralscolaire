@@ -12,7 +12,7 @@ const messageController = {
       const fichier_url = getUploadedFileUrl(req.file, 'messages');
       return res.json({
         fichier_url,
-        fichier_nom: req.file.originalname
+        fichier_nom: req.file.originalname,
       });
     } catch (err) {
       console.error(err);
@@ -34,14 +34,21 @@ const messageController = {
         finalEtablissementId = classRes.rows[0].etablissement_id;
 
         if (req.user.role === 'PROFESSEUR') {
-          const permRes = await db.query(`
+          const permRes = await db.query(
+            `
             SELECT droit_envoi_message 
             FROM professeurs_etablissements 
             WHERE professeur_id = $1 AND etablissement_id = $2 AND statut = 'ACCEPTE'
-          `, [req.user.id, finalEtablissementId]);
-          
+          `,
+            [req.user.id, finalEtablissementId]
+          );
+
           if (permRes.rows.length === 0 || !permRes.rows[0].droit_envoi_message) {
-            return response.error(res, "Vous n'avez pas la permission d'envoyer des messages aux classes de cet établissement.", 403);
+            return response.error(
+              res,
+              "Vous n'avez pas la permission d'envoyer des messages aux classes de cet établissement.",
+              403
+            );
           }
         }
       }
@@ -59,12 +66,21 @@ const messageController = {
         const etabRes = await db.query('SELECT etablissement_id FROM eleves WHERE user_id = $1', [req.user.id]);
         finalEtablissementId = etabRes.rows[0]?.etablissement_id;
       } else if (destinataire_type === 'ELEVE' && !finalEtablissementId) {
-        const etabRes = await db.query('SELECT etablissement_id FROM eleves WHERE user_id = $1 OR id = $1', [destinataire_id]);
+        const etabRes = await db.query('SELECT etablissement_id FROM eleves WHERE user_id = $1 OR id = $1', [
+          destinataire_id,
+        ]);
         finalEtablissementId = etabRes.rows[0]?.etablissement_id;
       }
 
       const message = await MessageModel.sendMessage(
-        req.user.id, destinataire_type, finalDestId, sujet, contenu, finalEtablissementId, fichier_url, fichier_nom
+        req.user.id,
+        destinataire_type,
+        finalDestId,
+        sujet,
+        contenu,
+        finalEtablissementId,
+        fichier_url,
+        fichier_nom
       );
       return res.status(201).json(message);
     } catch (err) {
@@ -72,8 +88,6 @@ const messageController = {
       return response.error(res, "Erreur lors de l'envoi du message.", 500);
     }
   },
-
-
 
   async getInbox(req, res, next) {
     try {
@@ -108,19 +122,23 @@ const messageController = {
         let teachers = [];
 
         if (student) {
-          const { rows: classRows } = await db.query(`
+          const { rows: classRows } = await db.query(
+            `
             SELECT c.id as classe_id, c.nom as classe_nom, c.annee_scolaire, c.etablissement_id
             FROM inscription_classes ic
             JOIN classes c ON ic.classe_id = c.id
             WHERE ic.eleve_id = $1
             ORDER BY ic.date_inscription DESC
             LIMIT 1
-          `, [student.id]);
+          `,
+            [student.id]
+          );
 
           if (classRows.length > 0) {
             classe = classRows[0];
 
-            const { rows: teacherRows } = await db.query(`
+            const { rows: teacherRows } = await db.query(
+              `
               SELECT DISTINCT 
                 u.id as user_id, 
                 p.prenom, 
@@ -146,7 +164,9 @@ const messageController = {
                 WHERE pe.etablissement_id = $2 AND pe.statut = 'ACCEPTE'
               )
               ORDER BY p.nom, p.prenom
-            `, [student.id, student.etablissement_id]);
+            `,
+              [student.id, student.etablissement_id]
+            );
 
             teachers = teacherRows;
           }
@@ -198,9 +218,9 @@ const messageController = {
       return res.json(messages);
     } catch (err) {
       console.error(err);
-      return response.error(res, 'Erreur lors du chargement de l\'historique.', 500);
+      return response.error(res, "Erreur lors du chargement de l'historique.", 500);
     }
-  }
+  },
 };
 
 module.exports = messageController;

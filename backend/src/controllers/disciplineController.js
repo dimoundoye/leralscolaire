@@ -8,7 +8,7 @@ const { canAccessEleve, getAdminEtablissementId } = require('../middleware/acces
 // Helper pour trouver l'etablissement_id de l'utilisateur
 async function resolveEtablissementId(user, eleveId = null) {
   if (user.etablissement_id) return user.etablissement_id;
-  
+
   if (user.role === 'ADMIN_ETABLISSEMENT') {
     const res = await db.query('SELECT id FROM etablissements WHERE admin_id = $1', [user.id]);
     if (res.rows[0]) return res.rows[0].id;
@@ -35,11 +35,11 @@ exports.createSignalement = async (req, res) => {
       date_rendez_vous,
       lieu_rendez_vous,
       matiere_code,
-      matiere_nom
+      matiere_nom,
     } = req.body;
 
     if (!eleve_id || !type_action || !motif) {
-      return response.error(res, 'Veuillez fournir l\'élève, le type d\'action et le motif.', 400);
+      return response.error(res, "Veuillez fournir l'élève, le type d'action et le motif.", 400);
     }
 
     if (!(await canAccessEleve(req.user, eleve_id, { allowProf: true }))) {
@@ -54,7 +54,7 @@ exports.createSignalement = async (req, res) => {
       `SELECT e.*, et.nom as etablissement_nom 
        FROM eleves e 
        LEFT JOIN etablissements et ON e.etablissement_id = et.id 
-       WHERE e.id = $1`, 
+       WHERE e.id = $1`,
       [eleve_id]
     );
     const eleveInfo = eleveRes.rows[0] || {};
@@ -70,7 +70,7 @@ exports.createSignalement = async (req, res) => {
       description,
       date_rendez_vous,
       lieu_rendez_vous,
-      etablissement_nom: eleveInfo.etablissement_nom
+      etablissement_nom: eleveInfo.etablissement_nom,
     });
 
     const signalement = await DisciplineModel.createSignalement({
@@ -87,7 +87,7 @@ exports.createSignalement = async (req, res) => {
       date_rendez_vous,
       lieu_rendez_vous,
       notifie_email: notifResult.emailSent,
-      notifie_sms: notifResult.smsSent
+      notifie_sms: notifResult.smsSent,
     });
 
     return response.success(res, signalement, 'Élément enregistré et notification transmise avec succès.', 201);
@@ -148,11 +148,11 @@ exports.getSignalementsEleve = async (req, res) => {
 
     return response.success(res, {
       eleve: dossierComplet.eleve,
-      signalements: signalementsFormatted
+      signalements: signalementsFormatted,
     });
   } catch (err) {
     console.error('Erreur getSignalementsEleve:', err);
-    return response.error(res, 'Erreur lors de la récupération du dossier de l\'élève.');
+    return response.error(res, "Erreur lors de la récupération du dossier de l'élève.");
   }
 };
 
@@ -166,14 +166,17 @@ exports.updateStatut = async (req, res) => {
     }
 
     // Seuls l'établissement concerné et l'auteur du signalement peuvent en changer le statut
-    const { rows } = await db.query('SELECT etablissement_id, auteur_id FROM signalements_discipline WHERE id = $1', [id]);
+    const { rows } = await db.query('SELECT etablissement_id, auteur_id FROM signalements_discipline WHERE id = $1', [
+      id,
+    ]);
     const signalement = rows[0];
     if (!signalement) {
       return response.error(res, 'Signalement introuvable.', 404);
     }
     const isAuteur = signalement.auteur_id === req.user.id;
-    const isEtablissement = req.user.role === 'ADMIN_ETABLISSEMENT'
-      && signalement.etablissement_id === (await getAdminEtablissementId(req.user.id));
+    const isEtablissement =
+      req.user.role === 'ADMIN_ETABLISSEMENT' &&
+      signalement.etablissement_id === (await getAdminEtablissementId(req.user.id));
     if (!isAuteur && !isEtablissement) {
       return response.error(res, 'Accès refusé. Ce signalement ne relève pas de votre établissement.', 403);
     }

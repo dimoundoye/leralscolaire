@@ -21,7 +21,8 @@ const profPortalController = {
   async updateProfile(req, res) {
     const { nom, prenom, telephone, photo_url, matiere_principale } = req.body;
     try {
-      await db.query(`
+      await db.query(
+        `
         INSERT INTO professeurs (id, nom, prenom, telephone, photo_url, matiere_principale)
         VALUES ($1, $2, $3, $4, $5, $6)
         ON CONFLICT (id) DO UPDATE SET 
@@ -30,7 +31,9 @@ const profPortalController = {
           telephone = EXCLUDED.telephone,
           photo_url = EXCLUDED.photo_url, 
           matiere_principale = EXCLUDED.matiere_principale
-      `, [req.user.id, nom, prenom, telephone, photo_url || null, matiere_principale]);
+      `,
+        [req.user.id, nom, prenom, telephone, photo_url || null, matiere_principale]
+      );
 
       const updated = await ProfModel.findProfById(req.user.id);
       return res.json(updated);
@@ -59,7 +62,7 @@ const profPortalController = {
       return res.json({ message: accept ? 'Invitation acceptée.' : 'Invitation refusée.', result });
     } catch (err) {
       console.error(err);
-      return response.error(res, 'Erreur lors de la réponse à l\'invitation.', 500);
+      return response.error(res, "Erreur lors de la réponse à l'invitation.", 500);
     }
   },
 
@@ -100,7 +103,7 @@ const profPortalController = {
       return res.json(schedule);
     } catch (err) {
       console.error(err);
-      return response.error(res, 'Erreur lors de la récupération de l\'emploi du temps.', 500);
+      return response.error(res, "Erreur lors de la récupération de l'emploi du temps.", 500);
     }
   },
 
@@ -109,9 +112,9 @@ const profPortalController = {
     try {
       // Vérifier que le prof enseigne dans cette classe
       const classes = await ProfModel.getTeacherClasses(req.user.id);
-      const isAssigned = classes.some(c => c.classe_id === classeId);
+      const isAssigned = classes.some((c) => c.classe_id === classeId);
       if (!isAssigned) {
-        return response.error(res, 'Accès refusé. Vous n\'enseignez pas dans cette classe.', 403);
+        return response.error(res, "Accès refusé. Vous n'enseignez pas dans cette classe.", 403);
       }
 
       const students = await ProfModel.getClassStudentsForTeacher(classeId);
@@ -130,16 +133,16 @@ const profPortalController = {
     try {
       // Vérifier affectation — on vérifie juste que le prof enseigne dans cette classe
       const classes = await ProfModel.getTeacherClasses(req.user.id);
-      const isAssigned = classes.some(c => c.classe_id === classeId);
+      const isAssigned = classes.some((c) => c.classe_id === classeId);
       if (!isAssigned) {
-        return response.error(res, 'Accès refusé. Vous n\'enseignez pas dans cette classe.', 403);
+        return response.error(res, "Accès refusé. Vous n'enseignez pas dans cette classe.", 403);
       }
 
       // Tous les élèves de l'appel doivent être inscrits dans la classe
       if (!Array.isArray(roster)) {
-        return response.error(res, 'Liste d\'appel invalide.', 400);
+        return response.error(res, "Liste d'appel invalide.", 400);
       }
-      const eleveIds = [...new Set(roster.map(item => item.eleve_id))];
+      const eleveIds = [...new Set(roster.map((item) => item.eleve_id))];
       const { rows: inscrits } = await db.query(
         'SELECT COUNT(DISTINCT eleve_id)::int AS total FROM inscription_classes WHERE classe_id = $1 AND eleve_id = ANY($2::uuid[])',
         [classeId, eleveIds]
@@ -166,14 +169,14 @@ const profPortalController = {
               `INSERT INTO absences (eleve_id, date_absence, justifiee, type_presence, duree_retard, matiere_id, classe_id, professeur_id, motif)
                VALUES ($1, $2, FALSE, $3, $4, $5, $6, $7, $8)`,
               [
-                item.eleve_id, 
-                date, 
-                item.type_presence, 
-                item.type_presence === 'RETARD' ? (item.duree_retard || 0) : 0,
-                matiere_id, 
-                classeId, 
-                req.user.id, 
-                item.motif || null
+                item.eleve_id,
+                date,
+                item.type_presence,
+                item.type_presence === 'RETARD' ? item.duree_retard || 0 : 0,
+                matiere_id,
+                classeId,
+                req.user.id,
+                item.motif || null,
               ]
             );
           }
@@ -189,7 +192,7 @@ const profPortalController = {
       }
     } catch (err) {
       console.error(err);
-      return response.error(res, 'Erreur lors de l\'enregistrement de l\'appel.', 500);
+      return response.error(res, "Erreur lors de l'enregistrement de l'appel.", 500);
     }
   },
 
@@ -209,7 +212,7 @@ const profPortalController = {
       return res.json(rows);
     } catch (err) {
       console.error(err);
-      return response.error(res, 'Erreur lors de la récupération de l\'historique d\'assiduité.', 500);
+      return response.error(res, "Erreur lors de la récupération de l'historique d'assiduité.", 500);
     }
   },
 
@@ -236,7 +239,7 @@ const profPortalController = {
       );
 
       // Get all student IDs in this class
-      const studentIds = students.map(s => s.id);
+      const studentIds = students.map((s) => s.id);
       if (studentIds.length === 0) return res.json({ students: [], grades: [] });
 
       // Fetch notes: match on semestre OR trimestre (both are used in the codebase)
@@ -270,17 +273,17 @@ const profPortalController = {
     try {
       // 1. Vérifier affectation
       const classes = await ProfModel.getTeacherClasses(req.user.id);
-      const isAssigned = classes.some(c => c.classe_id === classe_id && c.matiere_id === matiere_id);
+      const isAssigned = classes.some((c) => c.classe_id === classe_id && c.matiere_id === matiere_id);
       if (!isAssigned) {
-        return response.error(res, 'Accès refusé. Vous n\'enseignez pas cette matière dans cette classe.', 403);
+        return response.error(res, "Accès refusé. Vous n'enseignez pas cette matière dans cette classe.", 403);
       }
 
-      const inscription = await db.query(
-        'SELECT 1 FROM inscription_classes WHERE eleve_id = $1 AND classe_id = $2',
-        [eleve_id, classe_id]
-      );
+      const inscription = await db.query('SELECT 1 FROM inscription_classes WHERE eleve_id = $1 AND classe_id = $2', [
+        eleve_id,
+        classe_id,
+      ]);
       if (inscription.rows.length === 0) {
-        return response.error(res, 'Accès refusé. Cet élève n\'est pas inscrit dans cette classe.', 403);
+        return response.error(res, "Accès refusé. Cet élève n'est pas inscrit dans cette classe.", 403);
       }
 
       // Convert "Trimestre X" / "Semestre X" to integer
@@ -345,26 +348,20 @@ const profPortalController = {
 
         if (!(await isProfOfEleve(req.user.id, oldNote.eleve_id, oldNote.matiere_id))) {
           await client.query('ROLLBACK');
-          return response.error(res, 'Accès refusé. Vous n\'enseignez pas cette matière à cet élève.', 403);
+          return response.error(res, "Accès refusé. Vous n'enseignez pas cette matière à cet élève.", 403);
         }
 
         // Record history log (Audit Trail / pending request)
         await client.query(
           `INSERT INTO historique_notes (note_id, ancienne_valeur, nouvelle_valeur, ancienne_appreciation, nouvelle_appreciation, motif, auteur_id, statut)
            VALUES ($1, $2, $3, $4, $5, $6, $7, 'EN_ATTENTE')`,
-          [
-            noteId, 
-            oldNote.valeur, 
-            note, 
-            oldNote.appreciation, 
-            appreciation || null, 
-            motif,
-            req.user.id
-          ]
+          [noteId, oldNote.valeur, note, oldNote.appreciation, appreciation || null, motif, req.user.id]
         );
 
         await client.query('COMMIT');
-        return res.json({ message: 'Demande de modification soumise avec succès. En attente de validation par l\'établissement.' });
+        return res.json({
+          message: "Demande de modification soumise avec succès. En attente de validation par l'établissement.",
+        });
       } catch (err) {
         await client.query('ROLLBACK');
         throw err;
@@ -433,7 +430,7 @@ const profPortalController = {
     try {
       const PDFDocument = require('pdfkit');
       const slots = await ProfModel.getConsolidatedSchedule(req.user.id);
-      
+
       const doc = new PDFDocument({ margin: 50, size: 'A4' });
       const fileName = `emploi_du_temps_consolide.pdf`;
 
@@ -443,55 +440,66 @@ const profPortalController = {
 
       doc.fillColor('#1e3a8a').fontSize(22).font('Helvetica-Bold').text('LeralScolaire', { align: 'center' });
       doc.moveDown(0.2);
-      doc.fillColor('#4b5563').fontSize(14).font('Helvetica').text('Emploi du Temps Consolidé Enseignant', { align: 'center' });
+      doc
+        .fillColor('#4b5563')
+        .fontSize(14)
+        .font('Helvetica')
+        .text('Emploi du Temps Consolidé Enseignant', { align: 'center' });
       doc.moveDown(0.5);
-      
+
       const { rows: profInfo } = await db.query(
         `SELECT nom, prenom, email, telephone FROM professeurs p JOIN users u ON p.id = u.id WHERE p.id = $1`,
         [req.user.id]
       );
       if (profInfo.length > 0) {
-        doc.fillColor('#111827').fontSize(11).font('Helvetica-Bold').text(`Enseignant : ${profInfo[0].prenom} ${profInfo[0].nom}`);
+        doc
+          .fillColor('#111827')
+          .fontSize(11)
+          .font('Helvetica-Bold')
+          .text(`Enseignant : ${profInfo[0].prenom} ${profInfo[0].nom}`);
         doc.font('Helvetica').text(`Email : ${profInfo[0].email} | Téléphone : ${profInfo[0].telephone || 'N/A'}`);
       }
-      
+
       doc.moveDown(1.5);
       doc.strokeColor('#e5e7eb').lineWidth(1).moveTo(50, doc.y).lineTo(545, doc.y).stroke();
       doc.moveDown(1);
 
       const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
-      
-      days.forEach(day => {
-        const daySlots = slots.filter(s => s.jour_semaine === day)
+
+      days.forEach((day) => {
+        const daySlots = slots
+          .filter((s) => s.jour_semaine === day)
           .sort((a, b) => a.heure_debut.localeCompare(b.heure_debut));
-          
+
         doc.fillColor('#1e40af').fontSize(13).font('Helvetica-Bold').text(day.toUpperCase());
         doc.moveDown(0.3);
-        
+
         if (daySlots.length === 0) {
           doc.fillColor('#9ca3af').fontSize(10).font('Helvetica-Oblique').text('Aucun cours planifié ce jour.');
           doc.moveDown(1);
         } else {
-          daySlots.forEach(s => {
+          daySlots.forEach((s) => {
             const start = s.heure_debut.slice(0, 5);
             const end = s.heure_fin.slice(0, 5);
-            doc.fillColor('#111827').fontSize(11).font('Helvetica-Bold').text(
-              `${start} - ${end}   |   ${s.matiere_nom} (${s.classe_nom})`,
-              { indent: 15 }
-            );
-            doc.fillColor('#4b5563').fontSize(9.5).font('Helvetica').text(
-              `Établissement : ${s.etablissement_nom}   |   Salle : ${s.salle || 'N/A'}`,
-              { indent: 15 }
-            );
+            doc
+              .fillColor('#111827')
+              .fontSize(11)
+              .font('Helvetica-Bold')
+              .text(`${start} - ${end}   |   ${s.matiere_nom} (${s.classe_nom})`, { indent: 15 });
+            doc
+              .fillColor('#4b5563')
+              .fontSize(9.5)
+              .font('Helvetica')
+              .text(`Établissement : ${s.etablissement_nom}   |   Salle : ${s.salle || 'N/A'}`, { indent: 15 });
             doc.moveDown(0.4);
           });
           doc.moveDown(0.6);
         }
-        
+
         doc.strokeColor('#f3f4f6').moveTo(50, doc.y).lineTo(545, doc.y).stroke();
         doc.moveDown(0.8);
       });
-      
+
       doc.end();
     } catch (err) {
       console.error(err);
@@ -503,15 +511,15 @@ const profPortalController = {
     try {
       const { profId } = req.params;
       const slots = await ProfModel.getConsolidatedSchedule(profId);
-      
+
       const dayOffsets = {
-        'Lundi': '20260720',
-        'Mardi': '20260721',
-        'Mercredi': '20260722',
-        'Jeudi': '20260723',
-        'Vendredi': '20260724',
-        'Samedi': '20260725',
-        'Dimanche': '20260726'
+        Lundi: '20260720',
+        Mardi: '20260721',
+        Mercredi: '20260722',
+        Jeudi: '20260723',
+        Vendredi: '20260724',
+        Samedi: '20260725',
+        Dimanche: '20260726',
       };
 
       let ics = [
@@ -520,14 +528,14 @@ const profPortalController = {
         'PRODID:-//LeralScolaire//Timetable Feed//FR',
         'CALSCALE:GREGORIAN',
         'METHOD:PUBLISH',
-        'X-WR-CALNAME:LeralScolaire - Emploi du temps consolidé'
+        'X-WR-CALNAME:LeralScolaire - Emploi du temps consolidé',
       ];
 
-      slots.forEach(s => {
+      slots.forEach((s) => {
         const dateStr = dayOffsets[s.jour_semaine] || '20260720';
         const startStr = s.heure_debut.replace(/:/g, '').slice(0, 6);
         const endStr = s.heure_fin.replace(/:/g, '').slice(0, 6);
-        
+
         ics.push('BEGIN:VEVENT');
         ics.push(`UID:slot-${s.id}@leralscolaire.sn`);
         ics.push(`DTSTAMP:20260716T120000Z`);
@@ -547,7 +555,7 @@ const profPortalController = {
       return res.send(ics.join('\r\n'));
     } catch (err) {
       console.error(err);
-      res.status(500).json({ message: 'Erreur lors de la génération de l\'agenda.' });
+      res.status(500).json({ message: "Erreur lors de la génération de l'agenda." });
     }
   },
 
@@ -584,11 +592,11 @@ const profPortalController = {
         return res.json({
           meta: { classe_nom, matiere_nom, etablissement_nom, criticalThreshold },
           stats: { classAvg: 0, maxGrade: 0, minGrade: 0, criticalCount: 0, distribution: {} },
-          students: []
+          students: [],
         });
       }
 
-      const studentIds = students.map(s => s.id);
+      const studentIds = students.map((s) => s.id);
 
       const { rows: grades } = await db.query(
         `SELECT id, eleve_id, valeur as note, type_note, semestre, trimestre
@@ -599,9 +607,9 @@ const profPortalController = {
 
       const calculateAverage = (studentGrades) => {
         if (studentGrades.length === 0) return null;
-        
-        const devoirs = studentGrades.filter(g => g.type_note === 'DEVOIR');
-        const examens = studentGrades.filter(g => g.type_note !== 'DEVOIR');
+
+        const devoirs = studentGrades.filter((g) => g.type_note === 'DEVOIR');
+        const examens = studentGrades.filter((g) => g.type_note !== 'DEVOIR');
 
         let devoirsAvg = 0;
         if (devoirs.length > 0) {
@@ -619,13 +627,13 @@ const profPortalController = {
         return devoirs.length > 0 ? devoirsAvg : null;
       };
 
-      const studentsData = students.map(s => {
-        const sGrades = grades.filter(g => g.eleve_id === s.id);
-        
-        const s1Grades = sGrades.filter(g => g.semestre === 1 || g.trimestre === 1);
+      const studentsData = students.map((s) => {
+        const sGrades = grades.filter((g) => g.eleve_id === s.id);
+
+        const s1Grades = sGrades.filter((g) => g.semestre === 1 || g.trimestre === 1);
         const s1Avg = calculateAverage(s1Grades);
 
-        const s2Grades = sGrades.filter(g => g.semestre === 2 || g.trimestre === 2);
+        const s2Grades = sGrades.filter((g) => g.semestre === 2 || g.trimestre === 2);
         const s2Avg = calculateAverage(s2Grades);
 
         let currentAvg = null;
@@ -644,31 +652,32 @@ const profPortalController = {
           s2Avg: s2Avg !== null ? parseFloat(s2Avg.toFixed(2)) : null,
           currentAvg: currentAvg !== null ? parseFloat(currentAvg.toFixed(2)) : null,
           trend,
-          isCritical: currentAvg !== null && currentAvg < criticalThreshold
+          isCritical: currentAvg !== null && currentAvg < criticalThreshold,
         };
       });
 
-      const populatedAverages = studentsData.map(s => s.currentAvg).filter(a => a !== null);
-      const classAvg = populatedAverages.length > 0 
-        ? parseFloat((populatedAverages.reduce((sum, a) => sum + a, 0) / populatedAverages.length).toFixed(2))
-        : 0;
+      const populatedAverages = studentsData.map((s) => s.currentAvg).filter((a) => a !== null);
+      const classAvg =
+        populatedAverages.length > 0
+          ? parseFloat((populatedAverages.reduce((sum, a) => sum + a, 0) / populatedAverages.length).toFixed(2))
+          : 0;
       const maxGrade = populatedAverages.length > 0 ? Math.max(...populatedAverages) : 0;
       const minGrade = populatedAverages.length > 0 ? Math.min(...populatedAverages) : 0;
-      const criticalCount = studentsData.filter(s => s.isCritical).length;
+      const criticalCount = studentsData.filter((s) => s.isCritical).length;
 
       const distribution = {
-        '0-5': studentsData.filter(s => s.currentAvg !== null && s.currentAvg < 5).length,
-        '5-10': studentsData.filter(s => s.currentAvg !== null && s.currentAvg >= 5 && s.currentAvg < 10).length,
-        '10-12': studentsData.filter(s => s.currentAvg !== null && s.currentAvg >= 10 && s.currentAvg < 12).length,
-        '12-14': studentsData.filter(s => s.currentAvg !== null && s.currentAvg >= 12 && s.currentAvg < 14).length,
-        '14-16': studentsData.filter(s => s.currentAvg !== null && s.currentAvg >= 14 && s.currentAvg < 16).length,
-        '16-20': studentsData.filter(s => s.currentAvg !== null && s.currentAvg >= 16).length,
+        '0-5': studentsData.filter((s) => s.currentAvg !== null && s.currentAvg < 5).length,
+        '5-10': studentsData.filter((s) => s.currentAvg !== null && s.currentAvg >= 5 && s.currentAvg < 10).length,
+        '10-12': studentsData.filter((s) => s.currentAvg !== null && s.currentAvg >= 10 && s.currentAvg < 12).length,
+        '12-14': studentsData.filter((s) => s.currentAvg !== null && s.currentAvg >= 12 && s.currentAvg < 14).length,
+        '14-16': studentsData.filter((s) => s.currentAvg !== null && s.currentAvg >= 14 && s.currentAvg < 16).length,
+        '16-20': studentsData.filter((s) => s.currentAvg !== null && s.currentAvg >= 16).length,
       };
 
       return res.json({
         meta: { classe_nom, matiere_nom, etablissement_nom, criticalThreshold },
         stats: { classAvg, maxGrade, minGrade, criticalCount, distribution },
-        students: studentsData
+        students: studentsData,
       });
     } catch (err) {
       console.error(err);
@@ -714,12 +723,14 @@ const profPortalController = {
          RETURNING *`,
         [etablissement_id, classe_id, matiere_id, type_examen, date_examen, salle || null, req.user.id]
       );
-      return res.status(201).json({ message: 'Proposition soumise à la validation de l\'administrateur.', proposition: rows[0] });
+      return res
+        .status(201)
+        .json({ message: "Proposition soumise à la validation de l'administrateur.", proposition: rows[0] });
     } catch (err) {
       console.error(err);
       return response.error(res, 'Erreur lors de la soumission de la proposition.', 500);
     }
-  }
+  },
 };
 
 module.exports = profPortalController;

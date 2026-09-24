@@ -39,12 +39,7 @@ const ROUTES_BY_ROLE = {
     '/api/discipline/professeur',
     '/api/messages/inbox',
   ],
-  ELEVE: [
-    '/api/eleve-portal/profile',
-    '/api/eleve-portal/portfolio',
-    '/api/cahier-texte/eleve',
-    '/api/messages/inbox',
-  ],
+  ELEVE: ['/api/eleve-portal/profile', '/api/eleve-portal/portfolio', '/api/cahier-texte/eleve', '/api/messages/inbox'],
   OFFICE_BAC: [
     '/api/office-bac/stats',
     '/api/office-bac/carte-regionale',
@@ -69,8 +64,7 @@ after(async () => {
   await db.pool.end();
 });
 
-const get = (path, token) =>
-  fetch(baseUrl + path, token ? { headers: { Authorization: `Bearer ${token}` } } : {});
+const get = (path, token) => fetch(baseUrl + path, token ? { headers: { Authorization: `Bearer ${token}` } } : {});
 
 test('GET /api/health répond 200', async () => {
   const res = await get('/api/health');
@@ -85,13 +79,16 @@ test('les routes protégées refusent les requêtes sans jeton (401)', async () 
   }
 });
 
-test('un jeton signé avec l\'ancien secret par défaut est refusé (401)', async () => {
-  const forged = jwt.sign({ id: '00000000-0000-0000-0000-000000000000', role: 'OFFICE_BAC' }, 'votre_secret_tres_prive');
+test("un jeton signé avec l'ancien secret par défaut est refusé (401)", async () => {
+  const forged = jwt.sign(
+    { id: '00000000-0000-0000-0000-000000000000', role: 'OFFICE_BAC' },
+    'votre_secret_tres_prive'
+  );
   const res = await get('/api/office-bac/stats', forged);
   assert.strictEqual(res.status, 401);
 });
 
-test('CORS : une origine inconnue n\'est pas autorisée', async () => {
+test("CORS : une origine inconnue n'est pas autorisée", async () => {
   const res = await fetch(baseUrl + '/api/health', { headers: { Origin: 'https://site-malveillant.example' } });
   assert.strictEqual(res.headers.get('access-control-allow-origin'), null);
 });
@@ -102,7 +99,7 @@ test('CORS : FRONTEND_URL est autorisée', { skip: !process.env.FRONTEND_URL }, 
   assert.strictEqual(res.headers.get('access-control-allow-origin'), origin);
 });
 
-test('login avec de mauvais identifiants ne provoque pas d\'erreur serveur', async () => {
+test("login avec de mauvais identifiants ne provoque pas d'erreur serveur", async () => {
   const res = await fetch(baseUrl + '/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

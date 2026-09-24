@@ -2,15 +2,22 @@ const db = require('../config/db');
 
 const EtablissementModel = {
   async getProfileByAdminId(adminId) {
-    const { rows } = await db.query(
-      'SELECT * FROM etablissements WHERE admin_id = $1',
-      [adminId]
-    );
+    const { rows } = await db.query('SELECT * FROM etablissements WHERE admin_id = $1', [adminId]);
     return rows[0];
   },
 
-  async updateProfileByAdminId(adminId, nom, region, ville, codeEtablissement, signature_url, cachet_url, nomDirecteur) {
-    let query = 'UPDATE etablissements SET nom = $1, region = $2, ville = $3, code_etablissement = $4, nom_directeur = $5';
+  async updateProfileByAdminId(
+    adminId,
+    nom,
+    region,
+    ville,
+    codeEtablissement,
+    signature_url,
+    cachet_url,
+    nomDirecteur
+  ) {
+    let query =
+      'UPDATE etablissements SET nom = $1, region = $2, ville = $3, code_etablissement = $4, nom_directeur = $5';
     const params = [nom, region, ville, codeEtablissement, nomDirecteur];
     let count = 6;
 
@@ -38,7 +45,7 @@ const EtablissementModel = {
       [`%${query}%`]
     );
     return rows;
-  }
+  },
 };
 
 module.exports = EtablissementModel;

@@ -1,7 +1,14 @@
 import React from 'react';
 import {
-  ShieldCheck, GraduationCap, BookOpen, Calendar, Sparkles, BrainCircuit,
-  CheckCircle2, AlertCircle, Activity
+  ShieldCheck,
+  GraduationCap,
+  BookOpen,
+  Calendar,
+  Sparkles,
+  BrainCircuit,
+  CheckCircle2,
+  AlertCircle,
+  Activity,
 } from 'lucide-react';
 
 const StudentOverviewTab = ({
@@ -12,7 +19,7 @@ const StudentOverviewTab = ({
   navigate,
   generateCalendarData,
   absences,
-  getAbsenceColorClass
+  getAbsenceColorClass,
 }) => {
   const renderAbsenceCalendar = () => {
     const calendarData = generateCalendarData();
@@ -40,19 +47,19 @@ const StudentOverviewTab = ({
     let lastIndex = -1;
 
     weeks.forEach((week, wIdx) => {
-      const validDays = week.filter(d => d.date);
+      const validDays = week.filter((d) => d.date);
       if (validDays.length === 0) return;
 
       // Déterminer le mois dominant dans cette semaine
       const monthCounts = {};
-      validDays.forEach(d => {
+      validDays.forEach((d) => {
         const m = new Date(d.date).getMonth();
         monthCounts[m] = (monthCounts[m] || 0) + 1;
       });
 
       let dominantMonth = -1;
       let maxCount = 0;
-      Object.keys(monthCounts).forEach(mStr => {
+      Object.keys(monthCounts).forEach((mStr) => {
         const m = Number(mStr);
         if (monthCounts[m] > maxCount) {
           maxCount = monthCounts[m];
@@ -68,7 +75,11 @@ const StudentOverviewTab = ({
       }
     });
 
-    const totalAbsenceHours = absences.reduce((sum, a) => sum + (Number(a.heures_absent) || (a.type_presence === 'ABSENCE' || a.type_presence === 'ABSENT' ? 2 : 0)), 0);
+    const totalAbsenceHours = absences.reduce(
+      (sum, a) =>
+        sum + (Number(a.heures_absent) || (a.type_presence === 'ABSENCE' || a.type_presence === 'ABSENT' ? 2 : 0)),
+      0
+    );
 
     return (
       <div className="absence-heatmap-card">
@@ -88,11 +99,7 @@ const StudentOverviewTab = ({
             <div className="heatmap-weeks-columns">
               <div className="month-headers">
                 {monthHeaders.map((header, idx) => (
-                  <span 
-                    key={idx} 
-                    className="month-label" 
-                    style={{ left: `${header.index * 13}px` }}
-                  >
+                  <span key={idx} className="month-label" style={{ left: `${header.index * 13}px` }}>
                     {header.label}
                   </span>
                 ))}
@@ -108,27 +115,30 @@ const StudentOverviewTab = ({
                       const isWeekend = day.dayOfWeek === 0 || day.dayOfWeek === 6;
 
                       return (
-                        <div 
-                          key={dIdx} 
+                        <div
+                          key={dIdx}
                           className={`heatmap-cell ${day.date ? getAbsenceColorClass(day.hours, day.type) : 'cell-empty'}`}
                         >
                           {day.date && (
                             <span className="cell-tooltip">
                               <span className="tooltip-date">
-                                {new Date(day.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                                {new Date(day.date).toLocaleDateString('fr-FR', {
+                                  weekday: 'short',
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                })}
                               </span>
                               <span className="tooltip-status">
-                                {isAbsent ? (
-                                  `❌ Absence${day.hours > 0 ? ` de ${day.hours}h` : ''} en ${day.subject || 'cours'}${day.justified ? ' (Justifiée)' : ' (Non justifiée)'}${day.motif ? ` - ${day.motif}` : ''}`
-                                ) : isRetard ? (
-                                  `⏱️ Retard${day.delay > 0 ? ` de ${day.delay} min` : ''} en ${day.subject || 'cours'}${day.motif ? ` (${day.motif})` : ''}`
-                                ) : isFuture ? (
-                                  '📅 Date future'
-                                ) : isWeekend ? (
-                                  '🏖️ Week-end'
-                                ) : (
-                                  '✅ Présence complète'
-                                )}
+                                {isAbsent
+                                  ? `❌ Absence${day.hours > 0 ? ` de ${day.hours}h` : ''} en ${day.subject || 'cours'}${day.justified ? ' (Justifiée)' : ' (Non justifiée)'}${day.motif ? ` - ${day.motif}` : ''}`
+                                  : isRetard
+                                    ? `⏱️ Retard${day.delay > 0 ? ` de ${day.delay} min` : ''} en ${day.subject || 'cours'}${day.motif ? ` (${day.motif})` : ''}`
+                                    : isFuture
+                                      ? '📅 Date future'
+                                      : isWeekend
+                                        ? '🏖️ Week-end'
+                                        : '✅ Présence complète'}
                               </span>
                             </span>
                           )}
@@ -161,17 +171,25 @@ const StudentOverviewTab = ({
   return (
     <div className="tab-pane">
       <div className="overview-container">
-        
         {/* Hero Welcome Banner */}
         <div className="dashboard-card welcome-card">
           <div className="welcome-info">
             <h2>Bienvenue sur ton livret, {profile?.prenom || 'élève'} !</h2>
             <p>Retrouve tes notes, gère ton portfolio d'activités et prépare ton orientation pour le Baccalauréat.</p>
             <div className="welcome-meta-row">
-              <span className="meta-tag"><ShieldCheck size={14} /> ID unique : <strong>{profile?.identifiant_national || '---'}</strong></span>
-              <span className="meta-tag"><GraduationCap size={14} /> Établissement : <strong>{profile?.etablissement_nom || '---'}</strong></span>
-              <span className="meta-tag"><BookOpen size={14} /> Classe : <strong>{profile?.classe_nom || '---'}</strong></span>
-              <span className="meta-tag meta-tag-annee"><Calendar size={14} /> Année Scolaire : <strong>{profile?.classe_annee_scolaire || profile?.annee_scolaire || '2026-2027'}</strong></span>
+              <span className="meta-tag">
+                <ShieldCheck size={14} /> ID unique : <strong>{profile?.identifiant_national || '---'}</strong>
+              </span>
+              <span className="meta-tag">
+                <GraduationCap size={14} /> Établissement : <strong>{profile?.etablissement_nom || '---'}</strong>
+              </span>
+              <span className="meta-tag">
+                <BookOpen size={14} /> Classe : <strong>{profile?.classe_nom || '---'}</strong>
+              </span>
+              <span className="meta-tag meta-tag-annee">
+                <Calendar size={14} /> Année Scolaire :{' '}
+                <strong>{profile?.classe_annee_scolaire || profile?.annee_scolaire || '2026-2027'}</strong>
+              </span>
             </div>
           </div>
           <div className="welcome-decor-badge">
@@ -182,7 +200,6 @@ const StudentOverviewTab = ({
 
         {/* 2-Column Dashboard Grid */}
         <div className="overview-grid">
-          
           {/* Left Column (Heatmap & AI Advisor) */}
           <div className="overview-left-col">
             {renderAbsenceCalendar()}
@@ -198,8 +215,10 @@ const StudentOverviewTab = ({
                 </div>
               </div>
               <p className="ai-advice">
-                {currentPeriod && currentPeriod.moyenne_generale >= 12 
-                  ? "Félicitations pour votre moyenne de " + currentPeriod.moyenne_generale + "/20 ! Continuez ainsi. Votre profil est idéal pour postuler aux filières sélectives d'excellence post-BAC."
+                {currentPeriod && currentPeriod.moyenne_generale >= 12
+                  ? 'Félicitations pour votre moyenne de ' +
+                    currentPeriod.moyenne_generale +
+                    "/20 ! Continuez ainsi. Votre profil est idéal pour postuler aux filières sélectives d'excellence post-BAC."
                   : "Votre moyenne générale est encourageante. Pour atteindre vos objectifs, concentrez-vous sur les matières à fort coefficient et essayez d'anticiper vos notes de devoirs avec notre simulateur."}
               </p>
               <button className="secondary-btn w-full" onClick={() => navigate('/student/dashboard/ai-assistant')}>
@@ -224,11 +243,17 @@ const StudentOverviewTab = ({
               </div>
               <div className="avg-status-badge">
                 {currentPeriod && parseFloat(currentPeriod.moyenne_generale) >= 12 ? (
-                  <span className="badge-success"><CheckCircle2 size={13} /> Satisfaisant</span>
+                  <span className="badge-success">
+                    <CheckCircle2 size={13} /> Satisfaisant
+                  </span>
                 ) : currentPeriod && parseFloat(currentPeriod.moyenne_generale) >= 10 ? (
-                  <span className="badge-warning"><AlertCircle size={13} /> Encouragement</span>
+                  <span className="badge-warning">
+                    <AlertCircle size={13} /> Encouragement
+                  </span>
                 ) : (
-                  <span className="badge-neutral"><Activity size={13} /> À consolider</span>
+                  <span className="badge-neutral">
+                    <Activity size={13} /> À consolider
+                  </span>
                 )}
               </div>
               <p className="card-sub-text mt-3">
@@ -247,12 +272,20 @@ const StudentOverviewTab = ({
               </div>
               {schedule?.exams?.length > 0 ? (
                 <div className="mini-list">
-                  {schedule.exams.slice(0, 3).map(ex => (
+                  {schedule.exams.slice(0, 3).map((ex) => (
                     <div key={ex.id} className="mini-list-item">
                       <div className="badge av-red">{ex.type_examen}</div>
                       <div className="item-details">
                         <h4>{ex.matiere_nom}</h4>
-                        <p>{new Date(ex.date_examen).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'short' })} à {new Date(ex.date_examen).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</p>
+                        <p>
+                          {new Date(ex.date_examen).toLocaleDateString('fr-FR', {
+                            weekday: 'long',
+                            day: 'numeric',
+                            month: 'short',
+                          })}{' '}
+                          à{' '}
+                          {new Date(ex.date_examen).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
                       </div>
                       <div className="item-meta">Salle {ex.salle || 'N/A'}</div>
                     </div>
@@ -266,7 +299,6 @@ const StudentOverviewTab = ({
               )}
             </div>
           </div>
-
         </div>
       </div>
     </div>

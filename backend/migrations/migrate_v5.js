@@ -12,7 +12,7 @@ async function migrate() {
       ADD COLUMN IF NOT EXISTS telephone VARCHAR(20),
       ADD COLUMN IF NOT EXISTS coordonnees_parent TEXT;
     `);
-    console.log('✅ Colonnes d\'identité ajoutées à la table eleves');
+    console.log("✅ Colonnes d'identité ajoutées à la table eleves");
 
     // 2. Ajouter une colonne pour le mot de passe provisoire dans users (pour l'export initial)
     await db.query(`

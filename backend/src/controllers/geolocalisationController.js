@@ -50,10 +50,10 @@ const geolocalisationController = {
          RETURNING latitude, longitude, rayon_emargement_metres`,
         [position.latitude, position.longitude, parseRayon(req.body.rayon_metres, 200), etablissementId]
       );
-      return res.json({ message: 'Position de l\'établissement enregistrée.', position: rows[0] });
+      return res.json({ message: "Position de l'établissement enregistrée.", position: rows[0] });
     } catch (err) {
       console.error('Erreur updatePosition géolocalisation:', err);
-      return response.error(res, 'Erreur lors de l\'enregistrement de la position.', 500);
+      return response.error(res, "Erreur lors de l'enregistrement de la position.", 500);
     }
   },
 
@@ -62,7 +62,9 @@ const geolocalisationController = {
       const etablissementId = await getAdminEtablissementId(req.user.id);
       if (!etablissementId) return response.error(res, 'Établissement non trouvé.', 404);
 
-      const nom = String(req.body.nom || '').trim().slice(0, 150);
+      const nom = String(req.body.nom || '')
+        .trim()
+        .slice(0, 150);
       const position = parsePosition(req.body.latitude, req.body.longitude);
       if (!nom || !position) return response.error(res, 'Le nom et la position GPS du terrain sont obligatoires.', 400);
 
@@ -72,22 +74,22 @@ const geolocalisationController = {
          RETURNING id, nom, latitude, longitude, rayon_metres`,
         [etablissementId, nom, position.latitude, position.longitude, parseRayon(req.body.rayon_metres, 300)]
       );
-      return res.status(201).json({ message: 'Terrain d\'EPS ajouté.', terrain: rows[0] });
+      return res.status(201).json({ message: "Terrain d'EPS ajouté.", terrain: rows[0] });
     } catch (err) {
       console.error('Erreur createTerrain:', err);
-      return response.error(res, 'Erreur lors de l\'ajout du terrain.', 500);
+      return response.error(res, "Erreur lors de l'ajout du terrain.", 500);
     }
   },
 
   async deleteTerrain(req, res) {
     try {
       const etablissementId = await getAdminEtablissementId(req.user.id);
-      const { rowCount } = await db.query(
-        'DELETE FROM terrains_eps WHERE id = $1 AND etablissement_id = $2',
-        [req.params.id, etablissementId]
-      );
+      const { rowCount } = await db.query('DELETE FROM terrains_eps WHERE id = $1 AND etablissement_id = $2', [
+        req.params.id,
+        etablissementId,
+      ]);
       if (rowCount === 0) return response.error(res, 'Terrain introuvable dans votre établissement.', 404);
-      return res.json({ message: 'Terrain d\'EPS supprimé.' });
+      return res.json({ message: "Terrain d'EPS supprimé." });
     } catch (err) {
       console.error('Erreur deleteTerrain:', err);
       return response.error(res, 'Erreur lors de la suppression du terrain.', 500);

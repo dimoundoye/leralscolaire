@@ -38,4 +38,3 @@ router.delete('/assignments/:id', auth, profController.deleteAssignment);
 router.put('/:id/permission', auth, profController.toggleMessagePermission);
 
 module.exports = router;
-

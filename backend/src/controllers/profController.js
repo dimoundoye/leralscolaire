@@ -54,20 +54,22 @@ const profController = {
         await client.query('COMMIT');
 
         // Envoi automatique de l'email avec identifiant et mot de passe provisoire (non-bloquant)
-        emailService.sendProfesseurWelcome({
-          to: email,
-          nom: '',
-          prenom: '',
-          iupProf: identifiant_national,
-          tempPassword: tempPassword,
-          nomEtablissement: etab.nom
-        }).catch(e => console.error('Erreur email professeur:', e.message));
+        emailService
+          .sendProfesseurWelcome({
+            to: email,
+            nom: '',
+            prenom: '',
+            iupProf: identifiant_national,
+            tempPassword: tempPassword,
+            nomEtablissement: etab.nom,
+          })
+          .catch((e) => console.error('Erreur email professeur:', e.message));
 
         return res.status(201).json({
           message: 'Professeur créé avec succès ! Identifiants envoyés par email.',
           id: profId,
           identifiant: identifiant_national,
-          password: tempPassword
+          password: tempPassword,
         });
       } catch (err) {
         await client.query('ROLLBACK');
@@ -96,7 +98,7 @@ const profController = {
         [req.params.id, etablissementId]
       );
       if (cible.length === 0) {
-        return response.error(res, 'Accès refusé. Ce professeur n\'est pas rattaché à votre établissement.', 403);
+        return response.error(res, "Accès refusé. Ce professeur n'est pas rattaché à votre établissement.", 403);
       }
 
       let passwordHash = null;
@@ -151,10 +153,12 @@ const profController = {
       }
 
       await ProfModel.linkProfToEtablissement(professeur_id, etablissementId);
-      return res.json({ message: "Invitation envoyée avec succès ! L'enseignant doit maintenant l'accepter depuis son espace." });
+      return res.json({
+        message: "Invitation envoyée avec succès ! L'enseignant doit maintenant l'accepter depuis son espace.",
+      });
     } catch (err) {
       console.error(err);
-      return response.error(res, 'Erreur lors de l\'envoi de l\'invitation.', 500);
+      return response.error(res, "Erreur lors de l'envoi de l'invitation.", 500);
     }
   },
 
@@ -208,7 +212,7 @@ const profController = {
       return res.status(201).json({ message: 'Affectation créée avec succès !', assignment: rows[0] });
     } catch (err) {
       console.error(err);
-      return response.error(res, 'Erreur lors de la création de l\'affectation.', 500);
+      return response.error(res, "Erreur lors de la création de l'affectation.", 500);
     }
   },
 
@@ -228,7 +232,7 @@ const profController = {
       return res.json({ message: 'Affectation retirée avec succès.' });
     } catch (err) {
       console.error(err);
-      return response.error(res, 'Erreur lors du retrait de l\'affectation.', 500);
+      return response.error(res, "Erreur lors du retrait de l'affectation.", 500);
     }
   },
 
@@ -246,8 +250,7 @@ const profController = {
       console.error(err);
       return response.error(res, 'Erreur lors de la mise à jour de la permission.', 500);
     }
-  }
+  },
 };
-
 
 module.exports = profController;

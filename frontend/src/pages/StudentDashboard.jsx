@@ -1,18 +1,55 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useParams } from 'react-router-dom';
-import { 
-  LayoutDashboard, User, BookOpen, GraduationCap, Calendar, 
-  FileText, Bell, MessageSquare, Plus, Trash2, Award, Printer, 
-  WifiOff, RefreshCw, LogOut, CheckCircle2, ChevronRight, ChevronLeft, Menu, X, Activity, 
-  Percent, BrainCircuit, ShieldAlert, AwardIcon, Phone, Mail, MapPin,
-  HelpCircle, Sparkles, Send, Download, Lock,
-  Clock, CheckCircle, XCircle, AlertCircle, PartyPopper, ShieldCheck,
-  Users, UserCheck, Building2, Paperclip, BookMarked, ClipboardList, Scale
+import {
+  LayoutDashboard,
+  User,
+  BookOpen,
+  GraduationCap,
+  Calendar,
+  FileText,
+  Bell,
+  MessageSquare,
+  Plus,
+  Trash2,
+  Award,
+  Printer,
+  WifiOff,
+  RefreshCw,
+  LogOut,
+  CheckCircle2,
+  ChevronRight,
+  ChevronLeft,
+  Menu,
+  X,
+  Activity,
+  Percent,
+  BrainCircuit,
+  ShieldAlert,
+  AwardIcon,
+  Phone,
+  Mail,
+  MapPin,
+  HelpCircle,
+  Sparkles,
+  Send,
+  Download,
+  Lock,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  PartyPopper,
+  ShieldCheck,
+  Users,
+  UserCheck,
+  Building2,
+  Paperclip,
+  BookMarked,
+  ClipboardList,
+  Scale,
 } from 'lucide-react';
-import { 
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
-} from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import StudentDisciplineView from '../components/eleve/StudentDisciplineView';
 import StudentOverviewTab from '../components/eleve/StudentOverviewTab';
 import StudentProfileTab from '../components/eleve/StudentProfileTab';
@@ -35,13 +72,13 @@ const API_BASE_URL = '/api';
 const normalizeNotesData = (rawNotes) => {
   if (!rawNotes || typeof rawNotes !== 'object') return {};
   const normalized = {};
-  Object.keys(rawNotes).forEach(year => {
+  Object.keys(rawNotes).forEach((year) => {
     normalized[year] = {
       ...rawNotes[year],
-      periodes: {}
+      periodes: {},
     };
     if (rawNotes[year]?.periodes) {
-      Object.keys(rawNotes[year].periodes).forEach(periodKey => {
+      Object.keys(rawNotes[year].periodes).forEach((periodKey) => {
         const cleanKey = periodKey.replace(/Trimestre/gi, 'Semestre');
         normalized[year].periodes[cleanKey] = rawNotes[year].periodes[periodKey];
       });
@@ -88,7 +125,7 @@ const StudentDashboard = () => {
     titre: '',
     description: '',
     annee_scolaire: '2025-2026',
-    date_realisation: new Date().toISOString().split('T')[0]
+    date_realisation: new Date().toISOString().split('T')[0],
   });
   const [isAddingPortfolio, setIsAddingPortfolio] = useState(false);
 
@@ -102,7 +139,10 @@ const StudentDashboard = () => {
 
   // AI Assistant states
   const [aiChat, setAiChat] = useState([
-    { role: 'assistant', text: 'Bonjour ! Je suis votre Assistant Pédagogique IA. Je peux analyser vos notes, vous proposer des méthodes de révision adaptées et vous guider pour votre orientation post-BAC au Sénégal.' }
+    {
+      role: 'assistant',
+      text: 'Bonjour ! Je suis votre Assistant Pédagogique IA. Je peux analyser vos notes, vous proposer des méthodes de révision adaptées et vous guider pour votre orientation post-BAC au Sénégal.',
+    },
   ]);
   const [aiInput, setAiInput] = useState('');
 
@@ -125,7 +165,6 @@ const StudentDashboard = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadingFile, setUploadingFile] = useState(false);
   const chatEndRef = React.useRef(null);
-
 
   // Corner toast (errors / info)
   const [toast, setToast] = useState(null); // { message, type: 'error'|'info' }
@@ -161,11 +200,14 @@ const StudentDashboard = () => {
     if (navigator.onLine && !isOffline) {
       if (forceSync) setSyncing(true);
       try {
-        const headers = { };
+        const headers = {};
 
         // Fetch Profile
         const profRes = await fetch(`${API_BASE_URL}/eleve-portal/profile`, { headers });
-        if (profRes.status === 401) { logout(); return; }
+        if (profRes.status === 401) {
+          logout();
+          return;
+        }
         const profileData = await profRes.json();
         setProfile(profileData);
         localStorage.setItem('cached_profile', JSON.stringify(profileData));
@@ -188,7 +230,7 @@ const StudentDashboard = () => {
         const notesData = normalizeNotesData(rawNotesData);
         setNotes(notesData);
         localStorage.setItem('cached_notes', JSON.stringify(notesData));
-        
+
         // Pick default simulation period
         if (notesData && Object.keys(notesData).length > 0) {
           const latestYear = Object.keys(notesData)[0];
@@ -214,9 +256,7 @@ const StudentDashboard = () => {
         const examRes = await fetch(`${API_BASE_URL}/eleve-portal/exam-results`, { headers });
         const examData = await examRes.json();
         // Support both legacy array format and new { eleve, resultats } format
-        const normalizedExamData = Array.isArray(examData)
-          ? { eleve: null, resultats: examData }
-          : examData;
+        const normalizedExamData = Array.isArray(examData) ? { eleve: null, resultats: examData } : examData;
         setExamResults(normalizedExamData);
         localStorage.setItem('cached_examResults', JSON.stringify(normalizedExamData));
 
@@ -250,7 +290,6 @@ const StudentDashboard = () => {
           const attData = await attRes.json();
           setAttestationHistory(attData);
         }
-
       } catch (err) {
         console.error('Error fetching online data, switching to offline cache:', err);
         loadFromCache();
@@ -267,7 +306,7 @@ const StudentDashboard = () => {
     setProfile(JSON.parse(localStorage.getItem('cached_profile') || 'null'));
     setPortfolio(JSON.parse(localStorage.getItem('cached_portfolio') || '[]'));
     setCvData(JSON.parse(localStorage.getItem('cached_cv') || 'null'));
-    
+
     const rawNotesData = JSON.parse(localStorage.getItem('cached_notes') || '{}');
     const notesData = normalizeNotesData(rawNotesData);
     setNotes(notesData);
@@ -283,7 +322,9 @@ const StudentDashboard = () => {
     setSchedule(JSON.parse(localStorage.getItem('cached_schedule') || '{"timetable":[],"exams":[]}'));
     const cachedExam = JSON.parse(localStorage.getItem('cached_examResults') || 'null');
     setExamResults(cachedExam && !Array.isArray(cachedExam) ? cachedExam : { eleve: null, resultats: [] });
-    setDocuments(JSON.parse(localStorage.getItem('cached_documents') || '{"bulletins":[],"attestationDisponible":true}'));
+    setDocuments(
+      JSON.parse(localStorage.getItem('cached_documents') || '{"bulletins":[],"attestationDisponible":true}')
+    );
     setNotifications(JSON.parse(localStorage.getItem('cached_notifications') || '[]'));
     setMessages(JSON.parse(localStorage.getItem('cached_messages') || '[]'));
     setAbsences(JSON.parse(localStorage.getItem('cached_absences') || '[]'));
@@ -295,15 +336,15 @@ const StudentDashboard = () => {
     // Process offline changes if any (simulated for portfolio additions)
     const storedOffline = JSON.parse(localStorage.getItem('offline_portfolio_adds') || '[]');
     if (storedOffline.length > 0 && navigator.onLine) {
-      const headers = { 
-        'Content-Type': 'application/json'
+      const headers = {
+        'Content-Type': 'application/json',
       };
       for (const item of storedOffline) {
         try {
           await fetch(`${API_BASE_URL}/eleve-portal/portfolio`, {
             method: 'POST',
             headers,
-            body: JSON.stringify(item)
+            body: JSON.stringify(item),
           });
         } catch (e) {
           console.error('Error syncing offline item:', e);
@@ -325,20 +366,21 @@ const StudentDashboard = () => {
     }
   }, [tab]);
 
-
   const logout = () => endSession();
 
   // === MESSAGING FUNCTIONS ===
   const fetchChatChannel = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/messages/channels`, {
-        headers: {}
+        headers: {},
       });
       if (res.ok) {
         const data = await res.json();
         setChatChannelInfo(data);
       }
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const fetchChatHistory = async (target) => {
@@ -353,21 +395,25 @@ const StudentDashboard = () => {
 
       const params = new URLSearchParams({
         type: target.type,
-        target_id: target.target_id
+        target_id: target.target_id,
       });
       if (target.etablissement_id) {
         params.append('etablissement_id', target.etablissement_id);
       }
 
       const res = await fetch(`${API_BASE_URL}/messages/history?${params}`, {
-        headers: {}
+        headers: {},
       });
       if (res.ok) {
         const data = await res.json();
         setChatHistory(data);
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
       }
-    } catch (err) { console.error(err); } finally { setChatLoading(false); }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setChatLoading(false);
+    }
   };
 
   const handleFileUpload = async (e) => {
@@ -385,7 +431,7 @@ const StudentDashboard = () => {
       const res = await fetch(`${API_BASE_URL}/messages/upload`, {
         method: 'POST',
         headers: {},
-        body: formData
+        body: formData,
       });
       if (res.ok) {
         const data = await res.json();
@@ -396,7 +442,7 @@ const StudentDashboard = () => {
       }
     } catch (err) {
       console.error(err);
-      showToast('Erreur lors de l\'envoi du fichier.', 'error');
+      showToast("Erreur lors de l'envoi du fichier.", 'error');
     } finally {
       setUploadingFile(false);
     }
@@ -410,7 +456,7 @@ const StudentDashboard = () => {
       sujet: 'Message élève',
       contenu: chatInput || (selectedFile ? `[Fichier joint: ${selectedFile.fichier_nom}]` : ''),
       fichier_url: selectedFile?.fichier_url || null,
-      fichier_nom: selectedFile?.fichier_nom || null
+      fichier_nom: selectedFile?.fichier_nom || null,
     };
 
     if (activeChatTarget.type === 'ADMIN') {
@@ -431,7 +477,7 @@ const StudentDashboard = () => {
       const res = await fetch(`${API_BASE_URL}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
         setChatInput('');
@@ -441,16 +487,16 @@ const StudentDashboard = () => {
         const errData = await res.json();
         showToast(errData.message || "Erreur lors de l'envoi.", 'error');
       }
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   };
-
-
 
   // Refresh attestation history
   const refreshAttestationHistory = async () => {
     try {
       const attRes = await fetch(`${API_BASE_URL}/eleve-portal/attestations/history`, {
-        headers: {}
+        headers: {},
       });
       if (attRes.ok) {
         const attData = await attRes.json();
@@ -468,10 +514,10 @@ const StudentDashboard = () => {
     try {
       const res = await fetch(`${API_BASE_URL}/eleve-portal/attestations/request`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json'
+        headers: {
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ motif_demande: attestationMotif })
+        body: JSON.stringify({ motif_demande: attestationMotif }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -480,7 +526,7 @@ const StudentDashboard = () => {
         await refreshAttestationHistory();
         showPopup(
           'Demande envoyée !',
-          'Votre demande d\'attestation a bien été transmise à votre établissement. Vous serez notifié dès qu\'une décision est prise.'
+          "Votre demande d'attestation a bien été transmise à votre établissement. Vous serez notifié dès qu'une décision est prise."
         );
       } else {
         showToast(data.message || 'Erreur lors de la soumission de la demande.', 'error');
@@ -501,14 +547,16 @@ const StudentDashboard = () => {
       const pendingItem = {
         ...newPortfolio,
         id: 'offline-' + Date.now(),
-        eleve_id: profile?.id
+        eleve_id: profile?.id,
       };
       const updatedOffline = [...offlineChanges, pendingItem];
       localStorage.setItem('offline_portfolio_adds', JSON.stringify(updatedOffline));
       setOfflineChanges(updatedOffline);
       setPortfolio([pendingItem, ...portfolio]);
       setIsAddingPortfolio(false);
-      alert('Mode hors-ligne : votre projet est enregistré localement et sera synchronisé dès le retour de la connexion.');
+      alert(
+        'Mode hors-ligne : votre projet est enregistré localement et sera synchronisé dès le retour de la connexion.'
+      );
       return;
     }
 
@@ -516,9 +564,9 @@ const StudentDashboard = () => {
       const response = await fetch(`${API_BASE_URL}/eleve-portal/portfolio`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newPortfolio)
+        body: JSON.stringify(newPortfolio),
       });
       if (response.ok) {
         setNewPortfolio({
@@ -526,7 +574,7 @@ const StudentDashboard = () => {
           titre: '',
           description: '',
           annee_scolaire: '2025-2026',
-          date_realisation: new Date().toISOString().split('T')[0]
+          date_realisation: new Date().toISOString().split('T')[0],
         });
         setIsAddingPortfolio(false);
         fetchData();
@@ -539,10 +587,10 @@ const StudentDashboard = () => {
   // Delete portfolio item
   const handleDeletePortfolio = async (id) => {
     if (id.toString().startsWith('offline-')) {
-      const updatedOffline = offlineChanges.filter(item => item.id !== id);
+      const updatedOffline = offlineChanges.filter((item) => item.id !== id);
       localStorage.setItem('offline_portfolio_adds', JSON.stringify(updatedOffline));
       setOfflineChanges(updatedOffline);
-      setPortfolio(portfolio.filter(item => item.id !== id));
+      setPortfolio(portfolio.filter((item) => item.id !== id));
       return;
     }
 
@@ -555,7 +603,7 @@ const StudentDashboard = () => {
       try {
         const response = await fetch(`${API_BASE_URL}/eleve-portal/portfolio/${id}`, {
           method: 'DELETE',
-          headers: {}
+          headers: {},
         });
         if (response.ok) {
           fetchData();
@@ -571,7 +619,7 @@ const StudentDashboard = () => {
     setCahierLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/cahier-texte/eleve`, {
-        headers: {}
+        headers: {},
       });
       if (res.ok) {
         const data = await res.json();
@@ -592,11 +640,11 @@ const StudentDashboard = () => {
 
   // Read notifications
   const handleMarkNotificationsRead = async () => {
-    setNotifications(notifications.map(n => ({ ...n, lu: true })));
+    setNotifications(notifications.map((n) => ({ ...n, lu: true })));
     try {
       await fetch(`${API_BASE_URL}/eleve-portal/notifications/read`, {
         method: 'POST',
-        headers: {}
+        headers: {},
       });
     } catch (err) {
       console.error('Failed to mark read on server:', err);
@@ -610,7 +658,7 @@ const StudentDashboard = () => {
     const periodData = notes[year]?.periodes[period];
     if (periodData) {
       const initialSims = {};
-      Object.keys(periodData.matieres).forEach(code => {
+      Object.keys(periodData.matieres).forEach((code) => {
         initialSims[code] = periodData.matieres[code].moyenne || 10;
       });
       setSimulatedGrades(initialSims);
@@ -621,7 +669,7 @@ const StudentDashboard = () => {
     const val = parseFloat(value);
     setSimulatedGrades({
       ...simulatedGrades,
-      [code]: isNaN(val) ? 0 : Math.min(20, Math.max(0, val))
+      [code]: isNaN(val) ? 0 : Math.min(20, Math.max(0, val)),
     });
   };
 
@@ -635,9 +683,10 @@ const StudentDashboard = () => {
     let totalPoints = 0;
     let totalCoeff = 0;
 
-    Object.keys(periodData.matieres).forEach(code => {
+    Object.keys(periodData.matieres).forEach((code) => {
       const coeff = periodData.matieres[code].coefficient;
-      const simVal = simulatedGrades[code] !== undefined ? simulatedGrades[code] : (periodData.matieres[code].moyenne || 10);
+      const simVal =
+        simulatedGrades[code] !== undefined ? simulatedGrades[code] : periodData.matieres[code].moyenne || 10;
       totalPoints += simVal * coeff;
       totalCoeff += coeff;
     });
@@ -657,26 +706,26 @@ const StudentDashboard = () => {
   const generateCalendarData = () => {
     const data = [];
     const today = new Date('2026-06-29'); // Date fixe pour correspondre à l'année scolaire en cours
-    
+
     // Reculer de 364 jours (52 semaines)
     const startDate = new Date(today);
     startDate.setDate(today.getDate() - 364);
-    
+
     // Aligner sur le lundi précédent
     const startDay = startDate.getDay();
     const offset = startDay === 0 ? 6 : startDay - 1;
     startDate.setDate(startDate.getDate() - offset);
-    
+
     const tempDate = new Date(startDate);
     while (tempDate <= today) {
       const dateStr = tempDate.toISOString().split('T')[0];
-      const abs = absences.find(a => {
+      const abs = absences.find((a) => {
         const aDate = new Date(a.date_absence).toISOString().split('T')[0];
         return aDate === dateStr;
       });
       const isAbsentType = abs && (abs.type_presence === 'ABSENCE' || abs.type_presence === 'ABSENT');
-      const hoursVal = abs ? (Number(abs.heures_absent) || (isAbsentType ? 2 : 0)) : 0;
-      
+      const hoursVal = abs ? Number(abs.heures_absent) || (isAbsentType ? 2 : 0) : 0;
+
       data.push({
         date: dateStr,
         dayOfWeek: tempDate.getDay(),
@@ -686,9 +735,9 @@ const StudentDashboard = () => {
         type: abs ? abs.type_presence : null,
         delay: abs ? abs.duree_retard : 0,
         motif: abs ? abs.motif : null,
-        subject: abs ? abs.matiere_nom : null
+        subject: abs ? abs.matiere_nom : null,
       });
-      
+
       tempDate.setDate(tempDate.getDate() + 1);
     }
     return data;
@@ -732,18 +781,18 @@ const StudentDashboard = () => {
     let lastIndex = -1;
 
     weeks.forEach((week, wIdx) => {
-      const validDays = week.filter(d => d.date);
+      const validDays = week.filter((d) => d.date);
       if (validDays.length === 0) return;
 
       const monthCounts = {};
-      validDays.forEach(d => {
+      validDays.forEach((d) => {
         const m = new Date(d.date).getMonth();
         monthCounts[m] = (monthCounts[m] || 0) + 1;
       });
 
       let dominantMonth = -1;
       let maxCount = 0;
-      Object.keys(monthCounts).forEach(mStr => {
+      Object.keys(monthCounts).forEach((mStr) => {
         const m = Number(mStr);
         if (monthCounts[m] > maxCount) {
           maxCount = monthCounts[m];
@@ -758,7 +807,11 @@ const StudentDashboard = () => {
       }
     });
 
-    const totalAbsenceHours = absences.reduce((sum, a) => sum + (Number(a.heures_absent) || (a.type_presence === 'ABSENCE' || a.type_presence === 'ABSENT' ? 2 : 0)), 0);
+    const totalAbsenceHours = absences.reduce(
+      (sum, a) =>
+        sum + (Number(a.heures_absent) || (a.type_presence === 'ABSENCE' || a.type_presence === 'ABSENT' ? 2 : 0)),
+      0
+    );
 
     return (
       <div className="absence-heatmap-card">
@@ -778,11 +831,7 @@ const StudentDashboard = () => {
             <div className="heatmap-weeks-columns">
               <div className="month-headers">
                 {monthHeaders.map((header, idx) => (
-                  <span 
-                    key={idx} 
-                    className="month-label" 
-                    style={{ left: `${header.index * 13}px` }}
-                  >
+                  <span key={idx} className="month-label" style={{ left: `${header.index * 13}px` }}>
                     {header.label}
                   </span>
                 ))}
@@ -798,27 +847,30 @@ const StudentDashboard = () => {
                       const isWeekend = day.dayOfWeek === 0 || day.dayOfWeek === 6;
 
                       return (
-                        <div 
-                          key={dIdx} 
+                        <div
+                          key={dIdx}
                           className={`heatmap-cell ${day.date ? getAbsenceColorClass(day.hours, day.type) : 'cell-empty'}`}
                         >
                           {day.date && (
                             <span className="cell-tooltip">
                               <span className="tooltip-date">
-                                {new Date(day.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                                {new Date(day.date).toLocaleDateString('fr-FR', {
+                                  weekday: 'short',
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                })}
                               </span>
                               <span className="tooltip-status">
-                                {isAbsent ? (
-                                  `❌ Absence${day.hours > 0 ? ` de ${day.hours}h` : ''} en ${day.subject || 'cours'}${day.justified ? ' (Justifiée)' : ' (Non justifiée)'}${day.motif ? ` - ${day.motif}` : ''}`
-                                ) : isRetard ? (
-                                  `⏱️ Retard${day.delay > 0 ? ` de ${day.delay} min` : ''} en ${day.subject || 'cours'}${day.motif ? ` (${day.motif})` : ''}`
-                                ) : isFuture ? (
-                                  '📅 Date future'
-                                ) : isWeekend ? (
-                                  '🏖️ Week-end'
-                                ) : (
-                                  '✅ Présence complète'
-                                )}
+                                {isAbsent
+                                  ? `❌ Absence${day.hours > 0 ? ` de ${day.hours}h` : ''} en ${day.subject || 'cours'}${day.justified ? ' (Justifiée)' : ' (Non justifiée)'}${day.motif ? ` - ${day.motif}` : ''}`
+                                  : isRetard
+                                    ? `⏱️ Retard${day.delay > 0 ? ` de ${day.delay} min` : ''} en ${day.subject || 'cours'}${day.motif ? ` (${day.motif})` : ''}`
+                                    : isFuture
+                                      ? '📅 Date future'
+                                      : isWeekend
+                                        ? '🏖️ Week-end'
+                                        : '✅ Présence complète'}
                               </span>
                             </span>
                           )}
@@ -854,7 +906,7 @@ const StudentDashboard = () => {
     if (!aiInput.trim()) return;
 
     const userMsg = { role: 'user', text: aiInput };
-    setAiChat(prev => [...prev, userMsg]);
+    setAiChat((prev) => [...prev, userMsg]);
     setAiInput('');
 
     // Generate AI response mock based on student profile and grades
@@ -874,11 +926,17 @@ const StudentDashboard = () => {
           const periods = Object.keys(notes[year].periodes);
           if (periods.length > 0) {
             const matieresObj = notes[year].periodes[periods[0]].matieres;
-            Object.keys(matieresObj).forEach(code => {
+            Object.keys(matieresObj).forEach((code) => {
               const mVal = matieresObj[code].moyenne;
               if (mVal !== null) {
-                if (mVal > bestVal) { bestVal = mVal; bestSubj = matieresObj[code].nom; }
-                if (mVal < worstVal) { worstVal = mVal; worstSubj = matieresObj[code].nom; }
+                if (mVal > bestVal) {
+                  bestVal = mVal;
+                  bestSubj = matieresObj[code].nom;
+                }
+                if (mVal < worstVal) {
+                  worstVal = mVal;
+                  worstSubj = matieresObj[code].nom;
+                }
               }
             });
           }
@@ -887,17 +945,25 @@ const StudentDashboard = () => {
         if (bestSubj) {
           aiResp = `D'après vos notes récentes, vous excellez en **${bestSubj}** avec une moyenne de **${bestVal}/20**. C'est un excellent point fort ! En revanche, votre matière la plus faible semble être le **${worstSubj}** avec **${worstVal}/20**. Je vous conseille de consacrer 30 minutes de révision supplémentaires par jour à cette matière en utilisant des fiches de synthèse.`;
         } else {
-          aiResp = "Je n'ai pas trouvé de notes récentes dans votre livret scolaire pour faire une analyse. Mais d'une manière générale, je vous conseille de réviser régulièrement les matières scientifiques (Maths, PC) qui ont des coefficients élevés au Sénégal.";
+          aiResp =
+            "Je n'ai pas trouvé de notes récentes dans votre livret scolaire pour faire une analyse. Mais d'une manière générale, je vous conseille de réviser régulièrement les matières scientifiques (Maths, PC) qui ont des coefficients élevés au Sénégal.";
         }
-      } else if (textLower.includes('orientation') || textLower.includes('université') || textLower.includes('bac') || textLower.includes('métier')) {
-        aiResp = "Pour votre orientation au Sénégal :\n- Si vous êtes en série **S (S1/S2)**, les écoles d'ingénieurs comme l'**ESP** (Dakar), l'**EPT** (Thiès) ou les filières informatiques/mathématiques de l'**UGB** et de l'**UCAD** sont d'excellents choix.\n- Si vous êtes en série **L**, l'**ENAM** ou les facultés de Droit (UCAD) et de Lettres vous offriront de superbes débouchés.\nPensez également aux filières émergentes en agro-écologie et énergies renouvelables à l'**USSEIN** de Kaolack.";
+      } else if (
+        textLower.includes('orientation') ||
+        textLower.includes('université') ||
+        textLower.includes('bac') ||
+        textLower.includes('métier')
+      ) {
+        aiResp =
+          "Pour votre orientation au Sénégal :\n- Si vous êtes en série **S (S1/S2)**, les écoles d'ingénieurs comme l'**ESP** (Dakar), l'**EPT** (Thiès) ou les filières informatiques/mathématiques de l'**UGB** et de l'**UCAD** sont d'excellents choix.\n- Si vous êtes en série **L**, l'**ENAM** ou les facultés de Droit (UCAD) et de Lettres vous offriront de superbes débouchés.\nPensez également aux filières émergentes en agro-écologie et énergies renouvelables à l'**USSEIN** de Kaolack.";
       } else if (textLower.includes('planning') || textLower.includes('examen') || textLower.includes('réviser')) {
-        aiResp = "Voici ma méthode de révision recommandée (la méthode Pomodoro) :\n1. Travaillez concentré pendant 25 minutes.\n2. Prenez 5 minutes de pause.\n3. Répétez 4 fois, puis prenez une pause de 20 minutes.\nFaites des fiches pour les matières à formule (Physique, Maths) et apprenez les plans de cours en Histoire-Géographie.";
+        aiResp =
+          'Voici ma méthode de révision recommandée (la méthode Pomodoro) :\n1. Travaillez concentré pendant 25 minutes.\n2. Prenez 5 minutes de pause.\n3. Répétez 4 fois, puis prenez une pause de 20 minutes.\nFaites des fiches pour les matières à formule (Physique, Maths) et apprenez les plans de cours en Histoire-Géographie.';
       } else {
         aiResp = `Intéressant ! Pour réussir au mieux votre année académique en classe de ${profile?.classe_nom || 'lycée'}, restez régulier. N'hésitez pas à me demander des recommandations sur vos notes, sur les universités sénégalaises (UCAD, UGB, USSEIN) ou comment simuler vos moyennes pour le BAC.`;
       }
 
-      setAiChat(prev => [...prev, { role: 'assistant', text: aiResp }]);
+      setAiChat((prev) => [...prev, { role: 'assistant', text: aiResp }]);
     }, 1000);
   };
 
@@ -905,42 +971,52 @@ const StudentDashboard = () => {
   const currentPeriodKey = currentYearNotes ? Object.keys(currentYearNotes.periodes)[0] : '';
   const currentPeriod = currentYearNotes && currentPeriodKey ? currentYearNotes.periodes[currentPeriodKey] : null;
 
-  const filteredPortfolio = portfolioCategoryFilter === 'TOUS' 
-    ? portfolio 
-    : (portfolio || []).filter(item => item.type === portfolioCategoryFilter);
+  const filteredPortfolio =
+    portfolioCategoryFilter === 'TOUS'
+      ? portfolio
+      : (portfolio || []).filter((item) => item.type === portfolioCategoryFilter);
 
   const getCategoryBadgeClass = (type) => {
     switch (type) {
-      case 'PROJET': return 'cat-badge-projet';
-      case 'SPORT': return 'cat-badge-sport';
-      case 'ART': return 'cat-badge-art';
-      default: return 'cat-badge-autre';
+      case 'PROJET':
+        return 'cat-badge-projet';
+      case 'SPORT':
+        return 'cat-badge-sport';
+      case 'ART':
+        return 'cat-badge-art';
+      default:
+        return 'cat-badge-autre';
     }
   };
 
   const renderPortfolioTab = () => {
-
     const getCategoryLabel = (type) => {
       switch (type) {
-        case 'PROJET': return 'Projet Tech/Scientifique';
-        case 'SPORT': return 'Activité Sportive';
-        case 'ART': return 'Art & Culture';
-        default: return 'Engagement / Autre';
+        case 'PROJET':
+          return 'Projet Tech/Scientifique';
+        case 'SPORT':
+          return 'Activité Sportive';
+        case 'ART':
+          return 'Art & Culture';
+        default:
+          return 'Engagement / Autre';
       }
     };
 
     return (
       <div className="tab-pane">
-        
         {/* Top Hero Banner */}
         <div className="portfolio-hero-banner card-box">
           <div className="portfolio-hero-left">
             <div className="portfolio-hero-title-group">
               <h2>Mon Portfolio & CV Numérique Certifié</h2>
-              <span className="men-official-tag"><ShieldCheck size={14} /> Certifié MEN Sénégal</span>
+              <span className="men-official-tag">
+                <ShieldCheck size={14} /> Certifié MEN Sénégal
+              </span>
             </div>
             <p className="portfolio-hero-desc">
-              Consultez votre livret officiel, valorisez vos compétences extra-scolaires et constituez un dossier d'excellence pour vos choix d'orientation post-BAC.
+              Consultez votre livret officiel, valorisez vos compétences extra-scolaires et constituez un dossier
+              d'excellence pour vos choix d'orientation post-BAC.
             </p>
           </div>
 
@@ -959,7 +1035,6 @@ const StudentDashboard = () => {
         <div className="portfolio-cv-layout">
           {/* Official Printable CV Document */}
           <div className="cv-container card-box printable-cv">
-            
             {/* Top Official Seal & Header */}
             <div className="cv-header-official">
               <div className="cv-republic-header">
@@ -994,23 +1069,31 @@ const StudentDashboard = () => {
                 {profile?.photo_url ? (
                   <img src={`${profile.photo_url}`} alt="Photo d'identité" className="cv-photo-img" />
                 ) : (
-                  <div className="cv-photo-fallback">
-                    {profile ? `${profile.prenom[0]}${profile.nom[0]}` : 'EL'}
-                  </div>
+                  <div className="cv-photo-fallback">{profile ? `${profile.prenom[0]}${profile.nom[0]}` : 'EL'}</div>
                 )}
-                <span className="cv-photo-cert-tag"><CheckCircle2 size={11} /> Photo Certifiée</span>
+                <span className="cv-photo-cert-tag">
+                  <CheckCircle2 size={11} /> Photo Certifiée
+                </span>
               </div>
 
               <div className="cv-identity-details">
                 <div className="cv-name-row">
-                  <h2>{profile?.prenom} {profile?.nom}</h2>
-                  <span className="cv-id-pill">ID National : <strong>{profile?.identifiant_national || '---'}</strong></span>
+                  <h2>
+                    {profile?.prenom} {profile?.nom}
+                  </h2>
+                  <span className="cv-id-pill">
+                    ID National : <strong>{profile?.identifiant_national || '---'}</strong>
+                  </span>
                 </div>
 
                 <div className="cv-meta-grid">
                   <div className="cv-meta-col">
                     <span className="meta-lbl">Date de naissance :</span>
-                    <span className="meta-val">{profile?.date_naissance ? new Date(profile.date_naissance).toLocaleDateString('fr-FR') : 'Non renseigné'}</span>
+                    <span className="meta-val">
+                      {profile?.date_naissance
+                        ? new Date(profile.date_naissance).toLocaleDateString('fr-FR')
+                        : 'Non renseigné'}
+                    </span>
                   </div>
                   <div className="cv-meta-col">
                     <span className="meta-lbl">Lieu de naissance :</span>
@@ -1022,7 +1105,9 @@ const StudentDashboard = () => {
                   </div>
                   <div className="cv-meta-col">
                     <span className="meta-lbl">Établissement & Classe :</span>
-                    <span className="meta-val"><strong>{profile?.etablissement_nom || 'Lycée'}</strong> — {profile?.classe_nom || 'Classe'}</span>
+                    <span className="meta-val">
+                      <strong>{profile?.etablissement_nom || 'Lycée'}</strong> — {profile?.classe_nom || 'Classe'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1030,11 +1115,12 @@ const StudentDashboard = () => {
 
             {/* CV Sections */}
             <div className="cv-sections-container">
-              
               {/* Parcours Académique */}
               <div className="cv-section-box">
                 <div className="cv-section-header">
-                  <div className="icon-wrap"><GraduationCap size={16} /></div>
+                  <div className="icon-wrap">
+                    <GraduationCap size={16} />
+                  </div>
                   <h3>PARCOURS ACADÉMIQUE</h3>
                   <div className="header-line"></div>
                 </div>
@@ -1049,7 +1135,9 @@ const StudentDashboard = () => {
                             <span className="timeline-year">{p.annee_scolaire}</span>
                             <strong className="timeline-class">Classe de {p.classe_nom}</strong>
                           </div>
-                          <p className="timeline-school"><MapPin size={12} /> {p.etablissement_nom}</p>
+                          <p className="timeline-school">
+                            <MapPin size={12} /> {p.etablissement_nom}
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -1062,33 +1150,43 @@ const StudentDashboard = () => {
               {/* Projets & Activités Extra-Scolaires */}
               <div className="cv-section-box mt-6">
                 <div className="cv-section-header">
-                  <div className="icon-wrap"><Award size={16} /></div>
+                  <div className="icon-wrap">
+                    <Award size={16} />
+                  </div>
                   <h3>PROJETS & ACTIVITÉS EXTRA-SCOLAIRES</h3>
                   <div className="header-line"></div>
                 </div>
 
                 {portfolio.length > 0 ? (
                   <div className="cv-activities-list">
-                    {portfolio.map(item => (
+                    {portfolio.map((item) => (
                       <div key={item.id} className="cv-activity-card">
                         <div className="activity-card-top">
                           <span className={`activity-type-badge ${getCategoryBadgeClass(item.type)}`}>
                             {getCategoryLabel(item.type)}
                           </span>
                           <span className="activity-date">
-                            {item.annee_scolaire} • {new Date(item.date_realisation).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}
+                            {item.annee_scolaire} •{' '}
+                            {new Date(item.date_realisation).toLocaleDateString('fr-FR', {
+                              month: 'short',
+                              year: 'numeric',
+                            })}
                           </span>
                         </div>
                         <h4>{item.titre}</h4>
                         <p>{item.description}</p>
                         {item.id.toString().startsWith('offline-') && (
-                          <span className="offline-indicator-tag"><WifiOff size={10} /> En attente de sync</span>
+                          <span className="offline-indicator-tag">
+                            <WifiOff size={10} /> En attente de sync
+                          </span>
                         )}
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="cv-empty-text">Aucune activité ajoutée pour le moment. Utilisez le formulaire pour enrichir votre portfolio.</p>
+                  <p className="cv-empty-text">
+                    Aucune activité ajoutée pour le moment. Utilisez le formulaire pour enrichir votre portfolio.
+                  </p>
                 )}
               </div>
 
@@ -1096,7 +1194,9 @@ const StudentDashboard = () => {
               {cvData?.examens && cvData.examens.length > 0 && (
                 <div className="cv-section-box mt-6">
                   <div className="cv-section-header">
-                    <div className="icon-wrap"><AwardIcon size={16} /></div>
+                    <div className="icon-wrap">
+                      <AwardIcon size={16} />
+                    </div>
                     <h3>DIPLÔMES & EXAMENS NATIONAUX</h3>
                     <div className="header-line"></div>
                   </div>
@@ -1105,8 +1205,12 @@ const StudentDashboard = () => {
                       <div key={idx} className="cv-exam-badge">
                         <div className="exam-icon-flag">🇸🇳</div>
                         <div className="exam-details">
-                          <strong>{ex.type_examen} (Session {ex.annee})</strong>
-                          <span>Moyenne : <strong>{ex.moyenne}/20</strong> • Mention : <strong>{ex.mention}</strong></span>
+                          <strong>
+                            {ex.type_examen} (Session {ex.annee})
+                          </strong>
+                          <span>
+                            Moyenne : <strong>{ex.moyenne}/20</strong> • Mention : <strong>{ex.mention}</strong>
+                          </span>
                         </div>
                         <span className="exam-status-pill">{ex.statut_resultat}</span>
                       </div>
@@ -1114,7 +1218,6 @@ const StudentDashboard = () => {
                   </div>
                 </div>
               )}
-
             </div>
 
             {/* Document Bottom Footer */}
@@ -1124,7 +1227,6 @@ const StudentDashboard = () => {
               </div>
               <div className="footer-date">Généré le {new Date().toLocaleDateString('fr-FR')}</div>
             </div>
-
           </div>
 
           {/* Portfolio Manager Sidebar */}
@@ -1143,7 +1245,9 @@ const StudentDashboard = () => {
             {isAddingPortfolio ? (
               <div className="pm-form-box">
                 <div className="pm-form-header">
-                  <h4><Plus size={16} /> Nouvelle réalisation</h4>
+                  <h4>
+                    <Plus size={16} /> Nouvelle réalisation
+                  </h4>
                   <button className="close-btn" onClick={() => setIsAddingPortfolio(false)} title="Fermer">
                     <X size={16} />
                   </button>
@@ -1157,8 +1261,8 @@ const StudentDashboard = () => {
                         { key: 'PROJET', label: 'Projet Tech/Scientifique', icon: Sparkles },
                         { key: 'SPORT', label: 'Sport', icon: Activity },
                         { key: 'ART', label: 'Art & Culture', icon: PartyPopper },
-                        { key: 'AUTRE', label: 'Engagement / Autre', icon: Award }
-                      ].map(cat => {
+                        { key: 'AUTRE', label: 'Engagement / Autre', icon: Award },
+                      ].map((cat) => {
                         const IconComp = cat.icon;
                         return (
                           <button
@@ -1177,51 +1281,55 @@ const StudentDashboard = () => {
 
                   <div className="form-group">
                     <label>Titre de la réalisation</label>
-                    <input 
-                      type="text" 
-                      required 
+                    <input
+                      type="text"
+                      required
                       placeholder="Ex: Robot suiveur de ligne, Capitaine de l'équipe..."
                       value={newPortfolio.titre}
-                      onChange={e => setNewPortfolio({ ...newPortfolio, titre: e.target.value })}
+                      onChange={(e) => setNewPortfolio({ ...newPortfolio, titre: e.target.value })}
                     />
                   </div>
 
                   <div className="form-group">
                     <label>Description & compétences</label>
-                    <textarea 
-                      required 
+                    <textarea
+                      required
                       rows={3}
                       placeholder="Décrivez ce que vous avez accompli, les compétences développées..."
                       value={newPortfolio.description}
-                      onChange={e => setNewPortfolio({ ...newPortfolio, description: e.target.value })}
+                      onChange={(e) => setNewPortfolio({ ...newPortfolio, description: e.target.value })}
                     />
                   </div>
 
                   <div className="form-row">
                     <div className="form-group">
                       <label>Année scolaire</label>
-                      <input 
-                        type="text" 
-                        required 
+                      <input
+                        type="text"
+                        required
                         placeholder="Ex: 2025-2026"
                         value={newPortfolio.annee_scolaire}
-                        onChange={e => setNewPortfolio({ ...newPortfolio, annee_scolaire: e.target.value })}
+                        onChange={(e) => setNewPortfolio({ ...newPortfolio, annee_scolaire: e.target.value })}
                       />
                     </div>
                     <div className="form-group">
                       <label>Date de réalisation</label>
-                      <input 
-                        type="date" 
-                        required 
+                      <input
+                        type="date"
+                        required
                         value={newPortfolio.date_realisation}
-                        onChange={e => setNewPortfolio({ ...newPortfolio, date_realisation: e.target.value })}
+                        onChange={(e) => setNewPortfolio({ ...newPortfolio, date_realisation: e.target.value })}
                       />
                     </div>
                   </div>
 
                   <div className="form-actions">
-                    <button type="submit" className="primary-btn w-full">Enregistrer</button>
-                    <button type="button" className="secondary-btn w-full" onClick={() => setIsAddingPortfolio(false)}>Annuler</button>
+                    <button type="submit" className="primary-btn w-full">
+                      Enregistrer
+                    </button>
+                    <button type="button" className="secondary-btn w-full" onClick={() => setIsAddingPortfolio(false)}>
+                      Annuler
+                    </button>
                   </div>
                 </form>
               </div>
@@ -1239,7 +1347,7 @@ const StudentDashboard = () => {
                 <h4>Mes éléments ({portfolio.length})</h4>
                 {portfolio.length > 0 && (
                   <div className="pm-filter-pills">
-                    {['TOUS', 'PROJET', 'SPORT', 'ART'].map(cat => (
+                    {['TOUS', 'PROJET', 'SPORT', 'ART'].map((cat) => (
                       <button
                         key={cat}
                         className={`pm-filter-pill ${portfolioCategoryFilter === cat ? 'active' : ''}`}
@@ -1254,13 +1362,15 @@ const StudentDashboard = () => {
 
               {filteredPortfolio.length > 0 ? (
                 <div className="pm-items-grid">
-                  {filteredPortfolio.map(item => (
+                  {filteredPortfolio.map((item) => (
                     <div key={item.id} className="pm-card-item">
                       <div className="pm-card-header">
-                        <span className={`activity-type-badge ${getCategoryBadgeClass(item.type)}`}>
-                          {item.type}
-                        </span>
-                        <button className="delete-btn-mini" onClick={() => handleDeletePortfolio(item.id)} title="Supprimer">
+                        <span className={`activity-type-badge ${getCategoryBadgeClass(item.type)}`}>{item.type}</span>
+                        <button
+                          className="delete-btn-mini"
+                          onClick={() => handleDeletePortfolio(item.id)}
+                          title="Supprimer"
+                        >
                           <Trash2 size={14} />
                         </button>
                       </div>
@@ -1269,7 +1379,9 @@ const StudentDashboard = () => {
                       <div className="pm-card-footer">
                         <span className="pm-year-tag">{item.annee_scolaire}</span>
                         {item.id.toString().startsWith('offline-') && (
-                          <span className="offline-tag-mini"><WifiOff size={10} /> Sync</span>
+                          <span className="offline-tag-mini">
+                            <WifiOff size={10} /> Sync
+                          </span>
                         )}
                       </div>
                     </div>
@@ -1283,25 +1395,26 @@ const StudentDashboard = () => {
                 </div>
               )}
             </div>
-
           </div>
-
         </div>
-
       </div>
     );
   };
 
   const renderCahierTexteTab = () => {
-    const devoirsAfaire = cahierEntries.filter(e => e.travail_a_faire && e.travail_a_faire.trim() !== '');
+    const devoirsAfaire = cahierEntries.filter((e) => e.travail_a_faire && e.travail_a_faire.trim() !== '');
 
     return (
       <div className="tab-pane">
         <div className="schedule-hero-banner card-box" style={{ marginBottom: '20px' }}>
           <div className="sched-hero-left">
             <div className="sched-title-row">
-              <h2><BookMarked size={22} style={{ color: 'var(--accent-red)' }} /> Cahier de Texte Numérique</h2>
-              <span className="sched-badge-tag"><Calendar size={14} /> Suivi des cours et devoirs</span>
+              <h2>
+                <BookMarked size={22} style={{ color: 'var(--accent-red)' }} /> Cahier de Texte Numérique
+              </h2>
+              <span className="sched-badge-tag">
+                <Calendar size={14} /> Suivi des cours et devoirs
+              </span>
             </div>
             <p className="sched-hero-sub">
               Retrouvez l'ensemble des cours dispensés par vos enseignants ainsi que les devoirs et exercices à rendre.
@@ -1311,28 +1424,40 @@ const StudentDashboard = () => {
 
         {/* SUB-TABS SWITCHER */}
         <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-          <button 
-            type="button" 
-            onClick={() => setCahierSubTab('cours')} 
+          <button
+            type="button"
+            onClick={() => setCahierSubTab('cours')}
             className={`secondary-btn ${cahierSubTab === 'cours' ? 'active' : ''}`}
-            style={{ 
-              padding: '10px 20px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer',
+            style={{
+              padding: '10px 20px',
+              borderRadius: '8px',
+              fontWeight: 700,
+              cursor: 'pointer',
               background: cahierSubTab === 'cours' ? 'var(--primary-blue)' : '#f1f5f9',
               color: cahierSubTab === 'cours' ? '#ffffff' : 'var(--text-slate-700)',
-              border: 'none', display: 'flex', alignItems: 'center', gap: '8px'
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
             }}
           >
             <BookOpen size={16} /> Journal des Cours ({cahierEntries.length})
           </button>
-          <button 
-            type="button" 
-            onClick={() => setCahierSubTab('devoirs')} 
+          <button
+            type="button"
+            onClick={() => setCahierSubTab('devoirs')}
             className={`secondary-btn ${cahierSubTab === 'devoirs' ? 'active' : ''}`}
-            style={{ 
-              padding: '10px 20px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer',
+            style={{
+              padding: '10px 20px',
+              borderRadius: '8px',
+              fontWeight: 700,
+              cursor: 'pointer',
               background: cahierSubTab === 'devoirs' ? 'var(--primary-blue)' : '#f1f5f9',
               color: cahierSubTab === 'devoirs' ? '#ffffff' : 'var(--text-slate-700)',
-              border: 'none', display: 'flex', alignItems: 'center', gap: '8px'
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
             }}
           >
             <ClipboardList size={16} /> Devoirs & Travaux à faire ({devoirsAfaire.length})
@@ -1342,19 +1467,62 @@ const StudentDashboard = () => {
         {/* CONTENT */}
         <div className="card-box">
           {cahierLoading ? (
-            <div style={{ textAlign: 'center', padding: '40px', color: 'var(--slate-500)' }}>Chargement du cahier de texte...</div>
+            <div style={{ textAlign: 'center', padding: '40px', color: 'var(--slate-500)' }}>
+              Chargement du cahier de texte...
+            </div>
           ) : cahierSubTab === 'devoirs' ? (
             <div className="devoirs-list" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {devoirsAfaire.length > 0 ? (
-                devoirsAfaire.map(entry => (
-                  <div key={entry.id} style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <span style={{ background: '#166534', color: 'white', fontSize: '11px', fontWeight: 800, padding: '3px 10px', borderRadius: '6px' }}>
+                devoirsAfaire.map((entry) => (
+                  <div
+                    key={entry.id}
+                    style={{
+                      background: '#f0fdf4',
+                      border: '1px solid #bbf7d0',
+                      borderRadius: '12px',
+                      padding: '16px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '8px',
+                      }}
+                    >
+                      <span
+                        style={{
+                          background: '#166534',
+                          color: 'white',
+                          fontSize: '11px',
+                          fontWeight: 800,
+                          padding: '3px 10px',
+                          borderRadius: '6px',
+                        }}
+                      >
                         {entry.matiere_nom}
                       </span>
                       {entry.date_remise_devoir && (
-                        <span style={{ background: '#dcfce7', color: '#14532d', fontSize: '11px', fontWeight: 800, padding: '3px 10px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Clock size={12} /> À rendre pour le : {new Date(entry.date_remise_devoir).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        <span
+                          style={{
+                            background: '#dcfce7',
+                            color: '#14532d',
+                            fontSize: '11px',
+                            fontWeight: 800,
+                            padding: '3px 10px',
+                            borderRadius: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
+                        >
+                          <Clock size={12} /> À rendre pour le :{' '}
+                          {new Date(entry.date_remise_devoir).toLocaleDateString('fr-FR', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
                         </span>
                       )}
                     </div>
@@ -1363,22 +1531,52 @@ const StudentDashboard = () => {
                       {entry.titre_lecon}
                     </h4>
 
-                    <p style={{ fontSize: '13px', color: '#166534', margin: '0 0 10px', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
+                    <p
+                      style={{
+                        fontSize: '13px',
+                        color: '#166534',
+                        margin: '0 0 10px',
+                        lineHeight: 1.5,
+                        whiteSpace: 'pre-line',
+                      }}
+                    >
                       {entry.travail_a_faire}
                     </p>
 
-                    <div style={{ fontSize: '11px', color: 'var(--text-slate-500)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div
+                      style={{
+                        fontSize: '11px',
+                        color: 'var(--text-slate-500)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}
+                    >
                       <User size={12} /> Enseignant : {entry.professeur_nom}
                     </div>
 
                     {entry.fichier_url && (
-                      <a 
-                        href={`${API_BASE_URL.replace('/api', '')}${entry.fichier_url}`} 
-                        target="_blank" 
+                      <a
+                        href={`${API_BASE_URL.replace('/api', '')}${entry.fichier_url}`}
+                        target="_blank"
                         rel="noopener noreferrer"
-                        style={{ marginTop: '10px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--primary-blue)', background: '#ffffff', padding: '6px 12px', borderRadius: '8px', border: '1px solid #bfdbfe', fontWeight: 600 }}
+                        style={{
+                          marginTop: '10px',
+                          textDecoration: 'none',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          fontSize: '12px',
+                          color: 'var(--primary-blue)',
+                          background: '#ffffff',
+                          padding: '6px 12px',
+                          borderRadius: '8px',
+                          border: '1px solid #bfdbfe',
+                          fontWeight: 600,
+                        }}
                       >
-                        <Paperclip size={13} /> {entry.fichier_nom || 'Télécharger le support de cours'} <Download size={12} />
+                        <Paperclip size={13} /> {entry.fichier_nom || 'Télécharger le support de cours'}{' '}
+                        <Download size={12} />
                       </a>
                     )}
                   </div>
@@ -1393,55 +1591,153 @@ const StudentDashboard = () => {
           ) : (
             <div className="cours-list" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {cahierEntries.length > 0 ? (
-                cahierEntries.map(entry => (
-                  <div key={entry.id} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                cahierEntries.map((entry) => (
+                  <div
+                    key={entry.id}
+                    style={{
+                      background: '#ffffff',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '8px',
+                      }}
+                    >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                        <span style={{ background: 'var(--primary-blue)', color: 'white', fontSize: '11px', fontWeight: 800, padding: '3px 9px', borderRadius: '6px' }}>
+                        <span
+                          style={{
+                            background: 'var(--primary-blue)',
+                            color: 'white',
+                            fontSize: '11px',
+                            fontWeight: 800,
+                            padding: '3px 9px',
+                            borderRadius: '6px',
+                          }}
+                        >
                           {entry.matiere_nom}
                         </span>
-                        <span style={{ fontSize: '11px', color: 'var(--text-slate-500)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Clock size={12} /> {new Date(entry.date_seance).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            color: 'var(--text-slate-500)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
+                        >
+                          <Clock size={12} />{' '}
+                          {new Date(entry.date_seance).toLocaleDateString('fr-FR', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
                           {entry.heure_debut && ` (${entry.heure_debut} - ${entry.heure_fin})`}
                         </span>
                       </div>
 
                       {entry.visa_admin && (
-                        <span style={{ background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', fontSize: '10px', fontWeight: 800, padding: '2px 8px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span
+                          style={{
+                            background: '#ecfdf5',
+                            color: '#065f46',
+                            border: '1px solid #a7f3d0',
+                            fontSize: '10px',
+                            fontWeight: 800,
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
+                        >
                           <ShieldCheck size={12} /> Visé par l'Admin
                         </span>
                       )}
                     </div>
 
-                    <h4 style={{ margin: '0 0 6px', fontSize: '14px', fontWeight: 800, color: 'var(--text-slate-900)' }}>
+                    <h4
+                      style={{ margin: '0 0 6px', fontSize: '14px', fontWeight: 800, color: 'var(--text-slate-900)' }}
+                    >
                       {entry.titre_lecon}
                     </h4>
 
-                    <p style={{ fontSize: '13px', color: 'var(--text-slate-700)', margin: '0 0 10px', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
+                    <p
+                      style={{
+                        fontSize: '13px',
+                        color: 'var(--text-slate-700)',
+                        margin: '0 0 10px',
+                        lineHeight: 1.5,
+                        whiteSpace: 'pre-line',
+                      }}
+                    >
                       {entry.contenu_seance}
                     </p>
 
-                    <div style={{ fontSize: '11px', color: 'var(--text-slate-500)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: entry.travail_a_faire ? '10px' : '0' }}>
+                    <div
+                      style={{
+                        fontSize: '11px',
+                        color: 'var(--text-slate-500)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        marginBottom: entry.travail_a_faire ? '10px' : '0',
+                      }}
+                    >
                       <User size={12} /> Professeur : {entry.professeur_nom}
                     </div>
 
                     {entry.travail_a_faire && (
-                      <div style={{ background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: '8px', padding: '10px 12px', marginTop: '8px' }}>
+                      <div
+                        style={{
+                          background: '#f8fafc',
+                          border: '1px dashed #cbd5e1',
+                          borderRadius: '8px',
+                          padding: '10px 12px',
+                          marginTop: '8px',
+                        }}
+                      >
                         <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--primary-blue)' }}>
                           Devoir associé :
                         </span>
-                        <p style={{ fontSize: '12px', color: 'var(--text-slate-700)', margin: '2px 0 0', whiteSpace: 'pre-line' }}>
+                        <p
+                          style={{
+                            fontSize: '12px',
+                            color: 'var(--text-slate-700)',
+                            margin: '2px 0 0',
+                            whiteSpace: 'pre-line',
+                          }}
+                        >
                           {entry.travail_a_faire}
                         </p>
                       </div>
                     )}
 
                     {entry.fichier_url && (
-                      <a 
-                        href={`${API_BASE_URL.replace('/api', '')}${entry.fichier_url}`} 
-                        target="_blank" 
+                      <a
+                        href={`${API_BASE_URL.replace('/api', '')}${entry.fichier_url}`}
+                        target="_blank"
                         rel="noopener noreferrer"
-                        style={{ marginTop: '10px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--primary-blue)', background: '#eff6ff', padding: '6px 12px', borderRadius: '8px', border: '1px solid #bfdbfe', fontWeight: 600 }}
+                        style={{
+                          marginTop: '10px',
+                          textDecoration: 'none',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          fontSize: '12px',
+                          color: 'var(--primary-blue)',
+                          background: '#eff6ff',
+                          padding: '6px 12px',
+                          borderRadius: '8px',
+                          border: '1px solid #bfdbfe',
+                          fontWeight: 600,
+                        }}
                       >
                         <Paperclip size={13} /> {entry.fichier_nom || 'Support de cours joint'} <Download size={12} />
                       </a>
@@ -1470,16 +1766,18 @@ const StudentDashboard = () => {
 
     return (
       <div className="tab-pane">
-        
         {/* Top Hero Banner */}
         <div className="schedule-hero-banner card-box">
           <div className="sched-hero-left">
             <div className="sched-title-row">
               <h2>Emploi du Temps & Planning des Évaluations</h2>
-              <span className="sched-badge-tag"><Calendar size={14} /> Année {activeAnnee}</span>
+              <span className="sched-badge-tag">
+                <Calendar size={14} /> Année {activeAnnee}
+              </span>
             </div>
             <p className="sched-hero-sub">
-              Consultez le déroulement hebdomadaire de vos cours et soyez informé à l'avance des dates de vos devoirs et examens.
+              Consultez le déroulement hebdomadaire de vos cours et soyez informé à l'avance des dates de vos devoirs et
+              examens.
             </p>
           </div>
           {activeClassNom && (
@@ -1500,8 +1798,8 @@ const StudentDashboard = () => {
 
           {hasTimetable ? (
             <div className="timetable-grid-full mt-4">
-              {['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'].map(jour => {
-                const classesForDay = schedule.timetable.filter(t => t.jour_semaine === jour);
+              {['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'].map((jour) => {
+                const classesForDay = schedule.timetable.filter((t) => t.jour_semaine === jour);
                 return (
                   <div key={jour} className="day-column-full">
                     <div className="day-header-pill">
@@ -1510,7 +1808,7 @@ const StudentDashboard = () => {
                     </div>
                     <div className="slots-list">
                       {classesForDay.length > 0 ? (
-                        classesForDay.map(slot => {
+                        classesForDay.map((slot) => {
                           const formatRoom = (roomStr) => {
                             if (!roomStr || roomStr.trim() === '') return 'Salle N/A';
                             const trimmed = roomStr.trim();
@@ -1528,11 +1826,10 @@ const StudentDashboard = () => {
                               <strong className="slot-subject-title">{slot.matiere_nom}</strong>
                               <div className="slot-footer-details">
                                 <span className="slot-teacher-lbl" title={slot.professeur_email}>
-                                  <User size={11} /> {slot.professeur_email ? slot.professeur_email.split('@')[0] : 'Enseignant'}
+                                  <User size={11} />{' '}
+                                  {slot.professeur_email ? slot.professeur_email.split('@')[0] : 'Enseignant'}
                                 </span>
-                                <span className="slot-room-lbl">
-                                  {formatRoom(slot.salle)}
-                                </span>
+                                <span className="slot-room-lbl">{formatRoom(slot.salle)}</span>
                               </div>
                             </div>
                           );
@@ -1569,11 +1866,16 @@ const StudentDashboard = () => {
 
           {hasExams ? (
             <div className="exams-grid-full mt-4">
-              {schedule.exams.map(ex => {
+              {schedule.exams.map((ex) => {
                 const examDate = new Date(ex.date_examen);
                 const dayNum = examDate.getDate();
                 const monthStr = examDate.toLocaleDateString('fr-FR', { month: 'short' }).toUpperCase();
-                const fullDateStr = examDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                const fullDateStr = examDate.toLocaleDateString('fr-FR', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                });
                 const timeStr = examDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
                 return (
@@ -1586,7 +1888,9 @@ const StudentDashboard = () => {
                     <div className="exam-card-content">
                       <div className="exam-card-top">
                         <h4>{ex.matiere_nom}</h4>
-                        <span className={`exam-type-pill ${ex.type_examen === 'COMPOSITION' ? 'type-comp' : 'type-dev'}`}>
+                        <span
+                          className={`exam-type-pill ${ex.type_examen === 'COMPOSITION' ? 'type-comp' : 'type-dev'}`}
+                        >
                           {ex.type_examen}
                         </span>
                       </div>
@@ -1594,8 +1898,12 @@ const StudentDashboard = () => {
                         <Clock size={13} /> {fullDateStr} à {timeStr}
                       </p>
                       <div className="exam-card-bottom">
-                        <span className="exam-room-pill">Salle : <strong>{ex.salle || 'Non définie'}</strong></span>
-                        <span className="exam-status-pill"><CheckCircle2 size={12} /> Confirmation {ex.statut || 'VALIDÉ'}</span>
+                        <span className="exam-room-pill">
+                          Salle : <strong>{ex.salle || 'Non définie'}</strong>
+                        </span>
+                        <span className="exam-status-pill">
+                          <CheckCircle2 size={12} /> Confirmation {ex.statut || 'VALIDÉ'}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1609,7 +1917,6 @@ const StudentDashboard = () => {
             </div>
           )}
         </div>
-
       </div>
     );
   };
@@ -1626,33 +1933,34 @@ const StudentDashboard = () => {
 
     return (
       <div className="tab-pane">
-        
         {/* Messages Main Layout */}
         <div className="messages-layout-full card-box">
-          
           {/* Left Column: Channels & Contacts List */}
           <div className="msg-channels-sidebar">
             <div className="msg-sidebar-header">
-              <h3><MessageSquare size={18} /> Canaux & Messagerie</h3>
+              <h3>
+                <MessageSquare size={18} /> Canaux & Messagerie
+              </h3>
               <span>Sélectionnez une discussion</span>
             </div>
 
             <div className="msg-channels-list">
-              
               {/* 1. CANAL DE CLASSE */}
               {classe && (
                 <div className="channel-group">
                   <span className="group-label">GROUPE DE CLASSE</span>
-                  <button 
+                  <button
                     type="button"
                     className={`channel-item ${activeChatTarget?.type === 'CLASSE' ? 'active' : ''}`}
-                    onClick={() => handleSelectTarget({
-                      type: 'CLASSE',
-                      target_id: classe.classe_id,
-                      title: `Canal de Groupe ${classe.classe_nom}`,
-                      sub: `Discussion de la classe • ${classe.annee_scolaire}`,
-                      badge: 'Groupe'
-                    })}
+                    onClick={() =>
+                      handleSelectTarget({
+                        type: 'CLASSE',
+                        target_id: classe.classe_id,
+                        title: `Canal de Groupe ${classe.classe_nom}`,
+                        sub: `Discussion de la classe • ${classe.annee_scolaire}`,
+                        badge: 'Groupe',
+                      })
+                    }
                   >
                     <div className="chan-icon-box chan-classe">
                       <Users size={18} />
@@ -1669,24 +1977,28 @@ const StudentDashboard = () => {
               {teachers.length > 0 && (
                 <div className="channel-group">
                   <span className="group-label">MES PROFESSEURS</span>
-                  {teachers.map(t => (
-                    <button 
+                  {teachers.map((t) => (
+                    <button
                       key={t.user_id}
                       type="button"
                       className={`channel-item ${activeChatTarget?.type === 'PROFESSEUR' && activeChatTarget?.target_id === t.user_id ? 'active' : ''}`}
-                      onClick={() => handleSelectTarget({
-                        type: 'PROFESSEUR',
-                        target_id: t.user_id,
-                        title: `Prof. ${t.prenom || ''} ${t.nom || 'Enseignant'}`,
-                        sub: t.matiere_nom ? `Enseignant de ${t.matiere_nom}` : 'Professeur',
-                        badge: 'Prof'
-                      })}
+                      onClick={() =>
+                        handleSelectTarget({
+                          type: 'PROFESSEUR',
+                          target_id: t.user_id,
+                          title: `Prof. ${t.prenom || ''} ${t.nom || 'Enseignant'}`,
+                          sub: t.matiere_nom ? `Enseignant de ${t.matiere_nom}` : 'Professeur',
+                          badge: 'Prof',
+                        })
+                      }
                     >
                       <div className="chan-icon-box chan-prof">
                         <UserCheck size={18} />
                       </div>
                       <div className="chan-meta">
-                        <span className="chan-name">Prof. {t.prenom ? `${t.prenom} ${t.nom}` : (t.nom || 'Enseignant')}</span>
+                        <span className="chan-name">
+                          Prof. {t.prenom ? `${t.prenom} ${t.nom}` : t.nom || 'Enseignant'}
+                        </span>
                         <span className="chan-sub">{t.matiere_nom || 'Discipline'}</span>
                       </div>
                     </button>
@@ -1698,17 +2010,19 @@ const StudentDashboard = () => {
               {admin && (
                 <div className="channel-group">
                   <span className="group-label">ÉTABLISSEMENT</span>
-                  <button 
+                  <button
                     type="button"
                     className={`channel-item ${activeChatTarget?.type === 'ADMIN' ? 'active' : ''}`}
-                    onClick={() => handleSelectTarget({
-                      type: 'ADMIN',
-                      target_id: admin.admin_user_id,
-                      etablissement_id: admin.etablissement_id,
-                      title: admin.etablissement_nom,
-                      sub: "Administration de l'établissement",
-                      badge: 'Admin'
-                    })}
+                    onClick={() =>
+                      handleSelectTarget({
+                        type: 'ADMIN',
+                        target_id: admin.admin_user_id,
+                        etablissement_id: admin.etablissement_id,
+                        title: admin.etablissement_nom,
+                        sub: "Administration de l'établissement",
+                        badge: 'Admin',
+                      })
+                    }
                   >
                     <div className="chan-icon-box chan-admin">
                       <Building2 size={18} />
@@ -1724,16 +2038,18 @@ const StudentDashboard = () => {
               {/* 4. ANNONCES & DIFFUSIONS */}
               <div className="channel-group">
                 <span className="group-label">DIFFUSIONS & ANNONCES</span>
-                <button 
+                <button
                   type="button"
                   className={`channel-item ${activeChatTarget?.type === 'BROADCAST' ? 'active' : ''}`}
-                  onClick={() => handleSelectTarget({
-                    type: 'BROADCAST',
-                    target_id: 'broadcast',
-                    title: 'Diffusions & Annonces Officielles',
-                    sub: 'Messages généraux envoyés aux élèves',
-                    badge: 'Annonces'
-                  })}
+                  onClick={() =>
+                    handleSelectTarget({
+                      type: 'BROADCAST',
+                      target_id: 'broadcast',
+                      title: 'Diffusions & Annonces Officielles',
+                      sub: 'Messages généraux envoyés aux élèves',
+                      badge: 'Annonces',
+                    })
+                  }
                 >
                   <div className="chan-icon-box chan-bell">
                     <Bell size={18} />
@@ -1744,7 +2060,6 @@ const StudentDashboard = () => {
                   </div>
                 </button>
               </div>
-
             </div>
           </div>
 
@@ -1775,15 +2090,22 @@ const StudentDashboard = () => {
                     /* Broadcast Notifications Feed */
                     <div className="broadcast-feed">
                       {messages.length > 0 ? (
-                        messages.map(msg => (
+                        messages.map((msg) => (
                           <div key={msg.id} className={`broadcast-card ${msg.lu ? 'read' : 'unread'}`}>
                             <div className="broadcast-card-header">
                               <strong>{msg.sujet}</strong>
                               <span className="broadcast-date">
-                                {new Date(msg.date_envoi).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                {new Date(msg.date_envoi).toLocaleDateString('fr-FR', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
                               </span>
                             </div>
-                            <p className="broadcast-sender">De : <strong>{msg.expediteur_nom_complet || msg.expediteur_nom}</strong></p>
+                            <p className="broadcast-sender">
+                              De : <strong>{msg.expediteur_nom_complet || msg.expediteur_nom}</strong>
+                            </p>
                             <p className="broadcast-content">{msg.contenu}</p>
                           </div>
                         ))
@@ -1802,22 +2124,23 @@ const StudentDashboard = () => {
                           <span>Chargement des messages...</span>
                         </div>
                       ) : chatHistory.length > 0 ? (
-                        chatHistory.map(msg => {
+                        chatHistory.map((msg) => {
                           const isMe = String(msg.expediteur_id) === String(user?.id);
                           return (
                             <div key={msg.id} className={`chat-msg-row ${isMe ? 'me' : 'other'}`}>
                               <div className="chat-msg-bubble">
                                 {!isMe && (
                                   <span className="msg-sender-name">
-                                    {msg.expediteur_role === 'PROFESSEUR' ? 'Prof. ' : ''}{msg.expediteur_nom_complet || msg.expediteur_nom}
+                                    {msg.expediteur_role === 'PROFESSEUR' ? 'Prof. ' : ''}
+                                    {msg.expediteur_nom_complet || msg.expediteur_nom}
                                   </span>
                                 )}
                                 <p className="msg-text">{msg.contenu}</p>
                                 {msg.fichier_url && (
-                                  <a 
-                                    href={`${API_BASE_URL.replace('/api', '')}${msg.fichier_url}`} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer" 
+                                  <a
+                                    href={`${API_BASE_URL.replace('/api', '')}${msg.fichier_url}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className={`msg-file-attachment ${isMe ? 'file-me' : 'file-other'}`}
                                   >
                                     <Paperclip size={13} />
@@ -1826,7 +2149,10 @@ const StudentDashboard = () => {
                                   </a>
                                 )}
                                 <span className="msg-timestamp">
-                                  {new Date(msg.date_envoi).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                  {new Date(msg.date_envoi).toLocaleTimeString('fr-FR', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
                                 </span>
                               </div>
                             </div>
@@ -1859,13 +2185,22 @@ const StudentDashboard = () => {
                     <form onSubmit={sendChatMessage} className="chat-input-footer">
                       <label className="file-upload-btn" title="Joindre un fichier (PDF, image, doc...)">
                         <Paperclip size={18} />
-                        <input type="file" onChange={handleFileUpload} style={{ display: 'none' }} disabled={uploadingFile} />
+                        <input
+                          type="file"
+                          onChange={handleFileUpload}
+                          style={{ display: 'none' }}
+                          disabled={uploadingFile}
+                        />
                       </label>
                       <input
                         type="text"
-                        placeholder={uploadingFile ? "Téléchargement du fichier..." : `Écrire un message dans ${activeChatTarget.title}...`}
+                        placeholder={
+                          uploadingFile
+                            ? 'Téléchargement du fichier...'
+                            : `Écrire un message dans ${activeChatTarget.title}...`
+                        }
                         value={chatInput}
-                        onChange={e => setChatInput(e.target.value)}
+                        onChange={(e) => setChatInput(e.target.value)}
                         disabled={uploadingFile}
                       />
                       <button type="submit" className="primary-btn chat-send-btn" disabled={uploadingFile}>
@@ -1882,9 +2217,7 @@ const StudentDashboard = () => {
               </div>
             )}
           </div>
-
         </div>
-
       </div>
     );
   };
@@ -1899,7 +2232,7 @@ const StudentDashboard = () => {
       const periodData = notes[year]?.periodes[period];
       if (periodData) {
         const initialSims = {};
-        Object.keys(periodData.matieres).forEach(code => {
+        Object.keys(periodData.matieres).forEach((code) => {
           initialSims[code] = periodData.matieres[code].moyenne || 10;
         });
         setSimulatedGrades(initialSims);
@@ -1923,7 +2256,7 @@ const StudentDashboard = () => {
       let maxCoeff = 0;
       let totalCoeff = 0;
 
-      Object.keys(periodData.matieres).forEach(code => {
+      Object.keys(periodData.matieres).forEach((code) => {
         const mat = periodData.matieres[code];
         totalCoeff += mat.coefficient;
         if (mat.coefficient > maxCoeff) {
@@ -1933,41 +2266,43 @@ const StudentDashboard = () => {
       });
 
       if (topMat && totalCoeff > 0) {
-        const boostVal = (2 * topMat.coefficient / totalCoeff).toFixed(2);
+        const boostVal = ((2 * topMat.coefficient) / totalCoeff).toFixed(2);
         return (
           <span>
-            Astuce : Gagner <strong>+2 points</strong> en <strong>{topMat.nom}</strong> (Coeff {topMat.coefficient}) augmentera votre moyenne générale de <strong>+{boostVal} points</strong> !
+            Astuce : Gagner <strong>+2 points</strong> en <strong>{topMat.nom}</strong> (Coeff {topMat.coefficient})
+            augmentera votre moyenne générale de <strong>+{boostVal} points</strong> !
           </span>
         );
       }
-      return "Ajustez vos notes prévisionnelles pour analyser votre classement et vos chances de passage.";
+      return 'Ajustez vos notes prévisionnelles pour analyser votre classement et vos chances de passage.';
     };
 
     return (
       <div className="tab-pane">
-        
         {/* Top Hero Banner */}
         <div className="simulator-hero-banner card-box">
           <div className="simulator-hero-left">
             <div className="sim-hero-title-row">
               <h2>Simulateur de Moyenne Périodique</h2>
-              <span className="sim-badge-tag"><Percent size={14} /> Calcul Prévisionnel</span>
+              <span className="sim-badge-tag">
+                <Percent size={14} /> Calcul Prévisionnel
+              </span>
             </div>
             <p className="sim-hero-sub">
-              Ajustez vos notes prévisionnelles par matière et visualisez en temps réel leur impact sur votre moyenne générale et votre statut de passage.
+              Ajustez vos notes prévisionnelles par matière et visualisez en temps réel leur impact sur votre moyenne
+              générale et votre statut de passage.
             </p>
           </div>
 
           <div className="simulator-hero-actions">
             {hasNotes && (
               <div className="sim-selector-box">
-                <label><Calendar size={13} /> Période :</label>
-                <select 
-                  value={selectedSimPeriod} 
-                  onChange={e => setSelectedSimPeriod(e.target.value)}
-                >
-                  {Object.keys(notes).map(year => 
-                    Object.keys(notes[year].periodes).map(period => (
+                <label>
+                  <Calendar size={13} /> Période :
+                </label>
+                <select value={selectedSimPeriod} onChange={(e) => setSelectedSimPeriod(e.target.value)}>
+                  {Object.keys(notes).map((year) =>
+                    Object.keys(notes[year].periodes).map((period) => (
                       <option key={`${year}::${period}`} value={`${year}::${period}`}>
                         {year} - {period}
                       </option>
@@ -1977,7 +2312,11 @@ const StudentDashboard = () => {
               </div>
             )}
 
-            <button className="secondary-btn sim-reset-btn" onClick={handleResetGrades} title="Réinitialiser aux notes réelles">
+            <button
+              className="secondary-btn sim-reset-btn"
+              onClick={handleResetGrades}
+              title="Réinitialiser aux notes réelles"
+            >
               <RefreshCw size={15} /> Réinitialiser
             </button>
           </div>
@@ -1985,7 +2324,6 @@ const StudentDashboard = () => {
 
         {selectedSimPeriod && notes && (
           <div className="simulator-grid">
-            
             {/* LEFT COLUMN: Input controls */}
             <div className="simulator-inputs card-box">
               <div className="sim-inputs-header">
@@ -2013,9 +2351,9 @@ const StudentDashboard = () => {
                   const periodData = notes[year]?.periodes[period];
                   if (!periodData) return null;
 
-                  return Object.keys(periodData.matieres).map(code => {
+                  return Object.keys(periodData.matieres).map((code) => {
                     const mat = periodData.matieres[code];
-                    const currentVal = simulatedGrades[code] !== undefined ? simulatedGrades[code] : (mat.moyenne || 10);
+                    const currentVal = simulatedGrades[code] !== undefined ? simulatedGrades[code] : mat.moyenne || 10;
                     const isModified = mat.moyenne !== null && Math.abs(currentVal - mat.moyenne) > 0.01;
 
                     return (
@@ -2028,7 +2366,11 @@ const StudentDashboard = () => {
                           {mat.moyenne !== null ? (
                             <span className="real-grade-lbl">
                               Note actuelle: <strong>{mat.moyenne}/20</strong>
-                              {isModified && <span className="modified-dot" title="Note simulée modifiée">• Modifié</span>}
+                              {isModified && (
+                                <span className="modified-dot" title="Note simulée modifiée">
+                                  • Modifié
+                                </span>
+                              )}
                             </span>
                           ) : (
                             <span className="real-grade-lbl">Aucune note saisie</span>
@@ -2038,47 +2380,55 @@ const StudentDashboard = () => {
                         <div className="sim-controls-wrapper">
                           {/* Quick adjust buttons */}
                           <div className="quick-adjust-btns">
-                            <button 
-                              type="button" 
-                              className="adjust-btn" 
+                            <button
+                              type="button"
+                              className="adjust-btn"
                               onClick={() => handleSimGradeChange(code, currentVal - 1)}
                               title="-1 point"
-                            >-1</button>
-                            <button 
-                              type="button" 
-                              className="adjust-btn" 
+                            >
+                              -1
+                            </button>
+                            <button
+                              type="button"
+                              className="adjust-btn"
                               onClick={() => handleSimGradeChange(code, currentVal - 0.5)}
                               title="-0.5 point"
-                            >-0.5</button>
-                            <button 
-                              type="button" 
-                              className="adjust-btn" 
+                            >
+                              -0.5
+                            </button>
+                            <button
+                              type="button"
+                              className="adjust-btn"
                               onClick={() => handleSimGradeChange(code, currentVal + 0.5)}
                               title="+0.5 point"
-                            >+0.5</button>
-                            <button 
-                              type="button" 
-                              className="adjust-btn" 
+                            >
+                              +0.5
+                            </button>
+                            <button
+                              type="button"
+                              className="adjust-btn"
                               onClick={() => handleSimGradeChange(code, currentVal + 1)}
                               title="+1 point"
-                            >+1</button>
+                            >
+                              +1
+                            </button>
                           </div>
 
                           <div className="sim-input-box">
-                            <input 
-                              type="number" 
+                            <input
+                              type="number"
                               step="0.25"
                               min="0"
                               max="20"
                               value={currentVal}
-                              onChange={e => handleSimGradeChange(code, e.target.value)}
+                              onChange={(e) => handleSimGradeChange(code, e.target.value)}
                             />
                             <span className="unit-20">/20</span>
                           </div>
                         </div>
 
                         <div className="sim-score-bar-bg">
-                          <div 
+                          <div
                             className="sim-score-bar-fill"
                             style={{ width: `${Math.min(100, (currentVal / 20) * 100)}%` }}
                           ></div>
@@ -2092,11 +2442,10 @@ const StudentDashboard = () => {
 
             {/* RIGHT COLUMN: Results & AI Advice */}
             <div className="simulator-results-col">
-              
               {/* Score Display Card */}
               <div className="dashboard-card sim-result-card">
                 <span className="sim-result-tag">Moyenne Prévisionnelle</span>
-                
+
                 <div className={`sim-avg-circle ${getSimColorClass(simAverage)}`}>
                   <div className="avg-circle-inner">
                     <span className="avg-score-num">{getSimulatedAverage()}</span>
@@ -2113,7 +2462,7 @@ const StudentDashboard = () => {
                     <span className="thresh-lbl max">20</span>
                   </div>
                   <div className="sim-progress-track">
-                    <div 
+                    <div
                       className={`sim-progress-fill ${getSimColorClass(simAverage)}`}
                       style={{ width: `${Math.min(100, (simAverage / 20) * 100)}%` }}
                     ></div>
@@ -2124,7 +2473,9 @@ const StudentDashboard = () => {
 
                 {/* Decision Box */}
                 <div className="sim-decision-box">
-                  <span className="dec-title"><CheckCircle2 size={14} /> Décision Prévisionnelle</span>
+                  <span className="dec-title">
+                    <CheckCircle2 size={14} /> Décision Prévisionnelle
+                  </span>
                   <div className={`dec-pill ${getSimColorClass(simAverage)}`}>
                     {getPassageStatusText(simAverage).text}
                   </div>
@@ -2142,16 +2493,11 @@ const StudentDashboard = () => {
                     <span>Analyse d'impact des coefficients</span>
                   </div>
                 </div>
-                <p className="sim-advice-body">
-                  {getSimAdvice()}
-                </p>
+                <p className="sim-advice-body">{getSimAdvice()}</p>
               </div>
-
             </div>
-
           </div>
         )}
-
       </div>
     );
   };
@@ -2159,24 +2505,21 @@ const StudentDashboard = () => {
   const renderGradesTab = () => {
     const hasNotes = notes && Object.keys(notes).length > 0;
     const availableYears = hasNotes ? Object.keys(notes) : [];
-    const activeYearKey = (selectedGradeYear && notes[selectedGradeYear]) 
-      ? selectedGradeYear 
-      : (availableYears[0] || '');
+    const activeYearKey = selectedGradeYear && notes[selectedGradeYear] ? selectedGradeYear : availableYears[0] || '';
     const activeYearData = activeYearKey ? notes[activeYearKey] : null;
     const defaultPeriods = ['Semestre 1', 'Semestre 2'];
     const existingPeriods = activeYearData?.periodes ? Object.keys(activeYearData.periodes) : [];
     const availablePeriods = Array.from(new Set([...defaultPeriods, ...existingPeriods]));
-    const activePeriodKey = (selectedGradePeriod && availablePeriods.includes(selectedGradePeriod)) 
-      ? selectedGradePeriod 
-      : availablePeriods[0];
-    const activePeriodData = (activeYearData && activeYearData.periodes && activeYearData.periodes[activePeriodKey]) 
-      ? activeYearData.periodes[activePeriodKey] 
-      : null;
+    const activePeriodKey =
+      selectedGradePeriod && availablePeriods.includes(selectedGradePeriod) ? selectedGradePeriod : availablePeriods[0];
+    const activePeriodData =
+      activeYearData && activeYearData.periodes && activeYearData.periodes[activePeriodKey]
+        ? activeYearData.periodes[activePeriodKey]
+        : null;
 
     return (
       <div className="tab-pane">
         <div className="grades-layout">
-          
           {/* Grades explorer with selectors */}
           <div className="grades-explorer card-box">
             <div className="grades-header-toolbar">
@@ -2184,21 +2527,23 @@ const StudentDashboard = () => {
                 <h3>Notes & Bulletins Scolaires</h3>
                 <p className="subtitle">Consultez vos relevés de notes et appréciations certifiés par période.</p>
               </div>
-              
+
               {hasNotes && (
                 <div className="grades-selectors-row">
                   {/* Year Selector */}
                   <div className="selector-group">
-                    <label><Calendar size={13} /> Année Scolaire</label>
-                    <select 
-                      value={activeYearKey} 
+                    <label>
+                      <Calendar size={13} /> Année Scolaire
+                    </label>
+                    <select
+                      value={activeYearKey}
                       onChange={(e) => {
                         const year = e.target.value;
                         setSelectedGradeYear(year);
                         setSelectedGradePeriod('Semestre 1');
                       }}
                     >
-                      {availableYears.map(annee => (
+                      {availableYears.map((annee) => (
                         <option key={annee} value={annee}>
                           {annee} ({notes[annee].classe})
                         </option>
@@ -2209,13 +2554,14 @@ const StudentDashboard = () => {
                   {/* Period Selector Dropdown */}
                   {availablePeriods.length > 0 && (
                     <div className="selector-group">
-                      <label><BookOpen size={13} /> Période / Semestre</label>
-                      <select 
-                        value={activePeriodKey}
-                        onChange={(e) => setSelectedGradePeriod(e.target.value)}
-                      >
-                        {availablePeriods.map(p => (
-                          <option key={p} value={p}>{p}</option>
+                      <label>
+                        <BookOpen size={13} /> Période / Semestre
+                      </label>
+                      <select value={activePeriodKey} onChange={(e) => setSelectedGradePeriod(e.target.value)}>
+                        {availablePeriods.map((p) => (
+                          <option key={p} value={p}>
+                            {p}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -2227,9 +2573,9 @@ const StudentDashboard = () => {
             {/* Period Pills Switcher for quick clicks */}
             {availablePeriods.length > 1 && (
               <div className="period-pills-switcher">
-                {availablePeriods.map(p => (
-                  <button 
-                    key={p} 
+                {availablePeriods.map((p) => (
+                  <button
+                    key={p}
                     className={`period-pill-btn ${activePeriodKey === p ? 'active' : ''}`}
                     onClick={() => setSelectedGradePeriod(p)}
                   >
@@ -2244,8 +2590,12 @@ const StudentDashboard = () => {
               <div className="period-grades-view">
                 <div className="period-summary-card">
                   <div className="meta-info">
-                    <h4>{activeYearKey} — {activePeriodKey}</h4>
-                    <span className="class-badge">Classe : <strong>{activeYearData?.classe}</strong></span>
+                    <h4>
+                      {activeYearKey} — {activePeriodKey}
+                    </h4>
+                    <span className="class-badge">
+                      Classe : <strong>{activeYearData?.classe}</strong>
+                    </span>
                   </div>
                   <div className="avg-highlight-badge">
                     <Award size={16} /> Moyenne Générale : {activePeriodData.moyenne_generale} / 20
@@ -2264,28 +2614,24 @@ const StudentDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {Object.keys(activePeriodData.matieres).map(codeMat => {
+                    {Object.keys(activePeriodData.matieres).map((codeMat) => {
                       const mat = activePeriodData.matieres[codeMat];
-                      const devoirs = mat.notes.filter(n => n.type_note === 'DEVOIR');
-                      const examen = mat.notes.find(n => n.type_note === 'EXAMEN' || n.type_note === 'COMPOSITION');
+                      const devoirs = mat.notes.filter((n) => n.type_note === 'DEVOIR');
+                      const examen = mat.notes.find((n) => n.type_note === 'EXAMEN' || n.type_note === 'COMPOSITION');
                       return (
                         <tr key={codeMat}>
-                          <td><strong>{mat.nom}</strong></td>
-                          <td><span className="coeff-badge">{mat.coefficient}</span></td>
                           <td>
-                            {devoirs.length > 0 
-                              ? devoirs.map(d => d.valeur + '/20').join(', ') 
-                              : '--'}
+                            <strong>{mat.nom}</strong>
                           </td>
                           <td>
-                            {examen ? `${examen.valeur}/20` : '--'}
+                            <span className="coeff-badge">{mat.coefficient}</span>
                           </td>
+                          <td>{devoirs.length > 0 ? devoirs.map((d) => d.valeur + '/20').join(', ') : '--'}</td>
+                          <td>{examen ? `${examen.valeur}/20` : '--'}</td>
                           <td className="text-emerald font-bold">
                             {mat.moyenne !== null ? `${mat.moyenne}/20` : '--'}
                           </td>
-                          <td className="appr-cell">
-                            {mat.appreciation || 'Aucune appréciation.'}
-                          </td>
+                          <td className="appr-cell">{mat.appreciation || 'Aucune appréciation.'}</td>
                         </tr>
                       );
                     })}
@@ -2295,7 +2641,9 @@ const StudentDashboard = () => {
             ) : (
               <div className="empty-state" style={{ padding: '40px 20px', textAlign: 'center' }}>
                 <BookOpen size={48} className="text-gray" style={{ marginBottom: '12px' }} />
-                <h4 style={{ margin: '0 0 6px', fontSize: '16px', fontWeight: 700 }}>Aucune note pour le {activePeriodKey}</h4>
+                <h4 style={{ margin: '0 0 6px', fontSize: '16px', fontWeight: 700 }}>
+                  Aucune note pour le {activePeriodKey}
+                </h4>
                 <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-slate-500)' }}>
                   Les notes et évaluations de ce semestre n'ont pas encore été renseignées par l'équipe enseignante.
                 </p>
@@ -2306,38 +2654,107 @@ const StudentDashboard = () => {
           {/* Documents Downloads (Secured PDFs) */}
           <div className="documents-panel card-box">
             <h3>Bulletins & Attestations Officiels</h3>
-            <p className="subtitle">Tous les documents générés sur la plateforme LeralScolaire comportent un QR code d'authentification unique vérifiable par l'État du Sénégal.</p>
-            
+            <p className="subtitle">
+              Tous les documents générés sur la plateforme LeralScolaire comportent un QR code d'authentification unique
+              vérifiable par l'État du Sénégal.
+            </p>
+
             <div className="document-download-list mt-6">
               {documents.bulletins && documents.bulletins.length > 0 ? (
                 documents.bulletins.map((bull, idx) => (
-                  <div key={idx} className="document-card-download" style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'stretch', padding: '16px', border: '1.5px solid var(--border-color)', borderRadius: '12px', marginBottom: '12px' }}>
+                  <div
+                    key={idx}
+                    className="document-card-download"
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '12px',
+                      alignItems: 'stretch',
+                      padding: '16px',
+                      border: '1.5px solid var(--border-color)',
+                      borderRadius: '12px',
+                      marginBottom: '12px',
+                    }}
+                  >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div className="doc-icon" style={{ background: 'var(--primary-light)', color: 'var(--primary-color)', width: '38px', height: '38px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '12px' }}>PDF</div>
+                        <div
+                          className="doc-icon"
+                          style={{
+                            background: 'var(--primary-light)',
+                            color: 'var(--primary-color)',
+                            width: '38px',
+                            height: '38px',
+                            borderRadius: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 'bold',
+                            fontSize: '12px',
+                          }}
+                        >
+                          PDF
+                        </div>
                         <div className="doc-info">
-                          <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 600 }}>Bulletin - Semestre {bull.semestre}</h4>
+                          <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 600 }}>
+                            Bulletin - Semestre {bull.semestre}
+                          </h4>
                           <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--slate-500)' }}>
                             Classe : {bull.classe_nom} | Année : {bull.annee_scolaire}
                           </p>
                         </div>
                       </div>
-                      
+
                       {!bull.autorise ? (
-                        <span style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '12px', background: '#fef3c7', color: '#d97706', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            padding: '4px 10px',
+                            borderRadius: '12px',
+                            background: '#fef3c7',
+                            color: '#d97706',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
+                        >
                           <Lock size={11} /> En attente de publication
                         </span>
                       ) : bull.telecharge ? (
-                        <span style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '12px', background: '#d1fae5', color: '#059669', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            padding: '4px 10px',
+                            borderRadius: '12px',
+                            background: '#d1fae5',
+                            color: '#059669',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
+                        >
                           <CheckCircle size={11} /> Déjà téléchargé
                         </span>
                       ) : (
-                        <a 
+                        <a
                           href={`/api/documents/bulletin/${bull.eleve_id}?semestre=${bull.semestre}`}
-                          target="_blank" 
-                          rel="noopener noreferrer" 
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="download-action-btn"
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', padding: '6px 12px', borderRadius: '6px', background: 'var(--primary-color)', color: '#fff', fontWeight: 600, textDecoration: 'none' }}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            fontSize: '11px',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            background: 'var(--primary-color)',
+                            color: '#fff',
+                            fontWeight: 600,
+                            textDecoration: 'none',
+                          }}
                           onClick={() => {
                             setTimeout(() => {
                               fetchData();
@@ -2350,16 +2767,53 @@ const StudentDashboard = () => {
                     </div>
 
                     {!bull.autorise && (
-                      <div style={{ fontSize: '11px', color: '#92400e', background: '#fffbeb', padding: '8px 12px', borderRadius: '6px', border: '1px solid #fde68a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div
+                        style={{
+                          fontSize: '11px',
+                          color: '#92400e',
+                          background: '#fffbeb',
+                          padding: '8px 12px',
+                          borderRadius: '6px',
+                          border: '1px solid #fde68a',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
                         <AlertCircle size={13} style={{ flexShrink: 0 }} />
-                        <span>Les notes de ce semestre sont en cours de saisie. Le téléchargement officiel sera ouvert par l'administration une fois toutes les notes finalisées.</span>
+                        <span>
+                          Les notes de ce semestre sont en cours de saisie. Le téléchargement officiel sera ouvert par
+                          l'administration une fois toutes les notes finalisées.
+                        </span>
                       </div>
                     )}
 
                     {bull.telecharge && (
-                      <div style={{ fontSize: '11px', color: '#065f46', background: '#ecfdf5', padding: '8px 12px', borderRadius: '6px', border: '1px solid #a7f3d0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div
+                        style={{
+                          fontSize: '11px',
+                          color: '#065f46',
+                          background: '#ecfdf5',
+                          padding: '8px 12px',
+                          borderRadius: '6px',
+                          border: '1px solid #a7f3d0',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
                         <ShieldCheck size={13} style={{ flexShrink: 0 }} />
-                        <span>Ce bulletin officiel a été téléchargé le {new Date(bull.date_telechargement).toLocaleDateString('fr-SN', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}. Conformément à la réglementation, le téléchargement multiple est désactivé.</span>
+                        <span>
+                          Ce bulletin officiel a été téléchargé le{' '}
+                          {new Date(bull.date_telechargement).toLocaleDateString('fr-SN', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                          . Conformément à la réglementation, le téléchargement multiple est désactivé.
+                        </span>
                       </div>
                     )}
                   </div>
@@ -2369,10 +2823,8 @@ const StudentDashboard = () => {
                   Aucun bulletin officiel n'a encore été généré par l'administration de votre établissement.
                 </div>
               )}
-
             </div>
           </div>
-
         </div>
       </div>
     );
@@ -2380,7 +2832,6 @@ const StudentDashboard = () => {
 
   return (
     <div className="student-dashboard">
-      
       {/* OFFLINE BANNER */}
       {isOffline && (
         <div className="offline-banner">
@@ -2428,9 +2879,7 @@ const StudentDashboard = () => {
             />
           )}
 
-          {!loading && tab === 'profile' && (
-            <StudentProfileTab profile={profile} />
-          )}
+          {!loading && tab === 'profile' && <StudentProfileTab profile={profile} />}
 
           {!loading && tab === 'portfolio' && (
             <StudentPortfolioTab
@@ -2475,13 +2924,9 @@ const StudentDashboard = () => {
             />
           )}
 
-          {!loading && tab === 'evolution' && (
-            <StudentEvolutionTab evolution={evolution} />
-          )}
+          {!loading && tab === 'evolution' && <StudentEvolutionTab evolution={evolution} />}
 
-          {!loading && tab === 'schedule' && (
-            <StudentScheduleTab schedule={schedule} profile={profile} />
-          )}
+          {!loading && tab === 'schedule' && <StudentScheduleTab schedule={schedule} profile={profile} />}
 
           {!loading && tab === 'cahier-texte' && (
             <StudentCahierTexteTab
@@ -2493,9 +2938,7 @@ const StudentDashboard = () => {
             />
           )}
 
-          {!loading && tab === 'exams' && (
-            <StudentExamsTab examResults={examResults} profile={profile} />
-          )}
+          {!loading && tab === 'exams' && <StudentExamsTab examResults={examResults} profile={profile} />}
 
           {!loading && tab === 'messages' && (
             <StudentMessagesTab
@@ -2540,9 +2983,7 @@ const StudentDashboard = () => {
             />
           )}
 
-          {!loading && tab === 'discipline' && (
-            <StudentDisciplineView />
-          )}
+          {!loading && tab === 'discipline' && <StudentDisciplineView />}
         </main>
       </div>
 
@@ -2553,15 +2994,19 @@ const StudentDashboard = () => {
         <div
           onClick={closePopup}
           style={{
-            position: 'fixed', inset: 0, zIndex: 10000,
+            position: 'fixed',
+            inset: 0,
+            zIndex: 10000,
             background: 'rgba(10,25,49,0.55)',
             backdropFilter: 'blur(4px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             animation: 'fadeInOverlay .25s ease',
           }}
         >
           <div
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
             style={{
               background: 'white',
               borderRadius: '20px',
@@ -2574,34 +3019,47 @@ const StudentDashboard = () => {
             }}
           >
             {/* Icon circle */}
-            <div style={{
-              width: '72px', height: '72px', borderRadius: '50%',
-              background: 'linear-gradient(135deg, #131e6c, #2a3a9e)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 20px',
-              boxShadow: '0 8px 24px rgba(19,30,108,0.35)',
-            }}>
+            <div
+              style={{
+                width: '72px',
+                height: '72px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #131e6c, #2a3a9e)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 20px',
+                boxShadow: '0 8px 24px rgba(19,30,108,0.35)',
+              }}
+            >
               <PartyPopper size={34} color="white" />
             </div>
 
-            <h2 style={{ margin: '0 0 10px', fontSize: '22px', fontWeight: 800, color: '#0f172a' }}>
-              {popup.title}
-            </h2>
-            <p style={{ margin: '0 0 28px', fontSize: '13px', color: '#64748b', lineHeight: 1.6 }}>
-              {popup.message}
-            </p>
+            <h2 style={{ margin: '0 0 10px', fontSize: '22px', fontWeight: 800, color: '#0f172a' }}>{popup.title}</h2>
+            <p style={{ margin: '0 0 28px', fontSize: '13px', color: '#64748b', lineHeight: 1.6 }}>{popup.message}</p>
             <button
               onClick={closePopup}
               style={{
                 background: 'linear-gradient(135deg, #131e6c, #2a3a9e)',
-                color: 'white', border: 'none', borderRadius: '10px',
-                padding: '12px 32px', fontSize: '14px', fontWeight: 700,
-                cursor: 'pointer', width: '100%',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                padding: '12px 32px',
+                fontSize: '14px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                width: '100%',
                 boxShadow: '0 4px 14px rgba(19,30,108,0.3)',
                 transition: 'transform .15s ease, box-shadow .15s ease',
               }}
-              onMouseEnter={e => { e.target.style.transform = 'translateY(-1px)'; e.target.style.boxShadow = '0 6px 20px rgba(19,30,108,0.4)'; }}
-              onMouseLeave={e => { e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 4px 14px rgba(19,30,108,0.3)'; }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-1px)';
+                e.target.style.boxShadow = '0 6px 20px rgba(19,30,108,0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 14px rgba(19,30,108,0.3)';
+              }}
             >
               Parfait, merci !
             </button>
@@ -2613,43 +3071,71 @@ const StudentDashboard = () => {
           CORNER TOAST — errors & info
       ========================================== */}
       {toast && (
-        <div style={{
-          position: 'fixed', bottom: '28px', right: '28px', zIndex: 9999,
-          display: 'flex', alignItems: 'flex-start', gap: '12px',
-          padding: '14px 16px', borderRadius: '14px',
-          boxShadow: '0 10px 40px rgba(0,0,0,0.22)',
-          maxWidth: '360px', minWidth: '260px',
-          background: toast.type === 'error' ? '#1e0a0a' : '#0a1424',
-          border: `1.5px solid ${toast.type === 'error' ? '#7f1d1d' : '#1e3a5f'}`,
-          animation: 'slideInRight .3s cubic-bezier(0.34,1.3,0.64,1)',
-        }}>
-          <div style={{
-            width: '34px', height: '34px', borderRadius: '50%', flexShrink: 0,
-            background: toast.type === 'error' ? 'rgba(220,38,38,0.2)' : 'rgba(59,130,246,0.2)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            {toast.type === 'error'
-              ? <XCircle size={18} color="#f87171" />
-              : <AlertCircle size={18} color="#60a5fa" />
-            }
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '28px',
+            right: '28px',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '12px',
+            padding: '14px 16px',
+            borderRadius: '14px',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.22)',
+            maxWidth: '360px',
+            minWidth: '260px',
+            background: toast.type === 'error' ? '#1e0a0a' : '#0a1424',
+            border: `1.5px solid ${toast.type === 'error' ? '#7f1d1d' : '#1e3a5f'}`,
+            animation: 'slideInRight .3s cubic-bezier(0.34,1.3,0.64,1)',
+          }}
+        >
+          <div
+            style={{
+              width: '34px',
+              height: '34px',
+              borderRadius: '50%',
+              flexShrink: 0,
+              background: toast.type === 'error' ? 'rgba(220,38,38,0.2)' : 'rgba(59,130,246,0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {toast.type === 'error' ? <XCircle size={18} color="#f87171" /> : <AlertCircle size={18} color="#60a5fa" />}
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', color: toast.type === 'error' ? '#f87171' : '#60a5fa', marginBottom: '3px' }}>
+            <div
+              style={{
+                fontSize: '11px',
+                fontWeight: 800,
+                letterSpacing: '.06em',
+                textTransform: 'uppercase',
+                color: toast.type === 'error' ? '#f87171' : '#60a5fa',
+                marginBottom: '3px',
+              }}
+            >
               {toast.type === 'error' ? 'Erreur' : 'Information'}
             </div>
-            <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: 1.5 }}>
-              {toast.message}
-            </div>
+            <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: 1.5 }}>{toast.message}</div>
           </div>
           <button
             onClick={() => setToast(null)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', padding: '2px', flexShrink: 0, lineHeight: 1, display: 'flex' }}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#475569',
+              padding: '2px',
+              flexShrink: 0,
+              lineHeight: 1,
+              display: 'flex',
+            }}
           >
             <X size={16} />
           </button>
         </div>
       )}
-
 
       {/* MOBILE MENU DRAWER */}
       <StudentMobileDrawer
@@ -2659,7 +3145,6 @@ const StudentDashboard = () => {
         tab={tab}
         navigate={navigate}
       />
-
     </div>
   );
 };

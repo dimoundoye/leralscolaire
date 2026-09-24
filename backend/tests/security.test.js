@@ -31,7 +31,11 @@ before(async () => {
   );
   ids = {
     eleve: eleve.id,
-    classe: (await one('SELECT c.id FROM classes c JOIN etablissements e ON c.etablissement_id = e.id WHERE e.admin_id = (SELECT admin_id FROM etablissements LIMIT 1) LIMIT 1')).id,
+    classe: (
+      await one(
+        'SELECT c.id FROM classes c JOIN etablissements e ON c.etablissement_id = e.id WHERE e.admin_id = (SELECT admin_id FROM etablissements LIMIT 1) LIMIT 1'
+      )
+    ).id,
     matiere: (await one('SELECT id FROM matieres LIMIT 1')).id,
     etablissement: (await one('SELECT id FROM etablissements LIMIT 1')).id,
     prof: (await one("SELECT id FROM users WHERE role = 'PROFESSEUR' LIMIT 1")).id,
@@ -68,7 +72,7 @@ const needsData = (t) => {
   return false;
 };
 
-test('les données d\'un élève sont refusées aux autres établissements, professeurs et élèves', async (t) => {
+test("les données d'un élève sont refusées aux autres établissements, professeurs et élèves", async (t) => {
   if (needsData(t)) return;
   const routes = [
     `/api/documents/bulletin/${ids.eleve}?semestre=1`,
@@ -85,7 +89,7 @@ test('les données d\'un élève sont refusées aux autres établissements, prof
   }
 });
 
-test('les données d\'une classe sont refusées hors de son établissement', async (t) => {
+test("les données d'une classe sont refusées hors de son établissement", async (t) => {
   if (needsData(t)) return;
   const routes = [
     `/api/classes/${ids.classe}/matieres`,
@@ -105,7 +109,7 @@ test('les données d\'une classe sont refusées hors de son établissement', asy
   }
 });
 
-test('l\'administration de l\'établissement garde l\'accès à ses propres données', async (t) => {
+test("l'administration de l'établissement garde l'accès à ses propres données", async (t) => {
   if (needsData(t)) return;
   const routes = [
     `/api/documents/dossier-transfert/${ids.eleve}`,
@@ -120,7 +124,7 @@ test('l\'administration de l\'établissement garde l\'accès à ses propres donn
   }
 });
 
-test('un professeur garde l\'accès aux classes et matières qu\'il enseigne', async (t) => {
+test("un professeur garde l'accès aux classes et matières qu'il enseigne", async (t) => {
   const { rows } = await db.query(
     `SELECT pm.professeur_id, pm.classe_id, pm.matiere_id FROM professeur_matieres pm
      JOIN classes c ON c.id = pm.classe_id
@@ -147,15 +151,23 @@ test('un élève accède à son propre dossier disciplinaire (me)', async (t) =>
   assert.strictEqual(res.status, 200);
 });
 
-test('les modifications sont refusées hors de l\'établissement (sans rien écrire)', async (t) => {
+test("les modifications sont refusées hors de l'établissement (sans rien écrire)", async (t) => {
   if (needsData(t)) return;
   const attempts = [
     ['PUT', `/api/classes/${ids.classe}`, { nom: 'piratée' }],
     ['POST', `/api/classes/${ids.classe}/matieres`, { matieres: [] }],
     ['POST', `/api/notes/decisions/${ids.classe}`, { decisions: [] }],
-    ['POST', '/api/notes/batch', { notes: [{ eleve_id: ids.eleve, valeur: 20 }], matiere_id: ids.matiere, semestre: 1 }],
+    [
+      'POST',
+      '/api/notes/batch',
+      { notes: [{ eleve_id: ids.eleve, valeur: 20 }], matiere_id: ids.matiere, semestre: 1 },
+    ],
     ['PUT', `/api/professeurs/${ids.prof || OUTSIDER_ID}`, { email: 'pirate@test.local', password: 'x' }],
-    ['POST', '/api/professeurs/assignments', { professeur_id: OUTSIDER_ID, classe_id: ids.classe, matiere_id: ids.matiere }],
+    [
+      'POST',
+      '/api/professeurs/assignments',
+      { professeur_id: OUTSIDER_ID, classe_id: ids.classe, matiere_id: ids.matiere },
+    ],
   ];
   for (const [method, path, body] of attempts) {
     for (const who of ['adminAutre', 'profAutre', 'eleve']) {
@@ -165,7 +177,7 @@ test('les modifications sont refusées hors de l\'établissement (sans rien écr
   }
 });
 
-test('la carte d\'identité enseignant est réservée à l\'Office du Bac', async (t) => {
+test("la carte d'identité enseignant est réservée à l'Office du Bac", async (t) => {
   if (!ids.prof) return t.skip('aucun professeur en base');
   for (const who of ['adminAutre', 'profAutre', 'eleveAutre']) {
     const res = await request('GET', `/api/emargement/office/carte-identite/${ids.prof}`, tokens[who]);
@@ -178,15 +190,26 @@ test('émargement : réservé aux professeurs, QR invalide et terrain manquant r
   const eleveScan = await request('POST', '/api/emargement/scan', tokens.eleveAutre, { token: 'x' });
   assert.strictEqual(eleveScan.status, 403);
 
-  const qrInvalide = await request('POST', '/api/emargement/scan', profToken, { token: 'pas-un-qr', latitude: 14.7, longitude: -17.4 });
+  const qrInvalide = await request('POST', '/api/emargement/scan', profToken, {
+    token: 'pas-un-qr',
+    latitude: 14.7,
+    longitude: -17.4,
+  });
   assert.strictEqual(qrInvalide.status, 400);
 
-  const sansTerrain = await request('POST', '/api/emargement/eps-terrain', profToken, { latitude: 14.7, longitude: -17.4 });
+  const sansTerrain = await request('POST', '/api/emargement/eps-terrain', profToken, {
+    latitude: 14.7,
+    longitude: -17.4,
+  });
   assert.strictEqual(sansTerrain.status, 400);
 });
 
-test('inscription directe d\'un établissement désactivée', async () => {
-  const res = await request('POST', '/api/auth/register-etablissement', null, { nom: 'X', email: 'x@test.local', password: 'x' });
+test("inscription directe d'un établissement désactivée", async () => {
+  const res = await request('POST', '/api/auth/register-etablissement', null, {
+    nom: 'X',
+    email: 'x@test.local',
+    password: 'x',
+  });
   assert.strictEqual(res.status, 404);
 });
 
@@ -211,7 +234,8 @@ test('les fichiers envoyés non affichables sont servis en téléchargement isol
 
 test('mot de passe oublié : même réponse que le compte existe ou non', async () => {
   const res = await request('POST', '/api/auth/forgot-password', null, {
-    iup: 'INEXISTANT-000', email: 'inexistant@test.local',
+    iup: 'INEXISTANT-000',
+    email: 'inexistant@test.local',
   });
   assert.strictEqual(res.status, 200);
 });

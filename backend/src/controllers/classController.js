@@ -19,15 +19,18 @@ async function autoCloneClassesForEtablissement(etablissementId) {
   const client = await db.pool.connect();
   try {
     await client.query('BEGIN');
-    
+
     // Get the OLDEST year — use it as the reference/template for cloning
-    const yearsRes = await client.query(`
+    const yearsRes = await client.query(
+      `
       SELECT DISTINCT annee_scolaire FROM classes 
       WHERE etablissement_id = $1
       ORDER BY annee_scolaire ASC
       LIMIT 1
-    `, [etablissementId]);
-    
+    `,
+      [etablissementId]
+    );
+
     if (yearsRes.rows.length === 0) {
       await client.query('COMMIT');
       return;
@@ -45,41 +48,53 @@ async function autoCloneClassesForEtablissement(etablissementId) {
     }
 
     // Get all classes from the base year
-    const classesToClone = await client.query(`
+    const classesToClone = await client.query(
+      `
       SELECT id, nom, niveau FROM classes 
       WHERE etablissement_id = $1 AND annee_scolaire = $2
-    `, [etablissementId, baseYear]);
-    
+    `,
+      [etablissementId, baseYear]
+    );
+
     // For each class, check individually if a class with the same name already exists in nextY
     // This prevents duplicates when saveDecisions already created some classes for nextY
     for (const c of classesToClone.rows) {
-      const existsRes = await client.query(`
+      const existsRes = await client.query(
+        `
         SELECT id FROM classes 
         WHERE etablissement_id = $1 AND annee_scolaire = $2 AND nom = $3
         LIMIT 1
-      `, [etablissementId, nextY, c.nom]);
-      
+      `,
+        [etablissementId, nextY, c.nom]
+      );
+
       if (existsRes.rows.length === 0) {
-        const insertRes = await client.query(`
+        const insertRes = await client.query(
+          `
           INSERT INTO classes (nom, niveau, etablissement_id, annee_scolaire)
           VALUES ($1, $2, $3, $4)
           RETURNING id
-        `, [c.nom, c.niveau, etablissementId, nextY]);
-        
+        `,
+          [c.nom, c.niveau, etablissementId, nextY]
+        );
+
         if (insertRes.rows.length > 0) {
           const newClassId = insertRes.rows[0].id;
           // Copy matieres/coefficients only (no students)
-          await client.query(`
+          await client.query(
+            `
             INSERT INTO classe_matieres (classe_id, matiere_id, coefficient)
             SELECT $1, matiere_id, coefficient 
             FROM classe_matieres 
             WHERE classe_id = $2
             ON CONFLICT DO NOTHING
-          `, [newClassId, c.id]);
+          `,
+            [newClassId, c.id]
+          );
         }
       }
     }
-    
+
     await client.query('COMMIT');
   } catch (err) {
     await client.query('ROLLBACK');
@@ -96,10 +111,10 @@ const classController = {
       if (!etablissementId) {
         return response.error(res, 'Établissement non trouvé.', 404);
       }
-      
+
       // Automatically clone classes to next year if not done yet
       await autoCloneClassesForEtablissement(etablissementId);
-      
+
       const classes = await ClassModel.listClasses(etablissementId);
       return res.json(classes); // keeps compatibility with direct array response
     } catch (err) {
@@ -176,14 +191,22 @@ const classController = {
         }
       }
 
-      await ClassModel.addSchedule(req.params.id, matiere_id, professeur_id, jour_semaine, heure_debut, heure_fin, salle);
+      await ClassModel.addSchedule(
+        req.params.id,
+        matiere_id,
+        professeur_id,
+        jour_semaine,
+        heure_debut,
+        heure_fin,
+        salle
+      );
 
       if (professeur_id) {
         const { rows: cls } = await db.query(
           `SELECT c.nom as classe_nom, et.nom as etablissement_nom 
            FROM classes c 
            JOIN etablissements et ON c.etablissement_id = et.id 
-           WHERE c.id = $1`, 
+           WHERE c.id = $1`,
           [req.params.id]
         );
         const cNom = cls[0]?.classe_nom || '';
@@ -196,7 +219,7 @@ const classController = {
             professeur_id,
             'Nouveau créneau planifié',
             `Un nouveau cours a été planifié le ${jour_semaine} de ${heure_debut.slice(0, 5)} à ${heure_fin.slice(0, 5)} pour la classe ${cNom} à l'établissement ${eNom}.`,
-            'SCHEDULE'
+            'SCHEDULE',
           ]
         );
       }
@@ -240,7 +263,7 @@ const classController = {
             s.professeur_id,
             'Créneau de cours annulé',
             `Le cours de ${s.jour_semaine} de ${s.heure_debut.slice(0, 5)} à ${s.heure_fin.slice(0, 5)} (${s.classe_nom}) à l'établissement ${s.etablissement_nom} a été annulé.`,
-            'SCHEDULE'
+            'SCHEDULE',
           ]
         );
       }
@@ -277,7 +300,14 @@ const classController = {
   async updateExam(req, res, next) {
     const { matiere_id, type_examen, date_examen, salle } = req.body;
     try {
-      const updatedExam = await ClassModel.updateExam(req.params.examId, req.params.id, matiere_id, type_examen, date_examen, salle);
+      const updatedExam = await ClassModel.updateExam(
+        req.params.examId,
+        req.params.id,
+        matiere_id,
+        type_examen,
+        date_examen,
+        salle
+      );
       if (!updatedExam) {
         return response.error(res, 'Examen non trouvé.', 404);
       }
@@ -311,7 +341,7 @@ const classController = {
       console.error(err);
       return response.error(res, 'Erreur lors de la récupération des examens.', 500);
     }
-  }
+  },
 };
 
 module.exports = classController;

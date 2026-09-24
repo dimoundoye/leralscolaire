@@ -3,7 +3,9 @@ const db = require('../src/config/db');
 
 async function migrate() {
   try {
-    console.log('🚀 Migration v29 : Création de la table jurys_bac pour le registre national des jurys et centres d\'examen...');
+    console.log(
+      "🚀 Migration v29 : Création de la table jurys_bac pour le registre national des jurys et centres d'examen..."
+    );
 
     await db.query(`
       CREATE TABLE IF NOT EXISTS jurys_bac (

@@ -9,7 +9,7 @@ const StudentSimulatorTab = ({
   setSimulatedGrades,
   getSimulatedAverage,
   handleSimGradeChange,
-  getPassageStatusText
+  getPassageStatusText,
 }) => {
   const hasNotes = notes && Object.keys(notes).length > 0;
   const simAverage = parseFloat(getSimulatedAverage());
@@ -20,7 +20,7 @@ const StudentSimulatorTab = ({
     const periodData = notes[year]?.periodes[period];
     if (periodData) {
       const initialSims = {};
-      Object.keys(periodData.matieres).forEach(code => {
+      Object.keys(periodData.matieres).forEach((code) => {
         initialSims[code] = periodData.matieres[code].moyenne || 10;
       });
       setSimulatedGrades(initialSims);
@@ -43,7 +43,7 @@ const StudentSimulatorTab = ({
     let maxCoeff = 0;
     let totalCoeff = 0;
 
-    Object.keys(periodData.matieres).forEach(code => {
+    Object.keys(periodData.matieres).forEach((code) => {
       const mat = periodData.matieres[code];
       totalCoeff += mat.coefficient;
       if (mat.coefficient > maxCoeff) {
@@ -53,22 +53,43 @@ const StudentSimulatorTab = ({
     });
 
     if (topMat && totalCoeff > 0) {
-      const boostVal = (2 * topMat.coefficient / totalCoeff).toFixed(2);
+      const boostVal = ((2 * topMat.coefficient) / totalCoeff).toFixed(2);
       return (
         <span>
-          Astuce : Gagner <strong>+2 points</strong> en <strong>{topMat.nom}</strong> (Coeff {topMat.coefficient}) augmentera votre moyenne générale de <strong>+{boostVal} points</strong> !
+          Astuce : Gagner <strong>+2 points</strong> en <strong>{topMat.nom}</strong> (Coeff {topMat.coefficient})
+          augmentera votre moyenne générale de <strong>+{boostVal} points</strong> !
         </span>
       );
     }
-    return "Ajustez vos notes prévisionnelles pour analyser votre classement et vos chances de passage.";
+    return 'Ajustez vos notes prévisionnelles pour analyser votre classement et vos chances de passage.';
   };
 
   return (
     <div className="tab-pane">
       {/* Sleek Top Actions Bar */}
-      <div className="sim-toolbar-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+      <div
+        className="sim-toolbar-header"
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '16px',
+          flexWrap: 'wrap',
+          gap: '12px',
+        }}
+      >
         <div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--text-slate-800)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h2
+            style={{
+              fontSize: '1.25rem',
+              fontWeight: 700,
+              margin: 0,
+              color: 'var(--text-slate-800)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
             <Percent size={20} style={{ color: 'var(--primary-blue)' }} /> Simulateur de Moyenne Périodique
           </h2>
           <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: 'var(--text-slate-500)' }}>
@@ -79,13 +100,12 @@ const StudentSimulatorTab = ({
         <div className="simulator-hero-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {hasNotes && (
             <div className="sim-selector-box" style={{ margin: 0 }}>
-              <label><Calendar size={13} /> Période :</label>
-              <select 
-                value={selectedSimPeriod} 
-                onChange={e => setSelectedSimPeriod(e.target.value)}
-              >
-                {Object.keys(notes).map(year => 
-                  Object.keys(notes[year].periodes).map(period => (
+              <label>
+                <Calendar size={13} /> Période :
+              </label>
+              <select value={selectedSimPeriod} onChange={(e) => setSelectedSimPeriod(e.target.value)}>
+                {Object.keys(notes).map((year) =>
+                  Object.keys(notes[year].periodes).map((period) => (
                     <option key={`${year}::${period}`} value={`${year}::${period}`}>
                       {year} - {period}
                     </option>
@@ -95,7 +115,11 @@ const StudentSimulatorTab = ({
             </div>
           )}
 
-          <button className="secondary-btn sim-reset-btn" onClick={handleResetGrades} title="Réinitialiser aux notes réelles">
+          <button
+            className="secondary-btn sim-reset-btn"
+            onClick={handleResetGrades}
+            title="Réinitialiser aux notes réelles"
+          >
             <RefreshCw size={15} /> Réinitialiser
           </button>
         </div>
@@ -103,7 +127,6 @@ const StudentSimulatorTab = ({
 
       {selectedSimPeriod && notes && (
         <div className="simulator-grid">
-          
           {/* LEFT COLUMN: Input controls */}
           <div className="simulator-inputs card-box">
             <div className="sim-inputs-header">
@@ -131,9 +154,9 @@ const StudentSimulatorTab = ({
                 const periodData = notes[year]?.periodes[period];
                 if (!periodData) return null;
 
-                return Object.keys(periodData.matieres).map(code => {
+                return Object.keys(periodData.matieres).map((code) => {
                   const mat = periodData.matieres[code];
-                  const currentVal = simulatedGrades[code] !== undefined ? simulatedGrades[code] : (mat.moyenne || 10);
+                  const currentVal = simulatedGrades[code] !== undefined ? simulatedGrades[code] : mat.moyenne || 10;
                   const isModified = mat.moyenne !== null && Math.abs(currentVal - mat.moyenne) > 0.01;
 
                   return (
@@ -146,7 +169,11 @@ const StudentSimulatorTab = ({
                         {mat.moyenne !== null ? (
                           <span className="real-grade-lbl">
                             Note actuelle: <strong>{mat.moyenne}/20</strong>
-                            {isModified && <span className="modified-dot" title="Note simulée modifiée">• Modifié</span>}
+                            {isModified && (
+                              <span className="modified-dot" title="Note simulée modifiée">
+                                • Modifié
+                              </span>
+                            )}
                           </span>
                         ) : (
                           <span className="real-grade-lbl">Aucune note saisie</span>
@@ -156,47 +183,55 @@ const StudentSimulatorTab = ({
                       <div className="sim-controls-wrapper">
                         {/* Quick adjust buttons */}
                         <div className="quick-adjust-btns">
-                          <button 
-                            type="button" 
-                            className="adjust-btn" 
+                          <button
+                            type="button"
+                            className="adjust-btn"
                             onClick={() => handleSimGradeChange(code, currentVal - 1)}
                             title="-1 point"
-                          >-1</button>
-                          <button 
-                            type="button" 
-                            className="adjust-btn" 
+                          >
+                            -1
+                          </button>
+                          <button
+                            type="button"
+                            className="adjust-btn"
                             onClick={() => handleSimGradeChange(code, currentVal - 0.5)}
                             title="-0.5 point"
-                          >-0.5</button>
-                          <button 
-                            type="button" 
-                            className="adjust-btn" 
+                          >
+                            -0.5
+                          </button>
+                          <button
+                            type="button"
+                            className="adjust-btn"
                             onClick={() => handleSimGradeChange(code, currentVal + 0.5)}
                             title="+0.5 point"
-                          >+0.5</button>
-                          <button 
-                            type="button" 
-                            className="adjust-btn" 
+                          >
+                            +0.5
+                          </button>
+                          <button
+                            type="button"
+                            className="adjust-btn"
                             onClick={() => handleSimGradeChange(code, currentVal + 1)}
                             title="+1 point"
-                          >+1</button>
+                          >
+                            +1
+                          </button>
                         </div>
 
                         <div className="sim-input-box">
-                          <input 
-                            type="number" 
+                          <input
+                            type="number"
                             step="0.25"
                             min="0"
                             max="20"
                             value={currentVal}
-                            onChange={e => handleSimGradeChange(code, e.target.value)}
+                            onChange={(e) => handleSimGradeChange(code, e.target.value)}
                           />
                           <span className="unit-20">/20</span>
                         </div>
                       </div>
 
                       <div className="sim-score-bar-bg">
-                        <div 
+                        <div
                           className="sim-score-bar-fill"
                           style={{ width: `${Math.min(100, (currentVal / 20) * 100)}%` }}
                         ></div>
@@ -210,11 +245,10 @@ const StudentSimulatorTab = ({
 
           {/* RIGHT COLUMN: Results & AI Advice */}
           <div className="simulator-results-col">
-            
             {/* Score Display Card */}
             <div className="dashboard-card sim-result-card">
               <span className="sim-result-tag">Moyenne Prévisionnelle</span>
-              
+
               <div className={`sim-avg-circle ${getSimColorClass(simAverage)}`}>
                 <div className="avg-circle-inner">
                   <span className="avg-score-num">{getSimulatedAverage()}</span>
@@ -231,7 +265,7 @@ const StudentSimulatorTab = ({
                   <span className="thresh-lbl max">20</span>
                 </div>
                 <div className="sim-progress-track">
-                  <div 
+                  <div
                     className={`sim-progress-fill ${getSimColorClass(simAverage)}`}
                     style={{ width: `${Math.min(100, (simAverage / 20) * 100)}%` }}
                   ></div>
@@ -242,7 +276,9 @@ const StudentSimulatorTab = ({
 
               {/* Decision Box */}
               <div className="sim-decision-box">
-                <span className="dec-title"><CheckCircle2 size={14} /> Décision Prévisionnelle</span>
+                <span className="dec-title">
+                  <CheckCircle2 size={14} /> Décision Prévisionnelle
+                </span>
                 <div className={`dec-pill ${getSimColorClass(simAverage)}`}>
                   {getPassageStatusText(simAverage).text}
                 </div>
@@ -260,16 +296,11 @@ const StudentSimulatorTab = ({
                   <span>Analyse d'impact des coefficients</span>
                 </div>
               </div>
-              <p className="sim-advice-body">
-                {getSimAdvice()}
-              </p>
+              <p className="sim-advice-body">{getSimAdvice()}</p>
             </div>
-
           </div>
-
         </div>
       )}
-
     </div>
   );
 };

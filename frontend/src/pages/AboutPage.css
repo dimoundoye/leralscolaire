@@ -15,7 +15,13 @@
 }
 
 .about-page-wrapper {
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    'Poppins',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   background-color: #f8fafc;
   color: #0f172a;
   line-height: 1.6;
@@ -105,7 +111,8 @@
   white-space: nowrap;
 }
 
-.nav-link:hover, .nav-link.active {
+.nav-link:hover,
+.nav-link.active {
   color: var(--ls-primary);
   font-weight: 600;
 }
@@ -122,7 +129,8 @@
   transition: var(--ls-transition);
 }
 
-.nav-link:hover::after, .nav-link.active::after {
+.nav-link:hover::after,
+.nav-link.active::after {
   width: 100%;
 }
 
@@ -192,8 +200,14 @@
 }
 
 @keyframes drawerSlideDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .mobile-nav-link {
@@ -205,7 +219,8 @@
   border-bottom: 1px solid rgba(226, 232, 240, 0.6);
 }
 
-.mobile-nav-link:hover, .mobile-nav-link.active {
+.mobile-nav-link:hover,
+.mobile-nav-link.active {
   color: var(--ls-primary);
   font-weight: 600;
 }
@@ -223,10 +238,22 @@
   display: flex;
 }
 
-.bar-sn-green { flex: 1; background-color: #00853F; }
-.bar-sn-yellow { flex: 1; background-color: #FDEF42; }
-.bar-sn-red { flex: 1; background-color: #E31B23; }
-.bar-sn-cyan { flex: 1; background-color: #006973; }
+.bar-sn-green {
+  flex: 1;
+  background-color: #00853f;
+}
+.bar-sn-yellow {
+  flex: 1;
+  background-color: #fdef42;
+}
+.bar-sn-red {
+  flex: 1;
+  background-color: #e31b23;
+}
+.bar-sn-cyan {
+  flex: 1;
+  background-color: #006973;
+}
 
 /* --------------------------------------------------------------------------
    2. HERO DE LA PAGE À PROPOS
@@ -303,8 +330,12 @@
   position: relative;
 }
 
-.bg-white { background-color: #ffffff; }
-.bg-slate-50 { background-color: #f8fafc; }
+.bg-white {
+  background-color: #ffffff;
+}
+.bg-slate-50 {
+  background-color: #f8fafc;
+}
 
 .section-header-center {
   text-align: center;
@@ -526,9 +557,15 @@
   margin-bottom: 1.5rem;
 }
 
-.bg-blue-900 { background-color: #0f1e36; }
-.bg-teal-700 { background-color: #006973; }
-.bg-orange-600 { background-color: #F37021; }
+.bg-blue-900 {
+  background-color: #0f1e36;
+}
+.bg-teal-700 {
+  background-color: #006973;
+}
+.bg-orange-600 {
+  background-color: #f37021;
+}
 
 .objective-title {
   font-size: 1.25rem;
@@ -760,7 +797,7 @@
    SECTION 9 : BANNIÈRE D'ENGAGEMENT
    -------------------------------------------------------------------------- */
 .stitch-sovereign-banner {
-  background: linear-gradient(135deg, #0f1e36 0%, #003B46 60%, #000412 100%);
+  background: linear-gradient(135deg, #0f1e36 0%, #003b46 60%, #000412 100%);
   border-radius: 28px;
   padding: 4rem 3rem;
   color: #ffffff;
@@ -818,7 +855,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.85rem 1.85rem;
-  background: #00A5B5;
+  background: #00a5b5;
   color: #ffffff !important;
   font-size: 0.95rem;
   font-weight: 700;
@@ -906,19 +943,19 @@
 
 .flag-stripe-green {
   flex: 1;
-  background-color: #00853F;
+  background-color: #00853f;
 }
 
 .flag-stripe-yellow {
   flex: 1;
-  background-color: #FDEF42;
+  background-color: #fdef42;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .flag-star {
-  color: #00853F !important;
+  color: #00853f !important;
   font-size: 10px;
   line-height: 1;
   font-weight: 900;
@@ -926,7 +963,7 @@
 
 .flag-stripe-red {
   flex: 1;
-  background-color: #E31B23;
+  background-color: #e31b23;
 }
 
 .footer-ministry-title {
@@ -1014,7 +1051,9 @@
     align-items: center;
     justify-content: center;
   }
-  .grid-2cols, .grid-3cols, .workflow-steps-grid {
+  .grid-2cols,
+  .grid-3cols,
+  .workflow-steps-grid {
     grid-template-columns: 1fr;
     gap: 2rem;
   }

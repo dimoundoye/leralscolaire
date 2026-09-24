@@ -11,7 +11,11 @@ const { startSession, SESSION_COOKIE } = require('../src/utils/session');
 let server;
 let baseUrl;
 const sessionToken = jwt.sign(
-  { id: '11111111-2222-3333-4444-555555555555', role: 'ELEVE', user: { id: 'x', role: 'ELEVE', email: 'eleve@test.local' } },
+  {
+    id: '11111111-2222-3333-4444-555555555555',
+    role: 'ELEVE',
+    user: { id: 'x', role: 'ELEVE', email: 'eleve@test.local' },
+  },
   JWT_SECRET,
   { expiresIn: '5m' }
 );
@@ -27,12 +31,17 @@ after(async () => {
   await db.pool.end();
 });
 
-test('le cookie de session est httpOnly, Secure et SameSite=Strict, et le jeton n\'est pas renvoyé', () => {
+test("le cookie de session est httpOnly, Secure et SameSite=Strict, et le jeton n'est pas renvoyé", () => {
   let cookie;
   let body;
   const res = {
-    cookie: (name, value, options) => { cookie = { name, value, options }; },
-    json: (data) => { body = data; return data; },
+    cookie: (name, value, options) => {
+      cookie = { name, value, options };
+    },
+    json: (data) => {
+      body = data;
+      return data;
+    },
   };
   startSession(res, { id: 'u1', role: 'ELEVE' }, { id: 'u1', role: 'ELEVE' });
   assert.strictEqual(cookie.name, SESSION_COOKIE);
@@ -49,7 +58,7 @@ test('/api/auth/me accepte le cookie de session', async () => {
   assert.strictEqual((await res.json()).user.email, 'eleve@test.local');
 });
 
-test('le jeton dans l\'URL (?token=) n\'est plus accepté', async () => {
+test("le jeton dans l'URL (?token=) n'est plus accepté", async () => {
   const res = await fetch(`${baseUrl}/api/auth/me?token=${sessionToken}`);
   assert.strictEqual(res.status, 401);
 });

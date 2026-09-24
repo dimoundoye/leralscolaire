@@ -19,13 +19,15 @@ const TeacherTopbar = ({
   availableAcademicYears = [],
 }) => {
   const isConflict = schedule.some((slot) =>
-    hasConflict(slot, schedule.filter(s => s.jour_semaine === slot.jour_semaine))
+    hasConflict(
+      slot,
+      schedule.filter((s) => s.jour_semaine === slot.jour_semaine)
+    )
   );
 
   return (
     <>
       <header className="td-header">
-
         {/* GAUCHE : bouton flèche collapse sidebar (desktop) + burger mobile */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, marginRight: '16px' }}>
           {/* Bouton flèche toggle sidebar — desktop uniquement */}
@@ -49,21 +51,22 @@ const TeacherTopbar = ({
               flexShrink: 0,
               padding: 0,
             }}
-            onMouseEnter={e => {
+            onMouseEnter={(e) => {
               e.currentTarget.style.background = 'rgba(28,38,128,0.06)';
               e.currentTarget.style.borderColor = 'var(--primary-blue)';
               e.currentTarget.style.transform = 'scale(1.06)';
             }}
-            onMouseLeave={e => {
+            onMouseLeave={(e) => {
               e.currentTarget.style.background = 'var(--bg-white)';
               e.currentTarget.style.borderColor = 'var(--border-slate-200)';
               e.currentTarget.style.transform = 'scale(1)';
             }}
           >
-            {isSidebarCollapsed
-              ? <ChevronRight size={17} strokeWidth={2.4} />
-              : <ChevronLeft size={17} strokeWidth={2.4} />
-            }
+            {isSidebarCollapsed ? (
+              <ChevronRight size={17} strokeWidth={2.4} />
+            ) : (
+              <ChevronLeft size={17} strokeWidth={2.4} />
+            )}
           </button>
 
           {/* Burger mobile uniquement */}
@@ -78,21 +81,23 @@ const TeacherTopbar = ({
           </button>
         </div>
 
-        
-
         {/* DROITE : Filtres + Actions */}
         <div className="td-header-actions" style={{ flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-slate-500)', whiteSpace: 'nowrap' }}>Année :</label>
+            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-slate-500)', whiteSpace: 'nowrap' }}>
+              Année :
+            </label>
             <select
               value={profAnneeFilter}
-              onChange={e => setProfAnneeFilter(e.target.value)}
+              onChange={(e) => setProfAnneeFilter(e.target.value)}
               className="pill-select"
               style={{ height: '30px', fontSize: '11.5px', padding: '2px 8px', borderRadius: '6px', minWidth: '100px' }}
             >
               {availableAcademicYears && availableAcademicYears.length > 0 ? (
-                availableAcademicYears.map(year => (
-                  <option key={year} value={year}>{year}</option>
+                availableAcademicYears.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
                 ))
               ) : (
                 <option value={profAnneeFilter}>{profAnneeFilter || 'Année active'}</option>
@@ -102,7 +107,10 @@ const TeacherTopbar = ({
 
           <button
             className="icon-action-btn relative"
-            onClick={() => { setShowNotificationsDrawer(true); fetchNotifications(); }}
+            onClick={() => {
+              setShowNotificationsDrawer(true);
+              fetchNotifications();
+            }}
             title="Notifications"
           >
             <Bell size={20} />
@@ -116,10 +124,11 @@ const TeacherTopbar = ({
             onClick={() => navigate('/professeur/dashboard/profile')}
             title="Mon Profil"
           >
-            {profile?.photo_url
-              ? <img src={`${profile.photo_url}`} alt="Avatar" className="header-avatar-img" />
-              : <User size={18} />
-            }
+            {profile?.photo_url ? (
+              <img src={`${profile.photo_url}`} alt="Avatar" className="header-avatar-img" />
+            ) : (
+              <User size={18} />
+            )}
           </button>
 
           <button className="logout-btn" onClick={handleLogout} title="Déconnexion">
@@ -130,19 +139,23 @@ const TeacherTopbar = ({
 
       {/* Alerte conflit d'emploi du temps */}
       {isConflict && (
-        <div style={{
-          background: '#fef2f2',
-          borderBottom: '1px solid #fee2e2',
-          padding: '10px 24px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          color: '#991b1b',
-          fontSize: '13px',
-          fontWeight: 600,
-        }}>
+        <div
+          style={{
+            background: '#fef2f2',
+            borderBottom: '1px solid #fee2e2',
+            padding: '10px 24px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            color: '#991b1b',
+            fontSize: '13px',
+            fontWeight: 600,
+          }}
+        >
           <AlertTriangle size={18} />
-          <span>Attention : Conflit de chevauchement détecté dans votre emploi du temps. Veuillez vérifier vos créneaux.</span>
+          <span>
+            Attention : Conflit de chevauchement détecté dans votre emploi du temps. Veuillez vérifier vos créneaux.
+          </span>
         </div>
       )}
     </>

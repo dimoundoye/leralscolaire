@@ -3,36 +3,36 @@
 
 :root {
   /* ── Couleurs identitaires LeralScolaire ── */
-  --primary-blue: #1c2680;        /* Indigo Profond (inspiré samalocation hsl 240 68% 25%) */
-  --primary-hover: #2536b0;       /* Indigo hover légèrement plus clair */
-  --accent-red: #f43f2e;          /* Corail énergique (inspiré samalocation hsl 4 90% 58%) */
-  --accent-hover: #d93520;        /* Corail foncé au hover */
+  --primary-blue: #1c2680; /* Indigo Profond (inspiré samalocation hsl 240 68% 25%) */
+  --primary-hover: #2536b0; /* Indigo hover légèrement plus clair */
+  --accent-red: #f43f2e; /* Corail énergique (inspiré samalocation hsl 4 90% 58%) */
+  --accent-hover: #d93520; /* Corail foncé au hover */
 
   /* ── Palette de fonds ── */
-  --bg-page: #eef2f9;             /* Fond page doux slate-bleuté (vs blanc froid précédent) */
-  --bg-slate-50: #f1f5fb;         /* Surface cards principale */
-  --bg-slate-100: #e8edf7;        /* Surface secondaire, hover */
+  --bg-page: #eef2f9; /* Fond page doux slate-bleuté (vs blanc froid précédent) */
+  --bg-slate-50: #f1f5fb; /* Surface cards principale */
+  --bg-slate-100: #e8edf7; /* Surface secondaire, hover */
   --bg-white: #ffffff;
 
   /* ── Textes ── */
-  --text-slate-900: #0d1533;      /* Bleu nuit très foncé pour le corps */
-  --text-slate-700: #2d3b6b;      /* Textes secondaires indigo */
-  --text-slate-500: #6270a0;      /* Textes muets teintés */
+  --text-slate-900: #0d1533; /* Bleu nuit très foncé pour le corps */
+  --text-slate-700: #2d3b6b; /* Textes secondaires indigo */
+  --text-slate-500: #6270a0; /* Textes muets teintés */
 
   /* ── Bordures ── */
-  --border-slate-200: #dde3f4;    /* Bordures légèrement bleutées */
+  --border-slate-200: #dde3f4; /* Bordures légèrement bleutées */
   --border-focus: #1c2680;
 
   /* ── Ombres teintées (signature samalocation) ── */
-  --shadow-sm:     0 2px 8px -2px rgba(28, 38, 128, 0.07);
-  --shadow-md:     0 8px 24px -4px rgba(28, 38, 128, 0.11);
-  --shadow-lg:     0 16px 40px -8px rgba(28, 38, 128, 0.15);
+  --shadow-sm: 0 2px 8px -2px rgba(28, 38, 128, 0.07);
+  --shadow-md: 0 8px 24px -4px rgba(28, 38, 128, 0.11);
+  --shadow-lg: 0 16px 40px -8px rgba(28, 38, 128, 0.15);
   --shadow-strong: 0 20px 48px -10px rgba(28, 38, 128, 0.22);
 
   /* ── Dégradés signature ── */
   --gradient-primary: linear-gradient(135deg, #1c2680 0%, #2d40c0 100%);
-  --gradient-accent:  linear-gradient(135deg, #f43f2e 0%, #f97850 100%);
-  --gradient-card:    linear-gradient(145deg, #ffffff 0%, #f4f7ff 100%);
+  --gradient-accent: linear-gradient(135deg, #f43f2e 0%, #f97850 100%);
+  --gradient-card: linear-gradient(145deg, #ffffff 0%, #f4f7ff 100%);
 
   /* ── Arrondis ── */
   --radius-sm: 8px;
@@ -51,7 +51,14 @@
   background-color: var(--bg-page);
   height: 100vh;
   color: var(--text-slate-900);
-  font-family: 'Poppins', 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    'Poppins',
+    'Outfit',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   display: flex;
   overflow: hidden;
 }
@@ -142,7 +149,7 @@
   color: var(--text-slate-500);
   margin: 0;
   text-transform: uppercase;
-  letter-spacing: .07em;
+  letter-spacing: 0.07em;
   margin-top: -2px;
   font-weight: 600;
   white-space: nowrap;
@@ -655,7 +662,7 @@
   align-items: center;
   justify-content: center;
   z-index: 100;
-  animation: fadeInOverlay .2s ease-out forwards;
+  animation: fadeInOverlay 0.2s ease-out forwards;
 }
 
 .modal-card {
@@ -665,7 +672,7 @@
   width: 90%;
   max-width: 500px;
   box-shadow: var(--shadow-strong);
-  animation: popIn .2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: popIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   border: 1px solid var(--border-slate-200);
 }
 
@@ -848,24 +855,40 @@
   gap: 10px;
   font-size: 13px;
   font-weight: 600;
-  animation: slideInRight .3s ease-out forwards;
+  animation: slideInRight 0.3s ease-out forwards;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Animations */
 @keyframes slideInRight {
-  from { transform: translateX(120%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 @keyframes popIn {
-  from { transform: scale(0.9); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 @keyframes fadeInOverlay {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Mobile responsive drawer */
@@ -914,7 +937,8 @@
   .td-brand {
     gap: 6px;
   }
-  .td-brand h1, .brand-name {
+  .td-brand h1,
+  .brand-name {
     display: none !important; /* Hide LeralScolaire text on mobile navbar */
   }
   .td-sub {
@@ -942,7 +966,7 @@
   .td-container {
     padding: 12px 8px !important;
   }
-/* Stat cards arranged 2x2 on mobile with compact typography */
+  /* Stat cards arranged 2x2 on mobile with compact typography */
   .dashboard-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 10px !important;
@@ -990,14 +1014,17 @@
     padding: 12px 14px !important;
     min-height: 96px !important;
   }
-  .teacher-dashboard .stat-card:last-child { grid-column: span 1 !important; }
+  .teacher-dashboard .stat-card:last-child {
+    grid-column: span 1 !important;
+  }
   .teacher-dashboard .stat-card-value {
     font-size: 20px !important;
   }
   .teacher-dashboard .stat-card-sub {
     font-size: 10px !important;
   }
-  .card-box, .tab-pane {
+  .card-box,
+  .tab-pane {
     padding: 14px 10px !important;
     border-radius: 12px;
   }
@@ -1005,11 +1032,16 @@
     flex-direction: column !important;
     align-items: stretch !important;
   }
-  .filter-bar > div, .filter-bar input, .filter-bar select {
+  .filter-bar > div,
+  .filter-bar input,
+  .filter-bar select {
     width: 100% !important;
     min-width: 100% !important;
   }
-  .table-block, .table-container, div[style*="overflowX: auto"], div[style*="overflow-x: auto"] {
+  .table-block,
+  .table-container,
+  div[style*='overflowX: auto'],
+  div[style*='overflow-x: auto'] {
     -webkit-overflow-scrolling: touch;
     max-width: 100%;
   }
@@ -1038,7 +1070,7 @@
     flex-shrink: 0 !important;
   }
 
-  .tab-pane[style*="gridTemplateColumns"] {
+  .tab-pane[style*='gridTemplateColumns'] {
     grid-template-columns: 1fr !important;
     height: auto !important;
   }
@@ -1223,7 +1255,9 @@
   justify-content: center;
   position: relative;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+  transition:
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s ease;
   flex-shrink: 0;
   margin-bottom: 8px;
 }
@@ -1377,7 +1411,9 @@
   color: #1e293b;
   font-size: 13px;
   font-family: inherit;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .cahier-form-grid .pill-input:focus,
@@ -1458,7 +1494,7 @@
     padding: 14px 10px !important;
     gap: 12px !important;
   }
-  
+
   .cahier-form-grid .form-group,
   .cahier-col-full {
     grid-column: 1 / -1 !important;

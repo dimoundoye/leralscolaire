@@ -13,7 +13,8 @@ async function getBulletinData(eleveId, semesterNum) {
   const sem = parseInt(semesterNum) || 1;
 
   // 1. Récupérer l'élève, son établissement et sa classe actuelle
-  const infoRes = await db.query(`
+  const infoRes = await db.query(
+    `
     SELECT e.*, 
            et.nom as etablissement_nom, et.ville, et.region, et.signature_url, et.cachet_url,
            et.code_etablissement, et.nom_directeur,
@@ -29,7 +30,9 @@ async function getBulletinData(eleveId, semesterNum) {
       LIMIT 1
     ) c ON true
     WHERE e.id = $1
-  `, [eleveId]);
+  `,
+    [eleveId]
+  );
 
   if (infoRes.rows.length === 0) return null;
   const eleve = infoRes.rows[0];
@@ -40,60 +43,75 @@ async function getBulletinData(eleveId, semesterNum) {
   // 2. Effectif de la classe
   let effectif = 0;
   if (classeId) {
-    const effRes = await db.query(`SELECT COUNT(DISTINCT eleve_id) as total FROM inscription_classes WHERE classe_id = $1`, [classeId]);
+    const effRes = await db.query(
+      `SELECT COUNT(DISTINCT eleve_id) as total FROM inscription_classes WHERE classe_id = $1`,
+      [classeId]
+    );
     effectif = parseInt(effRes.rows[0].total) || 0;
   }
 
   // 3. Récupérer la liste des matières de la classe avec coefficients
   let matieresDef = [];
   if (classeId) {
-    const matRes = await db.query(`
+    const matRes = await db.query(
+      `
       SELECT m.id as matiere_id, m.nom as matiere_nom, m.code_matiere,
              COALESCE(cm.coefficient, 1) as coefficient
       FROM classe_matieres cm
       JOIN matieres m ON cm.matiere_id = m.id
       WHERE cm.classe_id = $1
       ORDER BY m.nom
-    `, [classeId]);
+    `,
+      [classeId]
+    );
     matieresDef = matRes.rows;
   }
 
   // Si aucune matière associée dans classe_matieres, chercher les matières avec notes
   if (matieresDef.length === 0) {
-    const fallbackMatRes = await db.query(`
+    const fallbackMatRes = await db.query(
+      `
       SELECT DISTINCT m.id as matiere_id, m.nom as matiere_nom, m.code_matiere,
              COALESCE(n.coefficient, 1) as coefficient
       FROM notes n
       JOIN matieres m ON n.matiere_id = m.id
       WHERE n.eleve_id = $1
       ORDER BY m.nom
-    `, [eleveId]);
+    `,
+      [eleveId]
+    );
     matieresDef = fallbackMatRes.rows;
   }
 
   // 4. Récupérer toutes les notes pour le semestre actuel pour cet élève
-  const notesRes = await db.query(`
+  const notesRes = await db.query(
+    `
     SELECT n.*, m.code_matiere, m.nom as matiere_nom
     FROM notes n
     JOIN matieres m ON n.matiere_id = m.id
     WHERE n.eleve_id = $1 AND n.semestre = $2
-  `, [eleveId, sem]);
+  `,
+    [eleveId, sem]
+  );
 
   // 5. Récupérer toutes les notes de TOUS les élèves de la classe pour calculer les rangs par matière & rang général
   let allClassNotes = [];
   if (classeId) {
-    const classNotesRes = await db.query(`
+    const classNotesRes = await db.query(
+      `
       SELECT n.eleve_id, n.matiere_id, n.valeur, n.type_note, n.semestre
       FROM notes n
       JOIN inscription_classes ic ON n.eleve_id = ic.eleve_id
       WHERE ic.classe_id = $1 AND n.semestre = $2 AND n.valeur IS NOT NULL
-    `, [classeId, sem]);
+    `,
+      [classeId, sem]
+    );
     allClassNotes = classNotesRes.rows;
   }
 
   // Calcul des moyennes par matière pour tous les élèves de la classe
   const classStudentSubjectAvg = {};
-  allClassNotes.forEach(n => {
+  allClassNotes.forEach((n) => {
     if (!classStudentSubjectAvg[n.eleve_id]) classStudentSubjectAvg[n.eleve_id] = {};
     if (!classStudentSubjectAvg[n.eleve_id][n.matiere_id]) {
       classStudentSubjectAvg[n.eleve_id][n.matiere_id] = { devoirs: [], comps: [] };
@@ -107,10 +125,10 @@ async function getBulletinData(eleveId, semesterNum) {
   });
 
   const classSubjectRankings = {};
-  Object.keys(classStudentSubjectAvg).forEach(eId => {
-    Object.keys(classStudentSubjectAvg[eId]).forEach(mId => {
+  Object.keys(classStudentSubjectAvg).forEach((eId) => {
+    Object.keys(classStudentSubjectAvg[eId]).forEach((mId) => {
       const data = classStudentSubjectAvg[eId][mId];
-      const devAvg = data.devoirs.length > 0 ? (data.devoirs.reduce((a,b)=>a+b,0)/data.devoirs.length) : null;
+      const devAvg = data.devoirs.length > 0 ? data.devoirs.reduce((a, b) => a + b, 0) / data.devoirs.length : null;
       const compVal = data.comps.length > 0 ? data.comps[0] : null;
       let matAvg = null;
       if (devAvg !== null && compVal !== null) matAvg = (devAvg + compVal) / 2;
@@ -124,13 +142,13 @@ async function getBulletinData(eleveId, semesterNum) {
     });
   });
 
-  Object.keys(classSubjectRankings).forEach(mId => {
-    classSubjectRankings[mId].sort((a,b) => b.avg - a.avg);
+  Object.keys(classSubjectRankings).forEach((mId) => {
+    classSubjectRankings[mId].sort((a, b) => b.avg - a.avg);
   });
 
   // 6. Construire les données par matière pour le bulletin de l'élève
   const studentNotesMap = {};
-  notesRes.rows.forEach(n => {
+  notesRes.rows.forEach((n) => {
     if (!studentNotesMap[n.matiere_id]) {
       studentNotesMap[n.matiere_id] = { devoirs: [], comps: [], appreciation: '' };
     }
@@ -149,9 +167,9 @@ async function getBulletinData(eleveId, semesterNum) {
   let totalPoints = 0;
   let totalCoeff = 0;
 
-  matieresDef.forEach(m => {
+  matieresDef.forEach((m) => {
     const sData = studentNotesMap[m.matiere_id] || { devoirs: [], comps: [], appreciation: '' };
-    const devAvg = sData.devoirs.length > 0 ? (sData.devoirs.reduce((a,b)=>a+b,0)/sData.devoirs.length) : null;
+    const devAvg = sData.devoirs.length > 0 ? sData.devoirs.reduce((a, b) => a + b, 0) / sData.devoirs.length : null;
     const compVal = sData.comps.length > 0 ? sData.comps[sData.comps.length - 1] : null;
 
     let moyenneMatiere = null;
@@ -174,7 +192,7 @@ async function getBulletinData(eleveId, semesterNum) {
     let rangMatiere = '-';
     if (moyenneMatiere !== null && classSubjectRankings[m.matiere_id]) {
       const list = classSubjectRankings[m.matiere_id];
-      const idx = list.findIndex(item => item.eleve_id === eleveId);
+      const idx = list.findIndex((item) => item.eleve_id === eleveId);
       if (idx !== -1) {
         rangMatiere = (idx + 1).toString();
       }
@@ -190,7 +208,7 @@ async function getBulletinData(eleveId, semesterNum) {
       else appText = 'Très Bien';
     }
 
-    const thText = (moyenneMatiere !== null && moyenneMatiere >= 12) ? 'TH' : '';
+    const thText = moyenneMatiere !== null && moyenneMatiere >= 12 ? 'TH' : '';
 
     matieresData.push({
       matiere_nom: m.matiere_nom,
@@ -201,23 +219,23 @@ async function getBulletinData(eleveId, semesterNum) {
       moy_x: moyCoeff,
       th: thText,
       rang: rangMatiere,
-      appreciation: appText || '-'
+      appreciation: appText || '-',
     });
   });
 
-  const moyenneGenerale = totalCoeff > 0 ? (totalPoints / totalCoeff) : null;
+  const moyenneGenerale = totalCoeff > 0 ? totalPoints / totalCoeff : null;
 
   // 7. Calcul du Rang Général de la classe pour le semestre
   let rangGeneral = '-';
   if (classeId && moyenneGenerale !== null) {
     const studentTotals = {};
-    Object.keys(classStudentSubjectAvg).forEach(eId => {
+    Object.keys(classStudentSubjectAvg).forEach((eId) => {
       let ePoints = 0;
       let eCoeff = 0;
-      matieresDef.forEach(m => {
+      matieresDef.forEach((m) => {
         const d = classStudentSubjectAvg[eId][m.matiere_id];
         if (d) {
-          const dev = d.devoirs.length > 0 ? (d.devoirs.reduce((a,b)=>a+b,0)/d.devoirs.length) : null;
+          const dev = d.devoirs.length > 0 ? d.devoirs.reduce((a, b) => a + b, 0) / d.devoirs.length : null;
           const cmp = d.comps.length > 0 ? d.comps[0] : null;
           let avg = null;
           if (dev !== null && cmp !== null) avg = (dev + cmp) / 2;
@@ -237,26 +255,29 @@ async function getBulletinData(eleveId, semesterNum) {
     });
 
     const sortedRank = Object.keys(studentTotals)
-      .map(id => ({ id, moy: studentTotals[id] }))
-      .sort((a,b) => b.moy - a.moy);
+      .map((id) => ({ id, moy: studentTotals[id] }))
+      .sort((a, b) => b.moy - a.moy);
 
-    const rIdx = sortedRank.findIndex(item => item.id === eleveId);
+    const rIdx = sortedRank.findIndex((item) => item.id === eleveId);
     if (rIdx !== -1) {
       rangGeneral = (rIdx + 1).toString();
     }
   }
 
   // 8. Récupérer retards et absences
-  const absRes = await db.query(`
+  const absRes = await db.query(
+    `
     SELECT type_presence, COUNT(*) as count, SUM(COALESCE(duree_retard, 0)) as min_retard
     FROM absences
     WHERE eleve_id = $1
     GROUP BY type_presence
-  `, [eleveId]);
+  `,
+    [eleveId]
+  );
 
   let countRetards = 0;
   let countAbsences = 0;
-  absRes.rows.forEach(r => {
+  absRes.rows.forEach((r) => {
     if (r.type_presence === 'RETARD') countRetards += parseInt(r.count);
     else if (r.type_presence === 'ABSENT' || r.type_presence === 'ABSENCE') countAbsences += parseInt(r.count);
   });
@@ -264,10 +285,13 @@ async function getBulletinData(eleveId, semesterNum) {
   // 9. Récupérer les décisions du jury / conseils enregistrées dans bulletins
   let bulletinSaved = null;
   if (classeId) {
-    const bRes = await db.query(`
+    const bRes = await db.query(
+      `
       SELECT * FROM bulletins
       WHERE eleve_id = $1 AND classe_id = $2
-    `, [eleveId, classeId]);
+    `,
+      [eleveId, classeId]
+    );
     if (bRes.rows.length > 0) {
       bulletinSaved = bRes.rows[0];
     }
@@ -313,7 +337,7 @@ async function getBulletinData(eleveId, semesterNum) {
     bulletinSaved,
     sem1Data,
     moyenneAnnuelle,
-    rangAnnuel
+    rangAnnuel,
   };
 }
 
@@ -336,7 +360,7 @@ async function drawSenegalBulletin(doc, data) {
     bulletinSaved,
     sem1Data,
     moyenneAnnuelle,
-    rangAnnuel
+    rangAnnuel,
   } = data;
 
   const startX = 35;
@@ -344,7 +368,9 @@ async function drawSenegalBulletin(doc, data) {
 
   // --- EN-TÊTE ---
   // Ligne d'autorisation officielle & contact en haut
-  const autNumStr = eleve.code_etablissement ? `Code Établissement : ${eleve.code_etablissement}` : 'Aut N°0121/IA/Dakar du 12/09/2010 Touba Ouakam-OUAKAM';
+  const autNumStr = eleve.code_etablissement
+    ? `Code Établissement : ${eleve.code_etablissement}`
+    : 'Aut N°0121/IA/Dakar du 12/09/2010 Touba Ouakam-OUAKAM';
   const autText = `République du Sénégal - Ministère de l'Éducation Nationale | ${autNumStr}`;
   doc.font('Helvetica-Bold').fontSize(8.5).fillColor('#333333');
   doc.text(autText, startX, 22, { align: 'center', width: pageWidth });
@@ -354,14 +380,14 @@ async function drawSenegalBulletin(doc, data) {
   // Gauche : IA, IEF, Établissement & Informations Publiques
   const regionIA = (eleve.region || 'DAKAR').toUpperCase();
   const villeIEF = (eleve.ville || 'ALMADIES').toUpperCase();
-  
+
   doc.font('Helvetica-Bold').fontSize(9.5).fillColor('#000000');
   doc.text(`IA ${regionIA}`, startX, topY);
   doc.text(`IEF ${villeIEF}`, startX, topY + 12);
-  
+
   doc.font('Helvetica-Bold').fontSize(11).fillColor('#0f172a');
   doc.text(eleve.etablissement_nom || 'CPS MAME NDJIRA', startX, topY + 25);
-  
+
   // Informations publiques supplémentaires de l'établissement
   doc.font('Helvetica').fontSize(8.5).fillColor('#475569');
   let pubInfoText = `Localisation : ${eleve.ville || ''} (${eleve.region || ''})`;
@@ -371,7 +397,11 @@ async function drawSenegalBulletin(doc, data) {
   doc.text(pubInfoText, startX, topY + 39);
 
   // Droite : Année scolaire & Intitulé du Semestre
-  doc.font('Helvetica-Bold').fontSize(10).fillColor('#000000').text(`Année Scolaire : ${anneeScolaire}`, startX + 280, topY, { align: 'right', width: 245 });
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(10)
+    .fillColor('#000000')
+    .text(`Année Scolaire : ${anneeScolaire}`, startX + 280, topY, { align: 'right', width: 245 });
   doc.font('Helvetica-Bold').fontSize(13).fillColor('#1e3a8a');
   const semTitle = semestre === 1 ? '1er SEMESTRE' : 'Bulletin du 2ème Semestre';
   doc.text(semTitle, startX + 250, topY + 16, { align: 'right', width: 275 });
@@ -384,13 +414,25 @@ async function drawSenegalBulletin(doc, data) {
 
   // Lignes de séparation sous en-tête
   const headerLineY = topY + 54;
-  doc.moveTo(startX, headerLineY).lineTo(startX + pageWidth, headerLineY).lineWidth(1.5).stroke('#0f172a');
-  doc.moveTo(startX, headerLineY + 2).lineTo(startX + pageWidth, headerLineY + 2).lineWidth(0.5).stroke('#0f172a');
+  doc
+    .moveTo(startX, headerLineY)
+    .lineTo(startX + pageWidth, headerLineY)
+    .lineWidth(1.5)
+    .stroke('#0f172a');
+  doc
+    .moveTo(startX, headerLineY + 2)
+    .lineTo(startX + pageWidth, headerLineY + 2)
+    .lineWidth(0.5)
+    .stroke('#0f172a');
 
   // --- BANDEAU TITRE ---
   const titleY = headerLineY + 6;
   doc.rect(startX, titleY, pageWidth, 20).fillAndStroke('#f8fafc', '#000000');
-  doc.font('Helvetica-Bold').fontSize(13).fillColor('#0f172a').text('BULLETIN DE NOTES', startX, titleY + 4, { align: 'center', width: pageWidth });
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(13)
+    .fillColor('#0f172a')
+    .text('BULLETIN DE NOTES', startX, titleY + 4, { align: 'center', width: pageWidth });
 
   // --- BLOC INFORMATIONS ÉLÈVE ---
   const infoY = titleY + 24;
@@ -417,9 +459,11 @@ async function drawSenegalBulletin(doc, data) {
 
   // Ligne 3
   doc.font('Helvetica-Bold').text('Matricule', startX + 6, infoY + 32);
-  doc.font('Helvetica').text(`: ${eleve.identifiant_national || eleve.id.toString().slice(0,8)}`, startX + 60, infoY + 32);
+  doc
+    .font('Helvetica')
+    .text(`: ${eleve.identifiant_national || eleve.id.toString().slice(0, 8)}`, startX + 60, infoY + 32);
 
-  doc.font('Helvetica-Bold').text('Nbre d\'élèves', startX + 175, infoY + 32);
+  doc.font('Helvetica-Bold').text("Nbre d'élèves", startX + 175, infoY + 32);
   doc.font('Helvetica').text(`: ${effectif || 22}`, startX + 245, infoY + 32);
 
   doc.font('Helvetica-Bold').text('Classe Redoublée', startX + 310, infoY + 32);
@@ -436,7 +480,7 @@ async function drawSenegalBulletin(doc, data) {
     moyX: 44,
     th: 26,
     rang: 32,
-    appr: 140
+    appr: 140,
   };
 
   const xDisc = startX;
@@ -464,8 +508,11 @@ async function drawSenegalBulletin(doc, data) {
   doc.text('Rang', xRang, tableY + 5, { width: colW.rang, align: 'center' });
   doc.text('Appréciations', xAppr + 4, tableY + 5);
 
-  [xDev, xComp, xMoy20, xCoef, xMoyX, xTH, xRang, xAppr].forEach(x => {
-    doc.moveTo(x, tableY).lineTo(x, tableY + headerH).stroke('#000000');
+  [xDev, xComp, xMoy20, xCoef, xMoyX, xTH, xRang, xAppr].forEach((x) => {
+    doc
+      .moveTo(x, tableY)
+      .lineTo(x, tableY + headerH)
+      .stroke('#000000');
   });
 
   // Lignes de matières avec police agrandie (9.5pt) et hauteur 20pt
@@ -474,22 +521,43 @@ async function drawSenegalBulletin(doc, data) {
 
   matieresData.forEach((row) => {
     doc.rect(startX, rowY, pageWidth, rowH).stroke('#000000');
-    [xDev, xComp, xMoy20, xCoef, xMoyX, xTH, xRang, xAppr].forEach(x => {
-      doc.moveTo(x, rowY).lineTo(x, rowY + rowH).stroke('#000000');
+    [xDev, xComp, xMoy20, xCoef, xMoyX, xTH, xRang, xAppr].forEach((x) => {
+      doc
+        .moveTo(x, rowY)
+        .lineTo(x, rowY + rowH)
+        .stroke('#000000');
     });
 
     doc.font('Helvetica-Bold').fontSize(9.5).fillColor('#0f172a');
     doc.text(row.matiere_nom, xDisc + 4, rowY + 5, { width: colW.disc - 6, height: 12 });
 
     doc.font('Helvetica').fontSize(9.5).fillColor('#000000');
-    doc.text(row.devoir !== null ? row.devoir.toFixed(row.devoir % 1 === 0 ? 0 : 2).replace('.',',') : '-', xDev, rowY + 5, { width: colW.dev, align: 'center' });
-    doc.text(row.comp !== null ? row.comp.toFixed(row.comp % 1 === 0 ? 0 : 2).replace('.',',') : '-', xComp, rowY + 5, { width: colW.comp, align: 'center' });
-    doc.text(row.moyenne !== null ? row.moyenne.toFixed(row.moyenne % 1 === 0 ? 0 : 3).replace('.',',') : '-', xMoy20, rowY + 5, { width: colW.moy20, align: 'center' });
+    doc.text(
+      row.devoir !== null ? row.devoir.toFixed(row.devoir % 1 === 0 ? 0 : 2).replace('.', ',') : '-',
+      xDev,
+      rowY + 5,
+      { width: colW.dev, align: 'center' }
+    );
+    doc.text(
+      row.comp !== null ? row.comp.toFixed(row.comp % 1 === 0 ? 0 : 2).replace('.', ',') : '-',
+      xComp,
+      rowY + 5,
+      { width: colW.comp, align: 'center' }
+    );
+    doc.text(
+      row.moyenne !== null ? row.moyenne.toFixed(row.moyenne % 1 === 0 ? 0 : 3).replace('.', ',') : '-',
+      xMoy20,
+      rowY + 5,
+      { width: colW.moy20, align: 'center' }
+    );
     doc.text(row.coefficient.toString(), xCoef, rowY + 5, { width: colW.coef, align: 'center' });
-    doc.text(row.moy_x !== null ? row.moy_x.toFixed(2).replace('.',',') : '-', xMoyX, rowY + 5, { width: colW.moyX, align: 'center' });
+    doc.text(row.moy_x !== null ? row.moy_x.toFixed(2).replace('.', ',') : '-', xMoyX, rowY + 5, {
+      width: colW.moyX,
+      align: 'center',
+    });
     doc.text(row.th || '', xTH, rowY + 5, { width: colW.th, align: 'center' });
     doc.text(row.rang || '-', xRang, rowY + 5, { width: colW.rang, align: 'center' });
-    
+
     doc.font('Helvetica-Bold').fontSize(9).fillColor('#1e293b');
     doc.text(row.appreciation || '-', xAppr + 6, rowY + 5, { width: colW.appr - 8 });
 
@@ -498,17 +566,39 @@ async function drawSenegalBulletin(doc, data) {
 
   // --- LIGNE DE TOTAL ---
   doc.rect(startX, rowY, pageWidth, rowH).fillAndStroke('#f8fafc', '#000000');
-  [xDev, xComp, xMoy20, xCoef, xMoyX, xTH, xRang, xAppr].forEach(x => {
-    doc.moveTo(x, rowY).lineTo(x, rowY + rowH).stroke('#000000');
+  [xDev, xComp, xMoy20, xCoef, xMoyX, xTH, xRang, xAppr].forEach((x) => {
+    doc
+      .moveTo(x, rowY)
+      .lineTo(x, rowY + rowH)
+      .stroke('#000000');
   });
 
-  doc.font('Helvetica-Bold').fontSize(10).fillColor('#000000').text('TOTAL', xDisc + 4, rowY + 5);
-  doc.font('Helvetica-Bold').fontSize(10).text(totalCoeff.toString(), xCoef, rowY + 5, { width: colW.coef, align: 'center' });
-  doc.font('Helvetica-Bold').fontSize(10).text(totalPoints > 0 ? totalPoints.toFixed(2).replace('.',',') : '-', xMoyX, rowY + 5, { width: colW.moyX, align: 'center' });
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(10)
+    .fillColor('#000000')
+    .text('TOTAL', xDisc + 4, rowY + 5);
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(10)
+    .text(totalCoeff.toString(), xCoef, rowY + 5, { width: colW.coef, align: 'center' });
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(10)
+    .text(totalPoints > 0 ? totalPoints.toFixed(2).replace('.', ',') : '-', xMoyX, rowY + 5, {
+      width: colW.moyX,
+      align: 'center',
+    });
 
   if (semestre === 2) {
-    doc.font('Helvetica-Bold').fontSize(9).text(`Absences`, xTH, rowY + 5);
-    doc.font('Helvetica').fontSize(9).text(countAbsences.toString(), xAppr + 20, rowY + 5);
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(9)
+      .text(`Absences`, xTH, rowY + 5);
+    doc
+      .font('Helvetica')
+      .fontSize(9)
+      .text(countAbsences.toString(), xAppr + 20, rowY + 5);
   }
 
   rowY += rowH;
@@ -517,24 +607,60 @@ async function drawSenegalBulletin(doc, data) {
   const moyRowH = 22;
   doc.rect(startX, rowY, pageWidth, moyRowH).stroke('#000000');
 
-  const moyStr = moyenneGenerale !== null ? moyenneGenerale.toFixed(2).replace('.',',') : '--';
-  doc.font('Helvetica-Bold').fontSize(10.5).fillColor('#0f172a').text(`Moyenne`, startX + 6, rowY + 5);
-  doc.font('Helvetica-Bold').fontSize(12).fillColor('#1e3a8a').text(`${moyStr} /20`, startX + 60, rowY + 4);
+  const moyStr = moyenneGenerale !== null ? moyenneGenerale.toFixed(2).replace('.', ',') : '--';
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(10.5)
+    .fillColor('#0f172a')
+    .text(`Moyenne`, startX + 6, rowY + 5);
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(12)
+    .fillColor('#1e3a8a')
+    .text(`${moyStr} /20`, startX + 60, rowY + 4);
 
   // Rang
-  doc.moveTo(startX + 135, rowY).lineTo(startX + 135, rowY + moyRowH).stroke('#000000');
-  doc.font('Helvetica-Bold').fontSize(10.5).fillColor('#000000').text(`Rang`, startX + 142, rowY + 5);
-  doc.font('Helvetica-Bold').fontSize(11).text(`${rangGeneral}`, startX + 182, rowY + 4);
+  doc
+    .moveTo(startX + 135, rowY)
+    .lineTo(startX + 135, rowY + moyRowH)
+    .stroke('#000000');
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(10.5)
+    .fillColor('#000000')
+    .text(`Rang`, startX + 142, rowY + 5);
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(11)
+    .text(`${rangGeneral}`, startX + 182, rowY + 4);
 
   // Retards
-  doc.moveTo(startX + 220, rowY).lineTo(startX + 220, rowY + moyRowH).stroke('#000000');
-  doc.font('Helvetica-Bold').fontSize(10.5).text(`Retards`, startX + 228, rowY + 5);
-  doc.font('Helvetica').fontSize(10.5).text(`${countRetards}`, startX + 280, rowY + 5);
+  doc
+    .moveTo(startX + 220, rowY)
+    .lineTo(startX + 220, rowY + moyRowH)
+    .stroke('#000000');
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(10.5)
+    .text(`Retards`, startX + 228, rowY + 5);
+  doc
+    .font('Helvetica')
+    .fontSize(10.5)
+    .text(`${countRetards}`, startX + 280, rowY + 5);
 
   // Absences
-  doc.moveTo(startX + 310, rowY).lineTo(startX + 310, rowY + moyRowH).stroke('#000000');
-  doc.font('Helvetica-Bold').fontSize(10.5).text(semestre === 2 ? `Abs. Tot` : `Absences`, startX + 318, rowY + 5);
-  doc.font('Helvetica').fontSize(10.5).text(`${countAbsences}`, startX + 380, rowY + 5);
+  doc
+    .moveTo(startX + 310, rowY)
+    .lineTo(startX + 310, rowY + moyRowH)
+    .stroke('#000000');
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(10.5)
+    .text(semestre === 2 ? `Abs. Tot` : `Absences`, startX + 318, rowY + 5);
+  doc
+    .font('Helvetica')
+    .fontSize(10.5)
+    .text(`${countAbsences}`, startX + 380, rowY + 5);
 
   rowY += moyRowH;
 
@@ -544,7 +670,7 @@ async function drawSenegalBulletin(doc, data) {
     doc.font('Helvetica-Bold').fontSize(8.5);
     doc.text('Blâme', startX + 12, rowY + 5);
     doc.text('Avertissement', startX + 65, rowY + 5);
-    doc.text('Tableau d\'honneur', startX + 152, rowY + 5);
+    doc.text("Tableau d'honneur", startX + 152, rowY + 5);
     doc.text('Encouragement', startX + 255, rowY + 5);
     doc.text('Félicitations', startX + 365, rowY + 5);
     rowY += 18;
@@ -560,7 +686,11 @@ async function drawSenegalBulletin(doc, data) {
   const drawCheckbox = (x, y, isChecked) => {
     doc.rect(x, y, 14, 13).stroke('#000000');
     if (isChecked) {
-      doc.font('Helvetica-Bold').fontSize(10).fillColor('#000000').text('X', x + 3, y + 1);
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(10)
+        .fillColor('#000000')
+        .text('X', x + 3, y + 1);
     }
   };
 
@@ -587,7 +717,7 @@ async function drawSenegalBulletin(doc, data) {
   doc.text('Risque de Redoubler', startX + 8, rowY + 55);
   drawCheckbox(startX + 195, rowY + 53, isRisqueRedoubler);
 
-  doc.text('Risque l\'exclusion', startX + 8, rowY + 71);
+  doc.text("Risque l'exclusion", startX + 8, rowY + 71);
   drawCheckbox(startX + 195, rowY + 69, isRisqueExclusion);
 
   // Grille Droite : Mentions Honorifiques / Conduite
@@ -606,7 +736,7 @@ async function drawSenegalBulletin(doc, data) {
   doc.text('Encouragement', rightGridX + 8, rowY + 23);
   drawCheckbox(rightGridX + 195, rowY + 21, isEncouragement);
 
-  doc.text('Tableau d\'honneur', rightGridX + 8, rowY + 39);
+  doc.text("Tableau d'honneur", rightGridX + 8, rowY + 39);
   drawCheckbox(rightGridX + 195, rowY + 37, isTableauHonneur);
 
   doc.text('Avertissement', rightGridX + 8, rowY + 55);
@@ -623,10 +753,16 @@ async function drawSenegalBulletin(doc, data) {
 
     // Bloc Gauche : Décision du Conseil
     doc.rect(startX, rowY, gridW, box2H).stroke('#000000');
-    doc.font('Helvetica-Bold').fontSize(9.5).text('Décision du Conseil', startX + 50, rowY + 5);
-    doc.moveTo(startX, rowY + 17).lineTo(startX + gridW, rowY + 17).stroke('#000000');
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(9.5)
+      .text('Décision du Conseil', startX + 50, rowY + 5);
+    doc
+      .moveTo(startX, rowY + 17)
+      .lineTo(startX + gridW, rowY + 17)
+      .stroke('#000000');
 
-    const dec = bulletinSaved ? bulletinSaved.decision : (moyenneAnnuelle >= 10 ? 'PASSAGE' : 'REDOUBLEMENT');
+    const dec = bulletinSaved ? bulletinSaved.decision : moyenneAnnuelle >= 10 ? 'PASSAGE' : 'REDOUBLEMENT';
     const isAdmis = dec === 'PASSAGE';
     const isRedouble = dec === 'REDOUBLEMENT';
     const isExclu = dec === 'EXCLUSION';
@@ -644,9 +780,9 @@ async function drawSenegalBulletin(doc, data) {
     // Bloc Droit : Récapitulatif Annuel
     doc.rect(rightGridX, rowY, gridW, box2H).stroke('#000000');
 
-    const moyS1Str = sem1Data && sem1Data.moyenneGenerale ? sem1Data.moyenneGenerale.toFixed(2).replace('.',',') : '-';
-    const moyS2Str = moyenneGenerale ? moyenneGenerale.toFixed(2).replace('.',',') : '-';
-    const moyAnnStr = moyenneAnnuelle ? moyenneAnnuelle.toFixed(2).replace('.',',') : '-';
+    const moyS1Str = sem1Data && sem1Data.moyenneGenerale ? sem1Data.moyenneGenerale.toFixed(2).replace('.', ',') : '-';
+    const moyS2Str = moyenneGenerale ? moyenneGenerale.toFixed(2).replace('.', ',') : '-';
+    const moyAnnStr = moyenneAnnuelle ? moyenneAnnuelle.toFixed(2).replace('.', ',') : '-';
 
     doc.font('Helvetica-Bold').fontSize(9);
     doc.text('Moy. 1er sem..............', rightGridX + 10, rowY + 7);
@@ -669,18 +805,24 @@ async function drawSenegalBulletin(doc, data) {
 
   // Observations du Conseil
   doc.rect(startX, rowY, gridW, footerBoxH).stroke('#000000');
-  doc.font('Helvetica-Bold').fontSize(9.5).text('Observations du conseil des professeurs', startX + 6, rowY + 5);
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(9.5)
+    .text('Observations du conseil des professeurs', startX + 6, rowY + 5);
 
-  const obsText = (bulletinSaved && bulletinSaved.observations_jury)
-    ? bulletinSaved.observations_jury
-    : (moyVal >= 10 ? 'Passable.\nPeut mieux faire.' : 'Insuffisant.\nDoit fournir plus d\'efforts.');
+  const obsText =
+    bulletinSaved && bulletinSaved.observations_jury
+      ? bulletinSaved.observations_jury
+      : moyVal >= 10
+        ? 'Passable.\nPeut mieux faire.'
+        : "Insuffisant.\nDoit fournir plus d'efforts.";
 
   doc.font('Times-Italic').fontSize(11.5).fillColor('#000080');
   doc.text(obsText, startX + 10, rowY + 21, { width: gridW - 20, height: 40 });
 
   // Le Chef d'Établissement
   doc.font('Helvetica-Bold').fontSize(10).fillColor('#000000');
-  doc.text('Le Chef d\'Etablissement', rightGridX + 25, rowY + 5);
+  doc.text("Le Chef d'Etablissement", rightGridX + 25, rowY + 5);
 
   // Cachet et Signature du Chef d'Établissement (Taille agrandie)
   const stampX = rightGridX + 10;
@@ -707,7 +849,12 @@ async function drawSenegalBulletin(doc, data) {
     const qrCodeImage = await QRCode.toDataURL(qrData);
     doc.image(qrCodeImage, startX, qrY, { width: 50 });
     doc.font('Helvetica-Oblique').fontSize(7.5).fillColor('#64748b');
-    doc.text('Document officiel certifié et vérifié numériquement via la plateforme nationale LeralScolaire.', startX + 58, qrY + 18, { width: 400 });
+    doc.text(
+      'Document officiel certifié et vérifié numériquement via la plateforme nationale LeralScolaire.',
+      startX + 58,
+      qrY + 18,
+      { width: 400 }
+    );
   } catch (qrErr) {
     console.error('Erreur QR Code:', qrErr);
   }
@@ -740,5 +887,5 @@ async function generateSenegalBulletinPdf(eleveId, semesterNum, res) {
 module.exports = {
   getBulletinData,
   drawSenegalBulletin,
-  generateSenegalBulletinPdf
+  generateSenegalBulletinPdf,
 };

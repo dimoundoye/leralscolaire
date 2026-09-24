@@ -3,7 +3,7 @@ const db = require('../src/config/db');
 
 async function migrate() {
   try {
-    console.log('🚀 Migration v27 : Ajout des documents justificatifs pour les demandes d\'inscription...');
+    console.log("🚀 Migration v27 : Ajout des documents justificatifs pour les demandes d'inscription...");
 
     await db.query(`
       ALTER TABLE demandes_inscription_office

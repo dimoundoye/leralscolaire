@@ -35,7 +35,11 @@ export function OfflineProvider({ children }) {
           setShowSuccessToast(true);
           setTimeout(() => setShowSuccessToast(false), 4000);
         }
-      } else if (eventData.event === 'enqueued' || eventData.event === 'item_synced' || eventData.event === 'item_failed') {
+      } else if (
+        eventData.event === 'enqueued' ||
+        eventData.event === 'item_synced' ||
+        eventData.event === 'item_failed'
+      ) {
         refreshPendingCount();
       }
     });
@@ -68,7 +72,7 @@ export function OfflineProvider({ children }) {
         lastSyncResult,
         showSuccessToast,
         syncNow,
-        refreshPendingCount
+        refreshPendingCount,
       }}
     >
       {children}

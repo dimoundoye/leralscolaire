@@ -26,7 +26,7 @@ export const LampLight3D = ({ className = '', interactive = true }) => {
 
     // 2. Particules du faisceau Léral (Lamp Light Simulation)
     const count = 14000;
-    const geometry = new THREE.TetrahedronGeometry(0.20);
+    const geometry = new THREE.TetrahedronGeometry(0.2);
     const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
     const instancedMesh = new THREE.InstancedMesh(geometry, material, count);
 
@@ -54,12 +54,12 @@ export const LampLight3D = ({ className = '', interactive = true }) => {
 
     // Paramètres de la lampe Léral
     const PARAMS = {
-      spread: 0.48,   // Cône régulier
-      reach: 78,      // Portée équilibrée
+      spread: 0.48, // Cône régulier
+      reach: 78, // Portée équilibrée
       haze: 1.1,
       flicker: 0.25,
-      warmth: 0.095,  // Teinte dorée / ambrée Léral
-      drift: 0.55
+      warmth: 0.095, // Teinte dorée / ambrée Léral
+      drift: 0.55,
     };
 
     // Interaction souris douce
@@ -91,14 +91,10 @@ export const LampLight3D = ({ className = '', interactive = true }) => {
       const apexY = 16; // Le lustre (sommet entier) se place 100% en dessous de la navbar
       const floorY = -48; // Le faisceau s'étend jusqu'en bas
 
-
-
       const gold = 2.399963;
-      const flick = 1.0 + flicker * 0.18 * (
-        Math.sin(time * 13.7) + 
-        0.6 * Math.sin(time * 29.1 + 1.3) + 
-        0.4 * Math.sin(time * 7.3 + 2.1)
-      );
+      const flick =
+        1.0 +
+        flicker * 0.18 * (Math.sin(time * 13.7) + 0.6 * Math.sin(time * 29.1 + 1.3) + 0.4 * Math.sin(time * 7.3 + 2.1));
 
       const nBulb = count * 0.05;
       const nShade = count * 0.13;
@@ -127,7 +123,7 @@ export const LampLight3D = ({ className = '', interactive = true }) => {
           const f = (i - nBulb) / Math.max(1, nShade - nBulb);
           const a = gold * i;
           const rad = reach * (0.03 + 0.14 * f);
-          const y = apexY + reach * 0.10 - f * reach * 0.14;
+          const y = apexY + reach * 0.1 - f * reach * 0.14;
           const rim = f * f * f;
           target.set(Math.cos(a) * rad, y, Math.sin(a) * rad);
           pColor.setHSL(0, 0, Math.max(0, Math.min(1, (0.08 + 0.65 * rim) * flick)));
@@ -146,7 +142,7 @@ export const LampLight3D = ({ className = '', interactive = true }) => {
           const radial = 1 - u * u;
           const b = Math.pow(Math.max(0, axial), 1.4) * (0.25 + 0.75 * radial);
           target.set(x, apexY - depth * reach, z);
-          pColor.setHSL(0, 0, Math.max(0, Math.min(1, (0.10 + 0.82 * b) * flick)));
+          pColor.setHSL(0, 0, Math.max(0, Math.min(1, (0.1 + 0.82 * b) * flick)));
         } else if (i < nPool) {
           // Halo au sol (Blanc)
           const f = (i - nBeam) / Math.max(1, nPool - nBeam);
@@ -218,8 +214,8 @@ export const LampLight3D = ({ className = '', interactive = true }) => {
   }, [interactive]);
 
   return (
-    <div 
-      ref={containerRef} 
+    <div
+      ref={containerRef}
       className={`lamp-3d-container ${className}`}
       style={{
         position: 'absolute',
@@ -228,7 +224,7 @@ export const LampLight3D = ({ className = '', interactive = true }) => {
         height: '100%',
         overflow: 'hidden',
         pointerEvents: 'none',
-        zIndex: 1
+        zIndex: 1,
       }}
     />
   );

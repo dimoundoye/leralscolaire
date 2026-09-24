@@ -1,14 +1,36 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  QrCode, Camera, CameraOff, RefreshCw, FlipHorizontal, MapPin, CheckCircle, 
-  Clock, BookOpen, AlertCircle, PlusCircle, ShieldCheck, Award, Star, 
-  Compass, Calendar, History, Sparkles, UserCheck, ChevronRight
+import {
+  QrCode,
+  Camera,
+  CameraOff,
+  RefreshCw,
+  FlipHorizontal,
+  MapPin,
+  CheckCircle,
+  Clock,
+  BookOpen,
+  AlertCircle,
+  PlusCircle,
+  ShieldCheck,
+  Award,
+  Star,
+  Compass,
+  Calendar,
+  History,
+  Sparkles,
+  UserCheck,
+  ChevronRight,
 } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { offlineFetch, api } from '../services/api';
 import { getCurrentPosition } from '../utils/geolocation';
 
-export default function ProfDashboardEmargement({ classes: propClasses = [], schedule: propSchedule = [], profile: propProfile = null, onNavigateTab = null }) {
+export default function ProfDashboardEmargement({
+  classes: propClasses = [],
+  schedule: propSchedule = [],
+  profile: propProfile = null,
+  onNavigateTab = null,
+}) {
   const [activeTab, setActiveTab] = useState('scanne');
   const [qrTokenInput, setQrTokenInput] = useState('');
   const [gpsStatus, setGpsStatus] = useState(null);
@@ -54,7 +76,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
     try {
       setStatsLoading(true);
       const res = await offlineFetch('/api/emargement/my-stats', {
-        headers: {}
+        headers: {},
       });
       if (res.ok) {
         const data = await res.json();
@@ -70,7 +92,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
   };
 
   const fetchClassesAndSchedule = async () => {
-    const headers = { };
+    const headers = {};
     try {
       if (classesList.length === 0) {
         const res = await offlineFetch('/api/professeurs-portal/classes', { headers });
@@ -123,7 +145,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
     const currentDay = daysMap[now.getDay()];
     const currentHour = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-    const match = scheduleList.find(s => {
+    const match = scheduleList.find((s) => {
       const matchDay = (s.jour || s.jour_semaine || '').toUpperCase() === currentDay;
       const matchTime = s.heure_debut <= currentHour && s.heure_fin >= currentHour;
       return matchDay && matchTime;
@@ -150,7 +172,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
   const handleClassChange = (e) => {
     const classId = e.target.value;
     setSelectedClassId(classId);
-    const found = classesList.find(c => (c.classe_id || c.id) === classId);
+    const found = classesList.find((c) => (c.classe_id || c.id) === classId);
     if (found) {
       setSelectedMatiereCode(found.matiere_code || 'GEN');
       setSelectedMatiereNom(found.matiere_nom || found.nom || 'Cours');
@@ -197,7 +219,9 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
     }
 
     if (!navigator?.mediaDevices?.getUserMedia && typeof Html5Qrcode === 'undefined') {
-      setCameraError("Votre navigateur ne supporte pas l'accès caméra. Veuillez utiliser la capture photo ou la saisie manuelle.");
+      setCameraError(
+        "Votre navigateur ne supporte pas l'accès caméra. Veuillez utiliser la capture photo ou la saisie manuelle."
+      );
       setIsCameraStarting(false);
       return;
     }
@@ -228,14 +252,16 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
         },
         aspectRatio: 1.0,
         experimentalFeatures: {
-          useBarCodeDetectorIfSupported: true
-        }
+          useBarCodeDetectorIfSupported: true,
+        },
       };
 
       const onScanSuccess = (decodedText) => {
         playScanBeep();
         if (navigator.vibrate) {
-          try { navigator.vibrate([100, 50, 100]); } catch (e) {}
+          try {
+            navigator.vibrate([100, 50, 100]);
+          } catch (e) {}
         }
         setQrTokenInput(decodedText);
         stopCamera();
@@ -248,11 +274,11 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
       } else {
         // Tenter d'abord la caméra arrière (smartphone)
         try {
-          await html5Qr.start({ facingMode: "environment" }, qrConfig, onScanSuccess, () => {});
+          await html5Qr.start({ facingMode: 'environment' }, qrConfig, onScanSuccess, () => {});
         } catch (envErr) {
-          console.warn("Caméra environnement indisponible, tentative caméra utilisateur/PC...", envErr);
+          console.warn('Caméra environnement indisponible, tentative caméra utilisateur/PC...', envErr);
           // Si échec (ex: webcam de PC portable), basculer sur la caméra utilisateur
-          await html5Qr.start({ facingMode: "user" }, qrConfig, onScanSuccess, () => {});
+          await html5Qr.start({ facingMode: 'user' }, qrConfig, onScanSuccess, () => {});
         }
       }
 
@@ -268,16 +294,17 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
           }
         }
       } catch (devErr) {
-        console.warn("Énumération caméras après start:", devErr);
+        console.warn('Énumération caméras après start:', devErr);
       }
-
     } catch (err) {
       console.error('Erreur démarrage caméra:', err);
       const isDenied = err?.name === 'NotAllowedError' || String(err).toLowerCase().includes('permission');
       setCameraError(
-        isDenied 
-          ? "Accès à la caméra refusé. Veuillez autoriser la caméra dans votre navigateur (icône cadenas dans la barre d'adresse)." 
-          : "Impossible d'accéder au flux caméra (" + (err.message || err) + "). Vous pouvez utiliser « Prendre une Photo du QR » ou coller le code ci-dessous."
+        isDenied
+          ? "Accès à la caméra refusé. Veuillez autoriser la caméra dans votre navigateur (icône cadenas dans la barre d'adresse)."
+          : "Impossible d'accéder au flux caméra (" +
+              (err.message || err) +
+              '). Vous pouvez utiliser « Prendre une Photo du QR » ou coller le code ci-dessous.'
       );
       setIsCameraActive(false);
     } finally {
@@ -303,7 +330,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
 
   const switchCamera = async () => {
     if (!availableCameras || availableCameras.length <= 1) return;
-    const currentIndex = availableCameras.findIndex(c => c.id === selectedCameraId);
+    const currentIndex = availableCameras.findIndex((c) => c.id === selectedCameraId);
     const nextIndex = (currentIndex + 1) % availableCameras.length;
     const nextCam = availableCameras[nextIndex];
     setSelectedCameraId(nextCam.id);
@@ -329,13 +356,17 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
       const decodedText = await html5Qr.scanFile(file, false);
       playScanBeep();
       if (navigator.vibrate) {
-        try { navigator.vibrate([100, 50, 100]); } catch (err) {}
+        try {
+          navigator.vibrate([100, 50, 100]);
+        } catch (err) {}
       }
       setQrTokenInput(decodedText);
       setMessage("✅ QR Code scanné depuis la photo avec succès ! Cliquez sur « Valider l'Émargement » ci-dessous.");
     } catch (err) {
       console.error('Erreur scan photo QR:', err);
-      setCameraError("Aucun QR Code valide détecté sur cette photo. Assurez-vous que l'image est nette et bien cadrée, ou saisissez le token directement.");
+      setCameraError(
+        "Aucun QR Code valide détecté sur cette photo. Assurez-vous que l'image est nette et bien cadrée, ou saisissez le token directement."
+      );
     } finally {
       e.target.value = '';
     }
@@ -379,13 +410,13 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
         },
         body: JSON.stringify({
           token: qrTokenInput,
-          classeId: (selectedClassId && selectedClassId !== 'classe-auto') ? selectedClassId : undefined,
+          classeId: selectedClassId && selectedClassId !== 'classe-auto' ? selectedClassId : undefined,
           matiereCode: selectedMatiereCode || 'GEN',
           matiereNom: selectedMatiereNom || 'Cours Général',
           heureDebut: heureDebut || '08:00',
           heureFin: heureFin || '10:00',
-          ...position
-        })
+          ...position,
+        }),
       });
 
       const data = await res.json();
@@ -397,7 +428,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
         setError(data.error || 'Erreur lors de la validation du scan.');
       }
     } catch (err) {
-      setError(err.message || 'Erreur lors de la communication avec le serveur d\'émargement.');
+      setError(err.message || "Erreur lors de la communication avec le serveur d'émargement.");
     } finally {
       setLoading(false);
     }
@@ -409,10 +440,13 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
       setTerrainsEps([]);
       return;
     }
-    api.getTerrainsEps(selectedEtabId)
+    api
+      .getTerrainsEps(selectedEtabId)
       .then((data) => {
         setTerrainsEps(data.terrains || []);
-        setSelectedTerrainId((current) => (data.terrains || []).some((t) => t.id === current) ? current : (data.terrains?.[0]?.id || ''));
+        setSelectedTerrainId((current) =>
+          (data.terrains || []).some((t) => t.id === current) ? current : data.terrains?.[0]?.id || ''
+        );
       })
       .catch(() => setTerrainsEps([]));
   }, [activeTab, selectedEtabId]);
@@ -420,7 +454,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
   // 6. Submit EPS Attendance : position comparée au terrain d'EPS choisi
   const handleEpsGpsEmargement = async () => {
     if (!selectedTerrainId) {
-      setError('Choisissez le terrain d\'EPS où se déroule la séance.');
+      setError("Choisissez le terrain d'EPS où se déroule la séance.");
       return;
     }
     if (!navigator.onLine) {
@@ -443,8 +477,8 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
           classeId: selectedClassId || undefined,
           heureDebut: heureDebut || '08:00',
           heureFin: heureFin || '10:00',
-          ...position
-        })
+          ...position,
+        }),
       });
 
       const data = await res.json();
@@ -473,7 +507,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
     setError(null);
     setMessage(null);
 
-    const targetClass = classesList.find(c => (c.id || c.classe_id) === (rattrapageClassId || selectedClassId));
+    const targetClass = classesList.find((c) => (c.id || c.classe_id) === (rattrapageClassId || selectedClassId));
 
     try {
       const res = await offlineFetch('/api/emargement/rattrapage/demande', {
@@ -489,8 +523,8 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
           dateSeance: rattrapageDate,
           heureDebut: rattrapageHeureDeb,
           heureFin: rattrapageHeureFin,
-          motif: rattrapageMotif
-        })
+          motif: rattrapageMotif,
+        }),
       });
 
       const data = await res.json();
@@ -512,7 +546,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
   const totalScore = myStats?.score1000?.totalScore ?? 0;
   const gradeTier = myStats?.score1000?.gradeTier || 'INITIAL';
   const badgeLabel = myStats?.score1000?.badgeLabel || 'Nouveau profil (En cours de constitution)';
-  
+
   const heuresEffectuees = myStats?.metrics?.heuresEffectuees ?? 0;
   const heuresTotal = myStats?.metrics?.heuresTotal ?? 0;
   const tauxEmargement = myStats?.metrics?.tauxEmargement;
@@ -522,33 +556,36 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', fontFamily: 'Poppins, system-ui, sans-serif' }}>
-      
       {/* 1. Header Card LeralScolaire Style */}
-      <div style={{
-        background: '#ffffff',
-        border: '1px solid #e2e8f0',
-        borderRadius: '16px',
-        padding: '24px',
-        marginBottom: '20px',
-        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: '20px'
-      }}>
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '20px',
+          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '20px',
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{
-            width: '52px',
-            height: '52px',
-            borderRadius: '14px',
-            background: 'linear-gradient(135deg, #131e6c 0%, #1d2c94 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(19, 30, 108, 0.25)',
-            flexShrink: 0
-          }}>
+          <div
+            style={{
+              width: '52px',
+              height: '52px',
+              borderRadius: '14px',
+              background: 'linear-gradient(135deg, #131e6c 0%, #1d2c94 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(19, 30, 108, 0.25)',
+              flexShrink: 0,
+            }}
+          >
             <ShieldCheck size={28} color="#ffffff" />
           </div>
           <div>
@@ -556,43 +593,81 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
               <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: '#131e6c' }}>
                 Émargement & Assiduité Enseignant
               </h1>
-              <span style={{
-                background: '#e0e7ff',
-                color: '#3730a3',
-                fontSize: '11px',
-                fontWeight: 700,
-                padding: '3px 9px',
-                borderRadius: '12px'
-              }}>
+              <span
+                style={{
+                  background: '#e0e7ff',
+                  color: '#3730a3',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  padding: '3px 9px',
+                  borderRadius: '12px',
+                }}
+              >
                 Direct Caméra 20s
               </span>
             </div>
             <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#64748b' }}>
-              Pointez votre présence par scan vidéo QR Code 20s, géofencez vos cours EPS ou complétez vos cahiers de texte.
+              Pointez votre présence par scan vidéo QR Code 20s, géofencez vos cours EPS ou complétez vos cahiers de
+              texte.
             </p>
           </div>
         </div>
 
         {/* Dynamic Score Card */}
-        <div style={{
-          background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-          border: '1px solid #cbd5e1',
-          padding: '10px 18px',
-          borderRadius: '14px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
-        }}>
-          <Award size={30} color={gradeTier === 'OR' ? '#f59e0b' : gradeTier === 'ARGENT' ? '#3b82f6' : gradeTier === 'BRONZE' ? '#b45309' : '#94a3b8'} />
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+            border: '1px solid #cbd5e1',
+            padding: '10px 18px',
+            borderRadius: '14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.02)',
+          }}
+        >
+          <Award
+            size={30}
+            color={
+              gradeTier === 'OR'
+                ? '#f59e0b'
+                : gradeTier === 'ARGENT'
+                  ? '#3b82f6'
+                  : gradeTier === 'BRONZE'
+                    ? '#b45309'
+                    : '#94a3b8'
+            }
+          />
           <div>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div
+              style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                color: '#64748b',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}
+            >
               Score LeralScolaire
             </div>
             <div style={{ fontSize: '18px', fontWeight: 900, color: '#131e6c' }}>
-              {statsLoading ? '...' : totalScore} <span style={{ fontSize: '12px', fontWeight: 500, color: '#94a3b8' }}>/ 1000 pts</span>
+              {statsLoading ? '...' : totalScore}{' '}
+              <span style={{ fontSize: '12px', fontWeight: 500, color: '#94a3b8' }}>/ 1000 pts</span>
             </div>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: gradeTier === 'OR' ? '#16a34a' : gradeTier === 'ARGENT' ? '#2563eb' : gradeTier === 'BRONZE' ? '#b45309' : '#64748b' }}>
+            <div
+              style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                color:
+                  gradeTier === 'OR'
+                    ? '#16a34a'
+                    : gradeTier === 'ARGENT'
+                      ? '#2563eb'
+                      : gradeTier === 'BRONZE'
+                        ? '#b45309'
+                        : '#64748b',
+              }}
+            >
               Grade {gradeTier} • {badgeLabel}
             </div>
           </div>
@@ -600,20 +675,33 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
       </div>
 
       {/* 2. Dynamic Metrics Row (Honest Data, No Fake Percentages) */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
-        gap: '14px',
-        marginBottom: '20px'
-      }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+          gap: '14px',
+          marginBottom: '20px',
+        }}
+      >
         {/* Heures */}
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+        <div
+          style={{
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '14px',
+            padding: '16px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#131e6c', marginBottom: '6px' }}>
             <Clock size={16} />
             <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b' }}>Heures Effectuées</span>
           </div>
           <div style={{ fontSize: '20px', fontWeight: 900, color: '#0f172a' }}>
-            {heuresEffectuees}h {heuresTotal > 0 && <span style={{ fontSize: '13px', fontWeight: 600, color: '#94a3b8' }}>/ {heuresTotal}h</span>}
+            {heuresEffectuees}h{' '}
+            {heuresTotal > 0 && (
+              <span style={{ fontSize: '13px', fontWeight: 600, color: '#94a3b8' }}>/ {heuresTotal}h</span>
+            )}
           </div>
           <div style={{ fontSize: '11px', color: '#64748b', marginTop: '3px' }}>
             {heuresTotal > 0 ? `${heuresEffectuees}h validées` : 'Aucun cours émargé'}
@@ -621,12 +709,26 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
         </div>
 
         {/* Taux d'émargement */}
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+        <div
+          style={{
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '14px',
+            padding: '16px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#16a34a', marginBottom: '6px' }}>
             <CheckCircle size={16} />
             <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b' }}>Taux d'Émargement</span>
           </div>
-          <div style={{ fontSize: '20px', fontWeight: 900, color: tauxEmargement !== null && tauxEmargement !== undefined ? '#16a34a' : '#64748b' }}>
+          <div
+            style={{
+              fontSize: '20px',
+              fontWeight: 900,
+              color: tauxEmargement !== null && tauxEmargement !== undefined ? '#16a34a' : '#64748b',
+            }}
+          >
             {tauxEmargement !== null && tauxEmargement !== undefined ? `${tauxEmargement}%` : '—'}
           </div>
           <div style={{ fontSize: '11px', color: '#64748b', marginTop: '3px' }}>
@@ -635,21 +737,47 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
         </div>
 
         {/* Cahiers de texte */}
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+        <div
+          style={{
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '14px',
+            padding: '16px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#7c3aed', marginBottom: '6px' }}>
             <BookOpen size={16} />
             <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b' }}>Cahiers de Texte</span>
           </div>
-          <div style={{ fontSize: '20px', fontWeight: 900, color: tauxCahier !== null && tauxCahier !== undefined ? '#7c3aed' : '#64748b' }}>
+          <div
+            style={{
+              fontSize: '20px',
+              fontWeight: 900,
+              color: tauxCahier !== null && tauxCahier !== undefined ? '#7c3aed' : '#64748b',
+            }}
+          >
             {tauxCahier !== null && tauxCahier !== undefined ? `${tauxCahier}%` : '—'}
           </div>
           <div style={{ fontSize: '11px', color: '#64748b', marginTop: '3px' }}>
-            {tauxCahier !== null && tauxCahier !== undefined ? (tauxCahier === 100 ? '100% à jour' : `${tauxCahier}% complétés`) : 'Aucune séance effectuée'}
+            {tauxCahier !== null && tauxCahier !== undefined
+              ? tauxCahier === 100
+                ? '100% à jour'
+                : `${tauxCahier}% complétés`
+              : 'Aucune séance effectuée'}
           </div>
         </div>
 
         {/* Évaluation élèves */}
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+        <div
+          style={{
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '14px',
+            padding: '16px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f59e0b', marginBottom: '6px' }}>
             <Star size={16} />
             <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b' }}>Évaluation Élèves</span>
@@ -658,7 +786,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
             {noteEleves ? `${noteEleves} / 5.0 ⭐` : '— / 5.0'}
           </div>
           <div style={{ fontSize: '11px', color: '#64748b', marginTop: '3px' }}>
-            {totalVotes > 0 ? `${totalVotes} avis d'élèves` : '0 avis d\'élève enregistré'}
+            {totalVotes > 0 ? `${totalVotes} avis d'élèves` : "0 avis d'élève enregistré"}
           </div>
         </div>
       </div>
@@ -668,13 +796,19 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
         <button
           onClick={() => setActiveTab('scanne')}
           style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '10px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: 800,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 18px',
+            borderRadius: '10px',
+            fontSize: '13px',
+            fontWeight: 800,
             border: activeTab === 'scanne' ? 'none' : '1px solid #cbd5e1',
             background: activeTab === 'scanne' ? '#131e6c' : '#ffffff',
             color: activeTab === 'scanne' ? '#ffffff' : '#475569',
-            cursor: 'pointer', boxShadow: activeTab === 'scanne' ? '0 4px 12px rgba(19, 30, 108, 0.2)' : 'none',
-            transition: 'all 0.2s ease'
+            cursor: 'pointer',
+            boxShadow: activeTab === 'scanne' ? '0 4px 12px rgba(19, 30, 108, 0.2)' : 'none',
+            transition: 'all 0.2s ease',
           }}
         >
           <Camera size={16} /> 1. Scanner QR Code Caméra
@@ -683,13 +817,19 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
         <button
           onClick={() => setActiveTab('eps')}
           style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '10px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: 800,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 18px',
+            borderRadius: '10px',
+            fontSize: '13px',
+            fontWeight: 800,
             border: activeTab === 'eps' ? 'none' : '1px solid #cbd5e1',
             background: activeTab === 'eps' ? '#059669' : '#ffffff',
             color: activeTab === 'eps' ? '#ffffff' : '#475569',
-            cursor: 'pointer', boxShadow: activeTab === 'eps' ? '0 4px 12px rgba(5, 150, 105, 0.2)' : 'none',
-            transition: 'all 0.2s ease'
+            cursor: 'pointer',
+            boxShadow: activeTab === 'eps' ? '0 4px 12px rgba(5, 150, 105, 0.2)' : 'none',
+            transition: 'all 0.2s ease',
           }}
         >
           <Compass size={16} /> Mode Terrain EPS (GPS)
@@ -698,13 +838,19 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
         <button
           onClick={() => setActiveTab('rattrapage')}
           style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '10px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: 800,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 18px',
+            borderRadius: '10px',
+            fontSize: '13px',
+            fontWeight: 800,
             border: activeTab === 'rattrapage' ? 'none' : '1px solid #cbd5e1',
             background: activeTab === 'rattrapage' ? '#d97706' : '#ffffff',
             color: activeTab === 'rattrapage' ? '#ffffff' : '#475569',
-            cursor: 'pointer', boxShadow: activeTab === 'rattrapage' ? '0 4px 12px rgba(217, 119, 6, 0.2)' : 'none',
-            transition: 'all 0.2s ease'
+            cursor: 'pointer',
+            boxShadow: activeTab === 'rattrapage' ? '0 4px 12px rgba(217, 119, 6, 0.2)' : 'none',
+            transition: 'all 0.2s ease',
           }}
         >
           <PlusCircle size={16} /> Demande de Rattrapage
@@ -713,30 +859,101 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
 
       {/* Global Alert Banners */}
       {message && (
-        <div style={{ background: '#dcfce7', border: '1px solid #86efac', color: '#166534', padding: '14px 18px', borderRadius: '12px', marginBottom: '20px', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div
+          style={{
+            background: '#dcfce7',
+            border: '1px solid #86efac',
+            color: '#166534',
+            padding: '14px 18px',
+            borderRadius: '12px',
+            marginBottom: '20px',
+            fontSize: '13px',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+          }}
+        >
           <CheckCircle size={18} /> {message}
         </div>
       )}
 
       {error && (
-        <div style={{ background: '#fee2e2', border: '1px solid #fca5a5', color: '#991b1b', padding: '14px 18px', borderRadius: '12px', marginBottom: '20px', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div
+          style={{
+            background: '#fee2e2',
+            border: '1px solid #fca5a5',
+            color: '#991b1b',
+            padding: '14px 18px',
+            borderRadius: '12px',
+            marginBottom: '20px',
+            fontSize: '13px',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+          }}
+        >
           <AlertCircle size={18} /> {error}
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', alignItems: 'start' }}>
-        
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gap: '20px',
+          alignItems: 'start',
+        }}
+      >
         {/* Left / Main Card: Active Tab Interface */}
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
-          
+        <div
+          style={{
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '16px',
+            padding: '24px',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+          }}
+        >
           {/* SÉLECTION DU COURS / CLASSE DYNAMIQUE */}
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <div
+            style={{
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '20px',
+            }}
+          >
+            <div
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}
+            >
+              <span
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  color: '#334155',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}
+              >
                 Séance d'Enseignement
               </span>
               {autoDetectedCourse && (
-                <span style={{ fontSize: '11px', fontWeight: 700, background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    background: '#dbeafe',
+                    color: '#1e40af',
+                    padding: '2px 8px',
+                    borderRadius: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
                   <Sparkles size={12} /> Cours actuel détecté
                 </span>
               )}
@@ -744,7 +961,15 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#64748b', marginBottom: '4px' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '11.5px',
+                    fontWeight: 700,
+                    color: '#64748b',
+                    marginBottom: '4px',
+                  }}
+                >
                   Classe & Matière :
                 </label>
                 <select
@@ -758,13 +983,14 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
                     fontSize: '12.5px',
                     fontWeight: 600,
                     color: '#0f172a',
-                    background: '#ffffff'
+                    background: '#ffffff',
                   }}
                 >
                   {classesList.length > 0 ? (
                     classesList.map((c, idx) => (
                       <option key={c.id || c.classe_id || idx} value={c.id || c.classe_id}>
-                        {c.nom || c.classe_nom || 'Classe'} — {c.matiere_nom || c.matiere || selectedMatiereNom || 'Cours'}
+                        {c.nom || c.classe_nom || 'Classe'} —{' '}
+                        {c.matiere_nom || c.matiere || selectedMatiereNom || 'Cours'}
                       </option>
                     ))
                   ) : (
@@ -775,21 +1001,55 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
 
               <div style={{ display: 'flex', gap: '6px' }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#64748b', marginBottom: '4px' }}>Début :</label>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '11.5px',
+                      fontWeight: 700,
+                      color: '#64748b',
+                      marginBottom: '4px',
+                    }}
+                  >
+                    Début :
+                  </label>
                   <input
                     type="time"
                     value={heureDebut}
                     onChange={(e) => setHeureDebut(e.target.value)}
-                    style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12.5px', fontWeight: 600 }}
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '12.5px',
+                      fontWeight: 600,
+                    }}
                   />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#64748b', marginBottom: '4px' }}>Fin :</label>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '11.5px',
+                      fontWeight: 700,
+                      color: '#64748b',
+                      marginBottom: '4px',
+                    }}
+                  >
+                    Fin :
+                  </label>
                   <input
                     type="time"
                     value={heureFin}
                     onChange={(e) => setHeureFin(e.target.value)}
-                    style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12.5px', fontWeight: 600 }}
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '12.5px',
+                      fontWeight: 600,
+                    }}
                   />
                 </div>
               </div>
@@ -800,54 +1060,69 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
           {activeTab === 'scanne' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
               <div>
-                <h3 style={{ margin: '0 0 4px', fontSize: '16px', fontWeight: 800, color: '#131e6c', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h3
+                  style={{
+                    margin: '0 0 4px',
+                    fontSize: '16px',
+                    fontWeight: 800,
+                    color: '#131e6c',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
                   <Camera size={20} color="#131e6c" /> Scan Direct Caméra (QR 20s)
                 </h3>
                 <p style={{ margin: 0, fontSize: '12.5px', color: '#64748b' }}>
-                  Activez votre caméra et visez l'écran du surveillant ou le moniteur d'affichage pour valider instantanément votre présence.
+                  Activez votre caméra et visez l'écran du surveillant ou le moniteur d'affichage pour valider
+                  instantanément votre présence.
                 </p>
               </div>
 
               {/* CAMERA VIEWFINDER CONTAINER */}
-              <div style={{
-                position: 'relative',
-                width: '100%',
-                minHeight: (isCameraActive || isCameraStarting) ? '340px' : '230px',
-                background: '#090d16',
-                borderRadius: '16px',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: isCameraActive ? '2px solid #38bdf8' : '1px dashed #cbd5e1',
-                boxShadow: isCameraActive ? '0 10px 25px -5px rgba(56, 189, 248, 0.3)' : 'none'
-              }}>
+              <div
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  minHeight: isCameraActive || isCameraStarting ? '340px' : '230px',
+                  background: '#090d16',
+                  borderRadius: '16px',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: isCameraActive ? '2px solid #38bdf8' : '1px dashed #cbd5e1',
+                  boxShadow: isCameraActive ? '0 10px 25px -5px rgba(56, 189, 248, 0.3)' : 'none',
+                }}
+              >
                 {/* Real Video Reader Viewport - MUST have physical dimensions in DOM so Html5Qrcode can attach */}
-                <div 
-                  id="ls-camera-reader-viewport" 
-                  style={{ 
-                    width: '100%', 
-                    minHeight: (isCameraActive || isCameraStarting) ? '340px' : '1px',
-                    display: (isCameraActive || isCameraStarting) ? 'block' : 'none',
+                <div
+                  id="ls-camera-reader-viewport"
+                  style={{
+                    width: '100%',
+                    minHeight: isCameraActive || isCameraStarting ? '340px' : '1px',
+                    display: isCameraActive || isCameraStarting ? 'block' : 'none',
                     borderRadius: '16px',
-                    overflow: 'hidden'
-                  }} 
+                    overflow: 'hidden',
+                  }}
                 />
 
                 {/* State: Camera Inactive Overlay */}
                 {!isCameraActive && !isCameraStarting && (
                   <div style={{ textAlign: 'center', padding: '24px 20px', color: '#94a3b8', zIndex: 5 }}>
-                    <div style={{
-                      width: '64px',
-                      height: '64px',
-                      borderRadius: '50%',
-                      background: 'rgba(255, 255, 255, 0.06)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      margin: '0 auto 12px'
-                    }}>
+                    <div
+                      style={{
+                        width: '64px',
+                        height: '64px',
+                        borderRadius: '50%',
+                        background: 'rgba(255, 255, 255, 0.06)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        margin: '0 auto 12px',
+                      }}
+                    >
                       <Camera size={32} color="#38bdf8" />
                     </div>
                     <div style={{ fontSize: '14px', fontWeight: 700, color: '#f8fafc', marginBottom: '6px' }}>
@@ -856,7 +1131,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
                     <p style={{ fontSize: '12px', color: '#94a3b8', maxWidth: '300px', margin: '0 auto 16px' }}>
                       Pointez votre caméra vers le QR Code affiché sur l'écran (renouvelé toutes les 20 secondes).
                     </p>
-                    
+
                     <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
                       <button
                         type="button"
@@ -873,13 +1148,13 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
                           boxShadow: '0 4px 14px rgba(37, 99, 235, 0.4)',
                           display: 'inline-flex',
                           alignItems: 'center',
-                          gap: '8px'
+                          gap: '8px',
                         }}
                       >
                         <Camera size={16} /> Activer la Caméra en Direct
                       </button>
 
-                      <input 
+                      <input
                         type="file"
                         accept="image/*"
                         capture="environment"
@@ -901,7 +1176,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
                           cursor: 'pointer',
                           display: 'inline-flex',
                           alignItems: 'center',
-                          gap: '8px'
+                          gap: '8px',
                         }}
                       >
                         <Camera size={16} color="#38bdf8" /> Scanner via Photo / Image
@@ -912,50 +1187,58 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
 
                 {/* State: Starting / Loading */}
                 {isCameraStarting && (
-                  <div style={{
-                    position: 'absolute',
-                    inset: 0,
-                    background: 'rgba(9, 13, 22, 0.95)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    textAlign: 'center',
-                    padding: '30px',
-                    color: '#ffffff',
-                    zIndex: 15
-                  }}>
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      background: 'rgba(9, 13, 22, 0.95)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      textAlign: 'center',
+                      padding: '30px',
+                      color: '#ffffff',
+                      zIndex: 15,
+                    }}
+                  >
                     <RefreshCw className="animate-spin" size={36} color="#38bdf8" style={{ margin: '0 auto 12px' }} />
                     <div style={{ fontSize: '13px', fontWeight: 700 }}>Initialisation de la caméra...</div>
-                    <div style={{ fontSize: '11.5px', color: '#94a3b8', marginTop: '6px' }}>Veuillez autoriser l'accès caméra si votre navigateur le demande.</div>
+                    <div style={{ fontSize: '11.5px', color: '#94a3b8', marginTop: '6px' }}>
+                      Veuillez autoriser l'accès caméra si votre navigateur le demande.
+                    </div>
                   </div>
                 )}
 
                 {/* Laser Overlay Animation when Active */}
                 {isCameraActive && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '16px',
-                    left: '16px',
-                    right: '16px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    zIndex: 10,
-                    pointerEvents: 'auto'
-                  }}>
-                    <span style={{
-                      background: 'rgba(0, 0, 0, 0.65)',
-                      backdropFilter: 'blur(8px)',
-                      color: '#22c55e',
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      padding: '4px 10px',
-                      borderRadius: '8px',
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '16px',
+                      left: '16px',
+                      right: '16px',
                       display: 'flex',
+                      justifyContent: 'space-between',
                       alignItems: 'center',
-                      gap: '6px'
-                    }}>
+                      zIndex: 10,
+                      pointerEvents: 'auto',
+                    }}
+                  >
+                    <span
+                      style={{
+                        background: 'rgba(0, 0, 0, 0.65)',
+                        backdropFilter: 'blur(8px)',
+                        color: '#22c55e',
+                        fontSize: '11px',
+                        fontWeight: 800,
+                        padding: '4px 10px',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}
+                    >
                       <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e' }} />
                       Caméra Active
                     </span>
@@ -978,7 +1261,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '4px'
+                            gap: '4px',
                           }}
                         >
                           <FlipHorizontal size={14} /> Retourner
@@ -1000,7 +1283,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '4px'
+                          gap: '4px',
                         }}
                       >
                         <CameraOff size={14} /> Arrêter
@@ -1012,17 +1295,19 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
 
               {/* Camera Error Message */}
               {cameraError && (
-                <div style={{
-                  background: '#fef2f2',
-                  border: '1px solid #fecaca',
-                  color: '#991b1b',
-                  padding: '12px 14px',
-                  borderRadius: '10px',
-                  fontSize: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}>
+                <div
+                  style={{
+                    background: '#fef2f2',
+                    border: '1px solid #fecaca',
+                    color: '#991b1b',
+                    padding: '12px 14px',
+                    borderRadius: '10px',
+                    fontSize: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
                   <AlertCircle size={16} flexShrink={0} />
                   <span>{cameraError}</span>
                 </div>
@@ -1031,14 +1316,26 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
               {/* Scanned Token Field / Fallback */}
               <form onSubmit={handleScanQrSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155' }}>
-                      Token Scanné :
-                    </label>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155' }}>Token Scanné :</label>
                     <button
                       type="button"
                       onClick={() => setShowManualInput(!showManualInput)}
-                      style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: '11.5px', fontWeight: 600, cursor: 'pointer' }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#2563eb',
+                        fontSize: '11.5px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
                     >
                       {showManualInput ? 'Masquer saisie manuelle' : 'Saisir manuellement'}
                     </button>
@@ -1058,7 +1355,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
                         fontSize: '12px',
                         fontFamily: 'monospace',
                         background: qrTokenInput ? '#f0fdf4' : '#f8fafc',
-                        color: '#0f172a'
+                        color: '#0f172a',
                       }}
                     />
                   )}
@@ -1081,11 +1378,15 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
                     justifyContent: 'center',
                     gap: '8px',
                     boxShadow: qrTokenInput ? '0 4px 12px rgba(19, 30, 108, 0.25)' : 'none',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
                   }}
                 >
                   <CheckCircle size={16} />
-                  {loading ? 'Validation en cours...' : qrTokenInput ? 'Valider l\'Émargement Physique' : 'Scannez le QR Code pour valider'}
+                  {loading
+                    ? 'Validation en cours...'
+                    : qrTokenInput
+                      ? "Valider l'Émargement Physique"
+                      : 'Scannez le QR Code pour valider'}
                 </button>
               </form>
             </div>
@@ -1095,24 +1396,65 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
           {activeTab === 'eps' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
-                <h3 style={{ margin: '0 0 4px', fontSize: '16px', fontWeight: 800, color: '#059669', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h3
+                  style={{
+                    margin: '0 0 4px',
+                    fontSize: '16px',
+                    fontWeight: 800,
+                    color: '#059669',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
                   <Compass size={20} /> Mode Terrain EPS (Stade & Géofencing GPS)
                 </h3>
                 <p style={{ margin: 0, fontSize: '12.5px', color: '#64748b' }}>
-                  Émargement automatique par coordonnées satellites pour les enseignants d'Éducation Physique en extérieur.
+                  Émargement automatique par coordonnées satellites pour les enseignants d'Éducation Physique en
+                  extérieur.
                 </p>
               </div>
 
-              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '14px', borderRadius: '12px', fontSize: '12.5px', color: '#166534', lineHeight: 1.5 }}>
-                📍 Ce mode vérifie que votre appareil se trouve dans le périmètre du terrain d'EPS choisi (stade, plateau sportif…), qui peut être éloigné de l'établissement.
+              <div
+                style={{
+                  background: '#f0fdf4',
+                  border: '1px solid #bbf7d0',
+                  padding: '14px',
+                  borderRadius: '12px',
+                  fontSize: '12.5px',
+                  color: '#166534',
+                  lineHeight: 1.5,
+                }}
+              >
+                📍 Ce mode vérifie que votre appareil se trouve dans le périmètre du terrain d'EPS choisi (stade,
+                plateau sportif…), qui peut être éloigné de l'établissement.
               </div>
 
               {terrainsEps.length === 0 ? (
-                <div style={{ fontSize: '12.5px', color: '#b45309', background: '#fffbeb', border: '1px solid #fde68a', padding: '10px 14px', borderRadius: '8px' }}>
-                  Aucun terrain d'EPS n'est enregistré pour cet établissement. Demandez à l'administration de le déclarer dans ses paramètres.
+                <div
+                  style={{
+                    fontSize: '12.5px',
+                    color: '#b45309',
+                    background: '#fffbeb',
+                    border: '1px solid #fde68a',
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                  }}
+                >
+                  Aucun terrain d'EPS n'est enregistré pour cet établissement. Demandez à l'administration de le
+                  déclarer dans ses paramètres.
                 </div>
               ) : (
-                <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', fontWeight: 700, color: '#334155' }}>
+                <label
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    color: '#334155',
+                  }}
+                >
                   Terrain de la séance
                   <select
                     value={selectedTerrainId}
@@ -1120,14 +1462,28 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
                     style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
                   >
                     {terrainsEps.map((terrain) => (
-                      <option key={terrain.id} value={terrain.id}>{terrain.nom} (rayon {terrain.rayon_metres} m)</option>
+                      <option key={terrain.id} value={terrain.id}>
+                        {terrain.nom} (rayon {terrain.rayon_metres} m)
+                      </option>
                     ))}
                   </select>
                 </label>
               )}
 
               {gpsStatus && (
-                <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#166534', background: '#dcfce7', padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div
+                  style={{
+                    fontSize: '12.5px',
+                    fontWeight: 700,
+                    color: '#166534',
+                    background: '#dcfce7',
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
                   <MapPin size={16} /> {gpsStatus}
                 </div>
               )}
@@ -1149,7 +1505,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  boxShadow: '0 4px 12px rgba(5, 150, 105, 0.2)'
+                  boxShadow: '0 4px 12px rgba(5, 150, 105, 0.2)',
                 }}
               >
                 <MapPin size={16} />
@@ -1162,7 +1518,17 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
           {activeTab === 'rattrapage' && (
             <form onSubmit={handleRattrapageSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <h3 style={{ margin: '0 0 4px', fontSize: '16px', fontWeight: 800, color: '#d97706', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h3
+                  style={{
+                    margin: '0 0 4px',
+                    fontSize: '16px',
+                    fontWeight: 800,
+                    color: '#d97706',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
                   <PlusCircle size={20} /> Demande de Cours de Rattrapage
                 </h3>
                 <p style={{ margin: 0, fontSize: '12.5px', color: '#64748b' }}>
@@ -1171,13 +1537,27 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '11.5px',
+                    fontWeight: 700,
+                    color: '#334155',
+                    marginBottom: '4px',
+                  }}
+                >
                   Classe Concernée :
                 </label>
                 <select
                   value={rattrapageClassId || selectedClassId}
                   onChange={(e) => setRattrapageClassId(e.target.value)}
-                  style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12.5px' }}
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '12.5px',
+                  }}
                 >
                   {classesList.map((c, idx) => (
                     <option key={c.id || c.classe_id || idx} value={c.id || c.classe_id}>
@@ -1188,40 +1568,94 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '11.5px',
+                    fontWeight: 700,
+                    color: '#334155',
+                    marginBottom: '4px',
+                  }}
+                >
                   Date Proposée :
                 </label>
                 <input
                   type="date"
                   value={rattrapageDate}
                   onChange={(e) => setRattrapageDate(e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '13px',
+                  }}
                 />
               </div>
 
               <div style={{ display: 'flex', gap: '10px' }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>Heure Début :</label>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '11.5px',
+                      fontWeight: 700,
+                      color: '#334155',
+                      marginBottom: '4px',
+                    }}
+                  >
+                    Heure Début :
+                  </label>
                   <input
                     type="time"
                     value={rattrapageHeureDeb}
                     onChange={(e) => setRattrapageHeureDeb(e.target.value)}
-                    style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '13px',
+                    }}
                   />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>Heure Fin :</label>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '11.5px',
+                      fontWeight: 700,
+                      color: '#334155',
+                      marginBottom: '4px',
+                    }}
+                  >
+                    Heure Fin :
+                  </label>
                   <input
                     type="time"
                     value={rattrapageHeureFin}
                     onChange={(e) => setRattrapageHeureFin(e.target.value)}
-                    style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '13px',
+                    }}
                   />
                 </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '11.5px',
+                    fontWeight: 700,
+                    color: '#334155',
+                    marginBottom: '4px',
+                  }}
+                >
                   Motif du rattrapage :
                 </label>
                 <input
@@ -1229,7 +1663,13 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
                   value={rattrapageMotif}
                   onChange={(e) => setRattrapageMotif(e.target.value)}
                   placeholder="Ex : Rattrapage du cours manqué le jeudi pour cause de mission pédagogique"
-                  style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                  style={{
+                    width: '100%',
+                    padding: '9px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '13px',
+                  }}
                 />
               </div>
 
@@ -1245,20 +1685,37 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
                   fontSize: '13px',
                   fontWeight: 800,
                   cursor: 'pointer',
-                  boxShadow: '0 4px 12px rgba(217, 119, 6, 0.2)'
+                  boxShadow: '0 4px 12px rgba(217, 119, 6, 0.2)',
                 }}
               >
                 {loading ? 'Transmission...' : 'Soumettre au Censeur'}
               </button>
             </form>
           )}
-
         </div>
 
         {/* Right Card: Historique Récent des Séances */}
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+        <div
+          style={{
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '16px',
+            padding: '24px',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h3
+              style={{
+                margin: 0,
+                fontSize: '15px',
+                fontWeight: 800,
+                color: '#0f172a',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
               <History size={18} color="#2563eb" /> Historique Récent
             </h3>
             <button
@@ -1285,30 +1742,43 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      gap: '12px'
+                      gap: '12px',
                     }}
                   >
                     <div>
                       <div style={{ fontSize: '13px', fontWeight: 800, color: '#1e293b' }}>
                         {seance.classe_nom || 'Classe'} • {seance.matiere_nom || seance.matiere_code || 'Matière'}
                       </div>
-                      <div style={{ fontSize: '11px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                      <div
+                        style={{
+                          fontSize: '11px',
+                          color: '#64748b',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          marginTop: '2px',
+                        }}
+                      >
                         <span>{new Date(seance.date_seance).toLocaleDateString('fr-FR')}</span>
                         <span>•</span>
-                        <span>{seance.heure_debut?.substring(0, 5)} - {seance.heure_fin?.substring(0, 5)}</span>
+                        <span>
+                          {seance.heure_debut?.substring(0, 5)} - {seance.heure_fin?.substring(0, 5)}
+                        </span>
                       </div>
                     </div>
 
                     <div style={{ textAlign: 'right' }}>
-                      <span style={{
-                        fontSize: '10.5px',
-                        fontWeight: 800,
-                        padding: '3px 8px',
-                        borderRadius: '6px',
-                        background: isComplete ? '#dcfce7' : '#fef3c7',
-                        color: isComplete ? '#15803d' : '#b45309',
-                        display: 'inline-block'
-                      }}>
+                      <span
+                        style={{
+                          fontSize: '10.5px',
+                          fontWeight: 800,
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          background: isComplete ? '#dcfce7' : '#fef3c7',
+                          color: isComplete ? '#15803d' : '#b45309',
+                          display: 'inline-block',
+                        }}
+                      >
                         {isComplete ? '100% Validé' : 'Cahier requis'}
                       </span>
                       {!isComplete && onNavigateTab && (
@@ -1323,7 +1793,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
                               fontSize: '11px',
                               fontWeight: 700,
                               cursor: 'pointer',
-                              padding: 0
+                              padding: 0,
                             }}
                           >
                             Cahier de texte →
@@ -1342,9 +1812,7 @@ export default function ProfDashboardEmargement({ classes: propClasses = [], sch
             </div>
           )}
         </div>
-
       </div>
-
     </div>
   );
 }

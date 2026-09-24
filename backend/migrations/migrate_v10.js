@@ -59,7 +59,8 @@ async function migrate() {
       console.log('Seeding des exemples pour le portail élève...');
       for (const eleve of elevesRes.rows) {
         // Portfolio item
-        await db.query(`
+        await db.query(
+          `
           INSERT INTO portfolio_items (eleve_id, type, titre, description, annee_scolaire, date_realisation)
           VALUES (
             $1, 
@@ -69,9 +70,12 @@ async function migrate() {
             '2025-2026', 
             '2026-04-15'
           ) ON CONFLICT DO NOTHING
-        `, [eleve.id]);
+        `,
+          [eleve.id]
+        );
 
-        await db.query(`
+        await db.query(
+          `
           INSERT INTO portfolio_items (eleve_id, type, titre, description, annee_scolaire, date_realisation)
           VALUES (
             $1, 
@@ -81,10 +85,13 @@ async function migrate() {
             '2024-2025', 
             '2025-05-10'
           ) ON CONFLICT DO NOTHING
-        `, [eleve.id]);
+        `,
+          [eleve.id]
+        );
 
         // Résultats nationaux (simulation d'un BFEM obtenu l'année précédente)
-        await db.query(`
+        await db.query(
+          `
           INSERT INTO resultats_examens_nationaux (eleve_id, type_examen, annee, session, serie, mention, moyenne, statut_resultat, details)
           VALUES (
             $1,
@@ -97,23 +104,34 @@ async function migrate() {
             'ADMIS',
             '{"Maths": 14, "Français": 12, "Histoire-Géo": 13, "Anglais": 15}'::jsonb
           ) ON CONFLICT (eleve_id, type_examen, annee) DO NOTHING
-        `, [eleve.id]);
+        `,
+          [eleve.id]
+        );
 
         // Notifications
-        await db.query(`
+        await db.query(
+          `
           INSERT INTO notifications (user_id, titre, description, type)
           VALUES ($1, 'Nouvelle note disponible', 'Votre devoir de Mathématiques a été saisi par le professeur. Note: 14.5/20', 'NOTE')
-        `, [eleve.user_id]);
+        `,
+          [eleve.user_id]
+        );
 
-        await db.query(`
+        await db.query(
+          `
           INSERT INTO notifications (user_id, titre, description, type)
           VALUES ($1, 'Emploi du temps mis à jour', 'L''emploi du temps de votre classe a été mis à jour par l''administration.', 'EXAMEN')
-        `, [eleve.user_id]);
+        `,
+          [eleve.user_id]
+        );
 
-        await db.query(`
+        await db.query(
+          `
           INSERT INTO notifications (user_id, titre, description, type)
           VALUES ($1, 'Nouveau message de l''établissement', 'Veuillez prendre note de la note d''information concernant la fin des cours le 14 juillet.', 'MESSAGE')
-        `, [eleve.user_id]);
+        `,
+          [eleve.user_id]
+        );
       }
       console.log('✅ Seeding terminé');
     }

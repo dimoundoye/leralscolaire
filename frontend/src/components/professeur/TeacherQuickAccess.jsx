@@ -1,8 +1,21 @@
 import React, { useState } from 'react';
 import {
-  QrCode, UserCheck, BookOpenCheck, BookMarked, Calendar,
-  ClipboardList, MessageSquare, ChevronUp, Users, Building,
-  BookOpen, Scale, Mail, Settings, Award, Sparkles
+  QrCode,
+  UserCheck,
+  BookOpenCheck,
+  BookMarked,
+  Calendar,
+  ClipboardList,
+  MessageSquare,
+  ChevronUp,
+  Users,
+  Building,
+  BookOpen,
+  Scale,
+  Mail,
+  Settings,
+  Award,
+  Sparkles,
 } from 'lucide-react';
 
 /**
@@ -17,12 +30,7 @@ const GridDotsIcon = ({ size = 24, color = '#64748b' }) => (
   </svg>
 );
 
-const TeacherQuickAccess = ({
-  navigate,
-  profile,
-  invitations = [],
-  setActiveTab
-}) => {
+const TeacherQuickAccess = ({ navigate, profile, invitations = [], setActiveTab }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleAction = (path, tabName) => {
@@ -42,7 +50,7 @@ const TeacherQuickAccess = ({
       icon: <QrCode size={26} strokeWidth={2.3} />,
       bg: '#dcfce7',
       color: '#15803d',
-      action: () => handleAction('/professeur/dashboard/emargement', 'emargement')
+      action: () => handleAction('/professeur/dashboard/emargement', 'emargement'),
     },
     {
       id: 'attendance',
@@ -50,7 +58,7 @@ const TeacherQuickAccess = ({
       icon: <UserCheck size={26} strokeWidth={2.3} />,
       bg: '#e0f2fe',
       color: '#0284c7',
-      action: () => handleAction('/professeur/dashboard/attendance', 'attendance')
+      action: () => handleAction('/professeur/dashboard/attendance', 'attendance'),
     },
     {
       id: 'grades',
@@ -58,7 +66,7 @@ const TeacherQuickAccess = ({
       icon: <BookOpenCheck size={26} strokeWidth={2.3} />,
       bg: '#e0e7ff',
       color: '#4338ca',
-      action: () => handleAction('/professeur/dashboard/grades', 'grades')
+      action: () => handleAction('/professeur/dashboard/grades', 'grades'),
     },
     {
       id: 'cahier-texte',
@@ -66,7 +74,7 @@ const TeacherQuickAccess = ({
       icon: <BookMarked size={26} strokeWidth={2.3} />,
       bg: '#fce7f3',
       color: '#c026d3',
-      action: () => handleAction('/professeur/dashboard/cahier-texte', 'cahier-texte')
+      action: () => handleAction('/professeur/dashboard/cahier-texte', 'cahier-texte'),
     },
     {
       id: 'schedule',
@@ -74,7 +82,7 @@ const TeacherQuickAccess = ({
       icon: <Calendar size={26} strokeWidth={2.3} />,
       bg: '#ffedd5',
       color: '#ea580c',
-      action: () => handleAction('/professeur/dashboard/schedule', 'schedule')
+      action: () => handleAction('/professeur/dashboard/schedule', 'schedule'),
     },
     {
       id: 'planning',
@@ -82,7 +90,7 @@ const TeacherQuickAccess = ({
       icon: <ClipboardList size={26} strokeWidth={2.3} />,
       bg: '#ccfbf1',
       color: '#0d9488',
-      action: () => handleAction('/professeur/dashboard/planning', 'planning')
+      action: () => handleAction('/professeur/dashboard/planning', 'planning'),
     },
     {
       id: 'messages',
@@ -90,19 +98,17 @@ const TeacherQuickAccess = ({
       icon: <MessageSquare size={26} strokeWidth={2.3} />,
       bg: '#fef3c7',
       color: '#d97706',
-      action: () => handleAction('/professeur/dashboard/messages', 'messages')
+      action: () => handleAction('/professeur/dashboard/messages', 'messages'),
     },
     {
       id: 'toggle-more',
       title: isExpanded ? 'Moins' : 'Plus',
-      icon: isExpanded
-        ? <ChevronUp size={26} strokeWidth={2.6} />
-        : <GridDotsIcon size={24} color="#64748b" />,
+      icon: isExpanded ? <ChevronUp size={26} strokeWidth={2.6} /> : <GridDotsIcon size={24} color="#64748b" />,
       bg: isExpanded ? '#fee2e2' : '#f1f5f9',
       color: isExpanded ? '#b91c1c' : '#475569',
-      action: () => setIsExpanded(prev => !prev),
-      isToggle: true
-    }
+      action: () => setIsExpanded((prev) => !prev),
+      isToggle: true,
+    },
   ];
 
   // Secondary actions revealed when "Plus" is clicked
@@ -113,7 +119,7 @@ const TeacherQuickAccess = ({
       icon: <Users size={26} strokeWidth={2.3} />,
       bg: '#ede9fe',
       color: '#7c3aed',
-      action: () => handleAction('/professeur/dashboard/attached-classes', 'attached-classes')
+      action: () => handleAction('/professeur/dashboard/attached-classes', 'attached-classes'),
     },
     {
       id: 'partner-schools',
@@ -121,7 +127,7 @@ const TeacherQuickAccess = ({
       icon: <Building size={26} strokeWidth={2.3} />,
       bg: '#e0f2fe',
       color: '#0284c7',
-      action: () => handleAction('/professeur/dashboard/partner-schools', 'partner-schools')
+      action: () => handleAction('/professeur/dashboard/partner-schools', 'partner-schools'),
     },
     {
       id: 'pedagogy',
@@ -129,7 +135,7 @@ const TeacherQuickAccess = ({
       icon: <BookOpen size={26} strokeWidth={2.3} />,
       bg: '#d1fae5',
       color: '#059669',
-      action: () => handleAction('/professeur/dashboard/pedagogy', 'pedagogy')
+      action: () => handleAction('/professeur/dashboard/pedagogy', 'pedagogy'),
     },
     {
       id: 'discipline',
@@ -137,7 +143,7 @@ const TeacherQuickAccess = ({
       icon: <Scale size={26} strokeWidth={2.3} />,
       bg: '#ffe4e6',
       color: '#e11d48',
-      action: () => handleAction('/professeur/dashboard/discipline', 'discipline')
+      action: () => handleAction('/professeur/dashboard/discipline', 'discipline'),
     },
     {
       id: 'invitations',
@@ -146,7 +152,7 @@ const TeacherQuickAccess = ({
       bg: '#fef9c3',
       color: '#ca8a04',
       badge: invitations?.length > 0 ? invitations.length : null,
-      action: () => handleAction('/professeur/dashboard/invitations', 'invitations')
+      action: () => handleAction('/professeur/dashboard/invitations', 'invitations'),
     },
     {
       id: 'profile',
@@ -154,8 +160,8 @@ const TeacherQuickAccess = ({
       icon: <Settings size={26} strokeWidth={2.3} />,
       bg: '#f1f5f9',
       color: '#334155',
-      action: () => handleAction('/professeur/dashboard/profile', 'profile')
-    }
+      action: () => handleAction('/professeur/dashboard/profile', 'profile'),
+    },
   ];
 
   // If teacher is President du Jury, add jury tab shortcut
@@ -166,7 +172,7 @@ const TeacherQuickAccess = ({
       icon: <Award size={26} strokeWidth={2.3} />,
       bg: '#fef08a',
       color: '#854d0e',
-      action: () => handleAction('/jury/dashboard')
+      action: () => handleAction('/jury/dashboard'),
     });
   }
 
@@ -182,19 +188,13 @@ const TeacherQuickAccess = ({
         className="quick-access-icon-circle"
         style={{
           backgroundColor: item.bg,
-          color: item.color
+          color: item.color,
         }}
       >
         {item.icon}
-        {item.badge && (
-          <span className="quick-access-badge">
-            {item.badge}
-          </span>
-        )}
+        {item.badge && <span className="quick-access-badge">{item.badge}</span>}
       </div>
-      <span className="quick-access-label">
-        {item.title}
-      </span>
+      <span className="quick-access-label">{item.title}</span>
     </button>
   );
 
@@ -205,20 +205,14 @@ const TeacherQuickAccess = ({
           <Sparkles size={16} /> Accès Rapide
         </h3>
         {isExpanded && (
-          <button
-            type="button"
-            className="quick-access-reduce-btn"
-            onClick={() => setIsExpanded(false)}
-          >
+          <button type="button" className="quick-access-reduce-btn" onClick={() => setIsExpanded(false)}>
             Réduire
           </button>
         )}
       </div>
 
       {/* Primary 4-col grid (2 rows on mobile) */}
-      <div className="quick-access-grid">
-        {primaryActions.map(renderButton)}
-      </div>
+      <div className="quick-access-grid">{primaryActions.map(renderButton)}</div>
 
       {/* Secondary grid revealed when clicking Plus */}
       {isExpanded && (
@@ -226,9 +220,7 @@ const TeacherQuickAccess = ({
           <div className="quick-access-divider">
             <span>Autres onglets & fonctionnalités</span>
           </div>
-          <div className="quick-access-grid quick-access-secondary-grid">
-            {secondaryActions.map(renderButton)}
-          </div>
+          <div className="quick-access-grid quick-access-secondary-grid">{secondaryActions.map(renderButton)}</div>
         </div>
       )}
     </div>
