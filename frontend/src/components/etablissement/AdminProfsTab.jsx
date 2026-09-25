@@ -1,4 +1,5 @@
 import { Plus, Edit, Trash2 } from 'lucide-react';
+import { apiFetch } from '../../services/http';
 
 const AdminProfsTab = ({
   profs,
@@ -156,7 +157,7 @@ const AdminProfsTab = ({
                         className="btn-action-text delete-btn"
                         onClick={async () => {
                           if (!window.confirm('Supprimer ce professeur de votre établissement ?')) return;
-                          await fetch(`/api/professeurs/${p.id}`, { method: 'DELETE', headers: {} });
+                          await apiFetch(`/api/professeurs/${p.id}`, { method: 'DELETE', headers: {} });
                           fetchProfs();
                         }}
                         title="Supprimer"

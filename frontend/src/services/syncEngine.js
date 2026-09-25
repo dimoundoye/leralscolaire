@@ -1,4 +1,5 @@
 import { db } from './db';
+import { apiFetch } from './http';
 
 class SyncEngine {
   constructor() {
@@ -127,7 +128,7 @@ class SyncEngine {
             'X-Client-Mutation-Id': item.clientMutationId,
           };
 
-          const response = await fetch(item.endpoint, {
+          const response = await apiFetch(item.endpoint, {
             method: item.method,
             headers: finalHeaders,
             body: item.body ? JSON.stringify(item.body) : undefined,

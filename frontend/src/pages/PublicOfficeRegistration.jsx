@@ -18,6 +18,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import './PublicOfficeRegistration.css';
 
 import { REFERENTIEL_IA_IEF, getIasByRegion, getIefsByIa } from '../utils/referentielIaIef';
+import { apiFetch } from '../services/http';
 
 const API = '/api';
 // Doit rester cohérent avec la limite de taille des requêtes du backend (src/app.js)
@@ -205,7 +206,7 @@ const PublicOfficeRegistration = () => {
         documents_fournis: docs,
       };
 
-      const r = await fetch(`${API}/office-bac/demande-public`, {
+      const r = await apiFetch(`${API}/office-bac/demande-public`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

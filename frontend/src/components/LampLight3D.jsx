@@ -79,12 +79,13 @@ export const LampLight3D = ({ className = '', interactive = true }) => {
 
     // 3. Boucle d'animation à 60 FPS
     let animationFrameId;
-    const clock = new THREE.Clock();
+    const timer = new THREE.Timer();
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
 
-      const time = clock.getElapsedTime();
+      timer.update();
+      const time = timer.getElapsed();
       const { spread, reach, haze, flicker, drift } = PARAMS;
       const apexY = 16; // Le lustre (sommet entier) se place 100% en dessous de la navbar
       const floorY = -48; // Le faisceau s'étend jusqu'en bas
@@ -208,6 +209,7 @@ export const LampLight3D = ({ className = '', interactive = true }) => {
       geometry.dispose();
       material.dispose();
       renderer.dispose();
+      timer.dispose();
     };
   }, [interactive]);
 

@@ -14,7 +14,10 @@ module.exports = [
     rules: {
       ...js.configs.recommended.rules,
       // Les paramètres Express inutilisés (req, res, next) et les erreurs ignorées sont tolérés s'ils commencent par _
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_|^(req|res|next)$', caughtErrors: 'none' }],
+      'no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_|^(req|res|next)$', varsIgnorePattern: '^_', caughtErrors: 'none' },
+      ],
     },
   },
   {

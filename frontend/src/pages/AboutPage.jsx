@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import {
-  LogIn,
-  Sparkles,
-  Menu,
-  X,
   ArrowRight,
-  ChevronRight,
-  ShieldCheck,
-  ChevronDown,
-  Lightbulb,
+  BadgeCheck,
   Check,
+  ChevronDown,
+  ChevronRight,
   Clock,
+  Flag,
   HeartHandshake,
+  Lightbulb,
+  LogIn,
+  Menu,
+  ShieldCheck,
+  Sparkles,
+  X,
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -168,7 +170,7 @@ export const AboutPage = () => {
             </a>
             <div className="mobile-drawer-btn">
               <button
-                className="btn-capsule-primary w-full"
+                className="btn-capsule-primary"
                 onClick={() => {
                   closeMobileMenu();
                   handleAuthAction();
@@ -185,7 +187,7 @@ export const AboutPage = () => {
       <section className="about-hero-section">
         <div className="about-hero-glow" />
         <div className="about-container">
-          <div className="about-hero-content text-center">
+          <div className="about-hero-content">
             <h1 className="about-hero-title">L'Histoire, la Vision et l'Engagement de léralscolaire.</h1>
             <p className="about-hero-subtitle">
               Une plateforme républicaine innovante pour unifier, sécuriser et pérenniser le livret scolaire numérique
@@ -198,7 +200,7 @@ export const AboutPage = () => {
       {/* 3. QU'EST-CE QUE LÉRAL SCOLAIRE ? */}
       <section className="about-section bg-white">
         <div className="about-container">
-          <div className="grid-2cols items-center gap-12">
+          <div className="grid-2cols">
             <div>
               <span className="about-tag">Définition & Portée Pédagogique</span>
               <h2 className="about-section-title">Qu'est-ce que LéralScolaire ?</h2>
@@ -303,10 +305,10 @@ export const AboutPage = () => {
             </p>
           </div>
 
-          <div className="grid-3cols gap-8">
+          <div className="grid-3cols">
             {/* 1. Transparence Totale */}
             <div className="objective-card objective-card-blue">
-              <div className="objective-icon-wrap bg-blue-900 text-white">
+              <div className="objective-icon-wrap bg-blue-900">
                 <ShieldCheck size={26} />
               </div>
               <h3 className="objective-title">Transparence Totale</h3>
@@ -317,20 +319,20 @@ export const AboutPage = () => {
               </p>
               <ul className="objective-bullets">
                 <li>
-                  <Check size={16} className="text-blue-700" /> Calculs automatisés sans erreur de formule
+                  <Check size={16} /> Calculs automatisés sans erreur de formule
                 </li>
                 <li>
-                  <Check size={16} className="text-blue-700" /> Scellement numérique officiel inaltérable
+                  <Check size={16} /> Scellement numérique officiel inaltérable
                 </li>
                 <li>
-                  <Check size={16} className="text-blue-700" /> Traçabilité intégrale de la 6e au Bac
+                  <Check size={16} /> Traçabilité intégrale de la 6e au Bac
                 </li>
               </ul>
             </div>
 
             {/* 2. Efficacité Accrue */}
             <div className="objective-card objective-card-teal">
-              <div className="objective-icon-wrap bg-teal-700 text-white">
+              <div className="objective-icon-wrap bg-teal-700">
                 <Clock size={26} />
               </div>
               <h3 className="objective-title">Efficacité Accrue</h3>
@@ -354,7 +356,7 @@ export const AboutPage = () => {
 
             {/* 3. Accessibilité Universelle */}
             <div className="objective-card objective-card-orange">
-              <div className="objective-icon-wrap bg-orange-600 text-white">
+              <div className="objective-icon-wrap bg-orange-600">
                 <HeartHandshake size={26} />
               </div>
               <h3 className="objective-title">Accessibilité Universelle</h3>
@@ -382,7 +384,7 @@ export const AboutPage = () => {
       {/* 6. NOTRE VISION POUR L'ÉCOLE SÉNÉGALAISE */}
       <section className="about-section about-vision-section">
         <div className="about-container">
-          <div className="grid-2cols items-center gap-12">
+          <div className="grid-2cols">
             <div className="vision-text-col">
               <div className="vision-badge-pill">
                 <Lightbulb size={16} />
@@ -526,12 +528,12 @@ export const AboutPage = () => {
       </section>
 
       {/* 9. BANNIÈRE D'APPEL À L'ACTION */}
-      <section className="about-section pt-0">
+      <section className="about-section">
         <div className="about-container">
           <div className="stitch-sovereign-banner">
             <div className="banner-content-wrap">
               <div className="banner-badge-pill">
-                <span className="material-symbols-outlined text-[14px]">flag</span>
+                <Flag size={14} aria-hidden="true" />
                 <span>Engagement National du Sénégal</span>
               </div>
               <h2 className="banner-title-text">Prêt à moderniser la gestion scolaire de votre établissement ?</h2>
@@ -552,7 +554,7 @@ export const AboutPage = () => {
             </div>
 
             <div className="banner-watermark-bg" aria-hidden="true">
-              <span className="material-symbols-outlined text-[320px]">verified</span>
+              <BadgeCheck size={320} aria-hidden="true" />
             </div>
           </div>
         </div>

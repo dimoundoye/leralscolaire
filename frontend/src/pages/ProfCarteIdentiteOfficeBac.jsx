@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Search, Award, User, Download } from 'lucide-react';
+import { apiFetch } from '../services/http';
 
 export default function ProfCarteIdentiteOfficeBac() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -15,7 +16,7 @@ export default function ProfCarteIdentiteOfficeBac() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/emargement/office/search?query=${encodeURIComponent(searchQuery.trim())}`);
+      const res = await apiFetch(`/api/emargement/office/search?query=${encodeURIComponent(searchQuery.trim())}`);
       const data = await res.json();
       if (data.success) {
         setSearchResults(data.professeurs || []);
@@ -37,7 +38,7 @@ export default function ProfCarteIdentiteOfficeBac() {
     setSelectedProfId(profId);
     setLoading(true);
     try {
-      const res = await fetch(`/api/emargement/office/carte-identite/${profId}`, {
+      const res = await apiFetch(`/api/emargement/office/carte-identite/${profId}`, {
         headers: {},
       });
       const data = await res.json();

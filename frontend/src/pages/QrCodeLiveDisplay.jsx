@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ShieldCheck, Clock, RefreshCw, AlertCircle } from 'lucide-react';
+import { apiFetch } from '../services/http';
 
 export default function QrCodeLiveDisplay() {
   const [qrToken, setQrToken] = useState('');
@@ -11,7 +12,7 @@ export default function QrCodeLiveDisplay() {
 
   const fetchLiveToken = async () => {
     try {
-      const res = await fetch('/api/emargement/live-qr');
+      const res = await apiFetch('/api/emargement/live-qr');
       if (res.status === 401 || res.status === 403) {
         setError("Ouvrez la borne depuis la session d'un administrateur d'établissement.");
         return;

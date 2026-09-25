@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../services/db';
+import { apiFetch, onSessionExpired } from '../services/http';
 
 // La session est portée par un cookie httpOnly posé par le serveur : le jeton n'est jamais
 // lisible par le JavaScript de la page. Seules les informations d'affichage de l'utilisateur
@@ -45,7 +46,7 @@ export const AuthProvider = ({ children }) => {
   // Au chargement : vérifier que le cookie de session est toujours valide
   useEffect(() => {
     if (!readSavedUser() || !navigator.onLine) return;
-    fetch('/api/auth/me')
+    apiFetch('/api/auth/me')
       .then((res) => {
         if (res.status === 401) {
           endLocalSession().then(() => navigate('/auth'));
@@ -56,6 +57,16 @@ export const AuthProvider = ({ children }) => {
       });
   }, [endLocalSession, navigate]);
 
+  // Session expirée pendant l'utilisation (réponse 401 de l'API) : retour à la connexion
+  useEffect(
+    () =>
+      onSessionExpired(() => {
+        if (!readSavedUser()) return;
+        endLocalSession().then(() => navigate('/auth'));
+      }),
+    [endLocalSession, navigate]
+  );
+
   const login = (userData) => {
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
@@ -64,7 +75,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     setLoading(true);
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await apiFetch('/api/auth/logout', { method: 'POST' });
     } catch {
       // Hors ligne : le cookie expirera de lui-même
     }

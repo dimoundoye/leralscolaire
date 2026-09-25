@@ -26,6 +26,7 @@ import {
   Zap,
 } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
+import { apiFetch } from '../services/http';
 import './JuryDeliberationDashboard.css';
 
 const API = '/api';
@@ -69,12 +70,12 @@ const JuryDeliberationDashboard = () => {
   const fetchJuryAndCandidats = async () => {
     setLoading(true);
     try {
-      const rJury = await fetch(`${API}/jury/my-jury`, { headers });
+      const rJury = await apiFetch(`${API}/jury/my-jury`, { headers });
       if (rJury.ok) {
         const jData = await rJury.json();
         setJuryInfo(jData);
 
-        const rCand = await fetch(`${API}/jury/candidats`, { headers });
+        const rCand = await apiFetch(`${API}/jury/candidats`, { headers });
         if (rCand.ok) setCandidats(await rCand.json());
       } else {
         showToast("Erreur d'accès au Jury attribué.", 'error');
@@ -98,7 +99,7 @@ const JuryDeliberationDashboard = () => {
     setSelectedCandidat(candidat);
     setAppreciationJury(candidat.appreciation_jury || '');
     try {
-      const r = await fetch(`${API}/jury/candidats/${candidat.id}/notes`, { headers });
+      const r = await apiFetch(`${API}/jury/candidats/${candidat.id}/notes`, { headers });
       if (r.ok) {
         const data = await r.json();
         setNotesGrid(data.notes);
@@ -170,7 +171,7 @@ const JuryDeliberationDashboard = () => {
     setSavingNotes(true);
 
     try {
-      const r = await fetch(`${API}/jury/candidats/${selectedCandidat.id}/notes`, {
+      const r = await apiFetch(`${API}/jury/candidats/${selectedCandidat.id}/notes`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ notes: notesGrid, appreciation_jury: appreciationJury }),
@@ -193,7 +194,7 @@ const JuryDeliberationDashboard = () => {
 
   const handleRepecher = async (candidatId, nouvelleMoyenne, nouveauStatut) => {
     try {
-      const r = await fetch(`${API}/jury/candidats/${candidatId}/repecher`, {
+      const r = await apiFetch(`${API}/jury/candidats/${candidatId}/repecher`, {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -221,7 +222,7 @@ const JuryDeliberationDashboard = () => {
 
   const confirmVerrouillerPV = async () => {
     try {
-      const r = await fetch(`${API}/jury/verrouiller`, {
+      const r = await apiFetch(`${API}/jury/verrouiller`, {
         method: 'PUT',
         headers,
         body: JSON.stringify({ numero_jury: juryInfo?.numero_jury }),
@@ -244,7 +245,7 @@ const JuryDeliberationDashboard = () => {
 
   const confirmPublierResultats = async () => {
     try {
-      const r = await fetch(`${API}/jury/publier`, {
+      const r = await apiFetch(`${API}/jury/publier`, {
         method: 'PUT',
         headers,
         body: JSON.stringify({ numero_jury: juryInfo?.numero_jury }),

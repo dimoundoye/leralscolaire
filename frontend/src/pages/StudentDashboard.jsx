@@ -17,6 +17,7 @@ import StudentAttestationTab from '../components/eleve/StudentAttestationTab';
 import StudentCahierTexteTab from '../components/eleve/StudentCahierTexteTab';
 import { StudentSidebar, StudentMobileDrawer } from '../components/eleve/StudentSidebar';
 import StudentTopbar from '../components/eleve/StudentTopbar';
+import { apiFetch } from '../services/http';
 import './StudentDashboard.css';
 
 const API_BASE_URL = '/api';
@@ -154,7 +155,7 @@ const StudentDashboard = () => {
         const headers = {};
 
         // Fetch Profile
-        const profRes = await fetch(`${API_BASE_URL}/eleve-portal/profile`, { headers });
+        const profRes = await apiFetch(`${API_BASE_URL}/eleve-portal/profile`, { headers });
         if (profRes.status === 401) {
           logout();
           return;
@@ -164,19 +165,19 @@ const StudentDashboard = () => {
         localStorage.setItem('cached_profile', JSON.stringify(profileData));
 
         // Fetch Portfolio
-        const portRes = await fetch(`${API_BASE_URL}/eleve-portal/portfolio`, { headers });
+        const portRes = await apiFetch(`${API_BASE_URL}/eleve-portal/portfolio`, { headers });
         const portfolioData = await portRes.json();
         setPortfolio(portfolioData);
         localStorage.setItem('cached_portfolio', JSON.stringify(portfolioData));
 
         // Fetch CV
-        const cvRes = await fetch(`${API_BASE_URL}/eleve-portal/cv`, { headers });
+        const cvRes = await apiFetch(`${API_BASE_URL}/eleve-portal/cv`, { headers });
         const cvDataFetched = await cvRes.json();
         setCvData(cvDataFetched);
         localStorage.setItem('cached_cv', JSON.stringify(cvDataFetched));
 
         // Fetch Notes
-        const notesRes = await fetch(`${API_BASE_URL}/eleve-portal/notes`, { headers });
+        const notesRes = await apiFetch(`${API_BASE_URL}/eleve-portal/notes`, { headers });
         const rawNotesData = await notesRes.json();
         const notesData = normalizeNotesData(rawNotesData);
         setNotes(notesData);
@@ -192,19 +193,19 @@ const StudentDashboard = () => {
         }
 
         // Fetch Evolution
-        const evoRes = await fetch(`${API_BASE_URL}/eleve-portal/notes-evolution`, { headers });
+        const evoRes = await apiFetch(`${API_BASE_URL}/eleve-portal/notes-evolution`, { headers });
         const evoData = await evoRes.json();
         setEvolution(evoData);
         localStorage.setItem('cached_evolution', JSON.stringify(evoData));
 
         // Fetch Schedule
-        const schedRes = await fetch(`${API_BASE_URL}/eleve-portal/schedule`, { headers });
+        const schedRes = await apiFetch(`${API_BASE_URL}/eleve-portal/schedule`, { headers });
         const schedData = await schedRes.json();
         setSchedule(schedData);
         localStorage.setItem('cached_schedule', JSON.stringify(schedData));
 
         // Fetch Exam Results (Portail BAC/BFEM)
-        const examRes = await fetch(`${API_BASE_URL}/eleve-portal/exam-results`, { headers });
+        const examRes = await apiFetch(`${API_BASE_URL}/eleve-portal/exam-results`, { headers });
         const examData = await examRes.json();
         // Support both legacy array format and new { eleve, resultats } format
         const normalizedExamData = Array.isArray(examData) ? { eleve: null, resultats: examData } : examData;
@@ -212,31 +213,31 @@ const StudentDashboard = () => {
         localStorage.setItem('cached_examResults', JSON.stringify(normalizedExamData));
 
         // Fetch Documents
-        const docRes = await fetch(`${API_BASE_URL}/eleve-portal/documents`, { headers });
+        const docRes = await apiFetch(`${API_BASE_URL}/eleve-portal/documents`, { headers });
         const docData = await docRes.json();
         setDocuments(docData);
         localStorage.setItem('cached_documents', JSON.stringify(docData));
 
         // Fetch Notifications
-        const notifRes = await fetch(`${API_BASE_URL}/eleve-portal/notifications`, { headers });
+        const notifRes = await apiFetch(`${API_BASE_URL}/eleve-portal/notifications`, { headers });
         const notifData = await notifRes.json();
         setNotifications(notifData);
         localStorage.setItem('cached_notifications', JSON.stringify(notifData));
 
         // Fetch Messages
-        const msgRes = await fetch(`${API_BASE_URL}/eleve-portal/messages`, { headers });
+        const msgRes = await apiFetch(`${API_BASE_URL}/eleve-portal/messages`, { headers });
         const msgData = await msgRes.json();
         setMessages(msgData);
         localStorage.setItem('cached_messages', JSON.stringify(msgData));
 
         // Fetch Absences
-        const absRes = await fetch(`${API_BASE_URL}/eleve-portal/absences`, { headers });
+        const absRes = await apiFetch(`${API_BASE_URL}/eleve-portal/absences`, { headers });
         const absData = await absRes.json();
         setAbsences(absData);
         localStorage.setItem('cached_absences', JSON.stringify(absData));
 
         // Fetch Attestation History
-        const attRes = await fetch(`${API_BASE_URL}/eleve-portal/attestations/history`, { headers });
+        const attRes = await apiFetch(`${API_BASE_URL}/eleve-portal/attestations/history`, { headers });
         if (attRes.ok) {
           const attData = await attRes.json();
           setAttestationHistory(attData);
@@ -292,7 +293,7 @@ const StudentDashboard = () => {
       };
       for (const item of storedOffline) {
         try {
-          await fetch(`${API_BASE_URL}/eleve-portal/portfolio`, {
+          await apiFetch(`${API_BASE_URL}/eleve-portal/portfolio`, {
             method: 'POST',
             headers,
             body: JSON.stringify(item),
@@ -322,7 +323,7 @@ const StudentDashboard = () => {
   // === MESSAGING FUNCTIONS ===
   const fetchChatChannel = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/messages/channels`, {
+      const res = await apiFetch(`${API_BASE_URL}/messages/channels`, {
         headers: {},
       });
       if (res.ok) {
@@ -352,7 +353,7 @@ const StudentDashboard = () => {
         params.append('etablissement_id', target.etablissement_id);
       }
 
-      const res = await fetch(`${API_BASE_URL}/messages/history?${params}`, {
+      const res = await apiFetch(`${API_BASE_URL}/messages/history?${params}`, {
         headers: {},
       });
       if (res.ok) {
@@ -379,7 +380,7 @@ const StudentDashboard = () => {
     formData.append('fichier', file);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/messages/upload`, {
+      const res = await apiFetch(`${API_BASE_URL}/messages/upload`, {
         method: 'POST',
         headers: {},
         body: formData,
@@ -425,7 +426,7 @@ const StudentDashboard = () => {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/messages`, {
+      const res = await apiFetch(`${API_BASE_URL}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -446,7 +447,7 @@ const StudentDashboard = () => {
   // Refresh attestation history
   const refreshAttestationHistory = async () => {
     try {
-      const attRes = await fetch(`${API_BASE_URL}/eleve-portal/attestations/history`, {
+      const attRes = await apiFetch(`${API_BASE_URL}/eleve-portal/attestations/history`, {
         headers: {},
       });
       if (attRes.ok) {
@@ -463,7 +464,7 @@ const StudentDashboard = () => {
     e.preventDefault();
     setAttestationSubmitting(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/eleve-portal/attestations/request`, {
+      const res = await apiFetch(`${API_BASE_URL}/eleve-portal/attestations/request`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -512,7 +513,7 @@ const StudentDashboard = () => {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/eleve-portal/portfolio`, {
+      const response = await apiFetch(`${API_BASE_URL}/eleve-portal/portfolio`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -552,7 +553,7 @@ const StudentDashboard = () => {
 
     if (window.confirm('Voulez-vous vraiment supprimer cet élément ?')) {
       try {
-        const response = await fetch(`${API_BASE_URL}/eleve-portal/portfolio/${id}`, {
+        const response = await apiFetch(`${API_BASE_URL}/eleve-portal/portfolio/${id}`, {
           method: 'DELETE',
           headers: {},
         });
@@ -569,7 +570,7 @@ const StudentDashboard = () => {
   const fetchCahierEleve = async () => {
     setCahierLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/cahier-texte/eleve`, {
+      const res = await apiFetch(`${API_BASE_URL}/cahier-texte/eleve`, {
         headers: {},
       });
       if (res.ok) {

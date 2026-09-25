@@ -1,17 +1,39 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
-  LogIn,
-  Sparkles,
-  Menu,
-  X,
   ArrowRight,
-  ChevronRight,
-  ShieldCheck,
+  BadgeCheck,
+  BookOpen,
   Building2,
-  Users,
-  CheckCircle2,
-  FileCheck,
+  Calculator,
   Check,
+  CheckCircle2,
+  ChevronRight,
+  CloudCog,
+  FileCheck,
+  FileText,
+  Flag,
+  Gavel,
+  GraduationCap,
+  IdCard,
+  Landmark,
+  Lock,
+  LogIn,
+  Menu,
+  Microscope,
+  NotebookPen,
+  Palette,
+  QrCode,
+  ScanLine,
+  ScrollText,
+  Send,
+  Shield,
+  ShieldCheck,
+  Sparkles,
+  SquarePen,
+  Terminal,
+  UserCog,
+  Users,
+  X,
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -22,16 +44,6 @@ export const LandingPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  // Redirection automatique des crawlers IA vers la page À Propos
-  useEffect(() => {
-    const isAiBot = /GPTBot|ChatGPT-User|Google-Extended|ClaudeBot|PerplexityBot|anthropic-ai|Bytespider|CCBot/i.test(
-      navigator.userAgent
-    );
-    if (isAiBot) {
-      navigate('/a-propos', { replace: true });
-    }
-  }, [navigate]);
 
   // Redirection dynamique selon rôle ou vers /auth
   const handleAuthAction = () => {
@@ -125,7 +137,7 @@ export const LandingPage = () => {
             <a href="#vision" onClick={closeMobileMenu} className="mobile-nav-link">
               Accueil
             </a>
-            <Link to="/a-propos" onClick={closeMobileMenu} className="mobile-nav-link font-semibold text-blue-900">
+            <Link to="/a-propos" onClick={closeMobileMenu} className="mobile-nav-link text-blue-900">
               À Propos du Projet
             </Link>
             <a href="#poles" onClick={closeMobileMenu} className="mobile-nav-link">
@@ -145,7 +157,7 @@ export const LandingPage = () => {
             </a>
             <div className="mobile-drawer-btn">
               <button
-                className="btn-capsule-primary w-full"
+                className="btn-capsule-primary"
                 onClick={() => {
                   closeMobileMenu();
                   handleAuthAction();
@@ -171,6 +183,8 @@ export const LandingPage = () => {
         <div className="hero-container hero-split-layout">
           {/* Colonne Gauche : Description & Accès au tableau de bord */}
           <div className="hero-split-left">
+            {/* Titre principal de la page (masqué visuellement : le visuel 3D tient lieu de titre) */}
+            <h1 className="sr-only">LéralScolaire, le livret scolaire numérique du Sénégal</h1>
             <p className="hero-description hero-description-left">
               LéralScolaire simplifie la gestion du livret scolaire numérique. Une plateforme transparente et accessible
               hors-ligne.
@@ -194,7 +208,7 @@ export const LandingPage = () => {
       {/* SECTION 2 : LE SCEAU PÉDAGOGIQUE NATIONAL & LES 4 PÔLES DU LOGO */}
       <section id="poles" className="stitch-section bg-surface-low">
         <div className="stitch-container">
-          <div className="stitch-head text-center">
+          <div className="stitch-head">
             <span className="stitch-tag-badge">Symbolisme & Rigueur Académique</span>
             <h2 className="stitch-title">Le Sceau Pédagogique National aux 4 Pôles Éducatifs</h2>
             <p className="stitch-subtitle">
@@ -229,7 +243,7 @@ export const LandingPage = () => {
             {/* 1. Arts & Culture */}
             <div className="pole-card pole-card-red">
               <div className="pole-icon-wrap bg-red-trans text-accent-red">
-                <span className="material-symbols-outlined text-[28px]">palette</span>
+                <Palette size={28} aria-hidden="true" />
               </div>
               <div className="pole-badge bg-red-trans text-accent-red">Arts & Culture</div>
               <h4 className="pole-name">Humanités & Expression</h4>
@@ -249,7 +263,7 @@ export const LandingPage = () => {
             {/* 2. Sciences Exactes */}
             <div className="pole-card pole-card-orange">
               <div className="pole-icon-wrap bg-orange-trans text-accent-orange">
-                <span className="material-symbols-outlined text-[28px]">biotech</span>
+                <Microscope size={28} aria-hidden="true" />
               </div>
               <div className="pole-badge bg-orange-trans text-accent-orange">Sciences Exactes</div>
               <h4 className="pole-name">Raisonnement & Recherche</h4>
@@ -269,7 +283,7 @@ export const LandingPage = () => {
             {/* 3. Lettres & Langues */}
             <div className="pole-card pole-card-green">
               <div className="pole-icon-wrap bg-green-trans text-accent-green">
-                <span className="material-symbols-outlined text-[28px]">menu_book</span>
+                <BookOpen size={28} aria-hidden="true" />
               </div>
               <div className="pole-badge bg-green-trans text-accent-green">Lettres & Langues</div>
               <h4 className="pole-name">Maîtrise Linguistique</h4>
@@ -290,7 +304,7 @@ export const LandingPage = () => {
             {/* 4. Numérique & Tech */}
             <div className="pole-card pole-card-cyan">
               <div className="pole-icon-wrap bg-cyan-trans text-accent-cyan">
-                <span className="material-symbols-outlined text-[28px]">terminal</span>
+                <Terminal size={28} aria-hidden="true" />
               </div>
               <div className="pole-badge bg-cyan-trans text-accent-cyan">Numérique & Tech</div>
               <h4 className="pole-name">Filières Techniques & SI</h4>
@@ -314,7 +328,7 @@ export const LandingPage = () => {
       {/* SECTION 3 : COMPARATIF PAPIER VS LÉRAL SCOLAIRE */}
       <section id="comparatif" className="stitch-section">
         <div className="stitch-container">
-          <div className="stitch-head text-center">
+          <div className="stitch-head">
             <span className="stitch-tag-badge">Transformation Régalien</span>
             <h2 className="stitch-title">Pourquoi éradiquer définitivement le livret papier ?</h2>
             <p className="stitch-subtitle">
@@ -327,9 +341,9 @@ export const LandingPage = () => {
             {/* Ancien Modèle Papier */}
             <div className="compare-card compare-card-danger">
               <div className="compare-card-head">
-                <div className="flex items-center gap-3">
-                  <div className="compare-icon-box bg-red-100 text-red-600">
-                    <span className="material-symbols-outlined text-[24px]">history_edu</span>
+                <div>
+                  <div className="compare-icon-box">
+                    <ScrollText size={24} aria-hidden="true" />
                   </div>
                   <div>
                     <h3 className="compare-title">L'Ancien Modèle Papier</h3>
@@ -339,7 +353,7 @@ export const LandingPage = () => {
 
               <div className="compare-points-list">
                 <div className="compare-point-box bg-white">
-                  <X size={20} className="text-red-500 shrink-0 mt-1" />
+                  <X size={20} />
                   <div>
                     <p className="point-head">Falsification des moyennes et cachets</p>
                     <p className="point-desc">
@@ -350,7 +364,7 @@ export const LandingPage = () => {
                 </div>
 
                 <div className="compare-point-box bg-white">
-                  <X size={20} className="text-red-500 shrink-0 mt-1" />
+                  <X size={20} />
                   <div>
                     <p className="point-head">Pertes physiques irréversibles</p>
                     <p className="point-desc">
@@ -361,7 +375,7 @@ export const LandingPage = () => {
                 </div>
 
                 <div className="compare-point-box bg-white">
-                  <X size={20} className="text-red-500 shrink-0 mt-1" />
+                  <X size={20} />
                   <div>
                     <p className="point-head">Paralysie logistique et coûts d'impression</p>
                     <p className="point-desc">
@@ -375,11 +389,11 @@ export const LandingPage = () => {
 
             {/* Standard LéralScolaire */}
             <div className="compare-card compare-card-success">
-              <div className="pole-top-stripe bg-secondary" />
+              <div className="pole-top-stripe" />
               <div className="compare-card-head">
-                <div className="flex items-center gap-3">
-                  <div className="compare-icon-box bg-teal-100 text-teal-800">
-                    <span className="material-symbols-outlined text-[24px]">verified_user</span>
+                <div>
+                  <div className="compare-icon-box">
+                    <ShieldCheck size={24} aria-hidden="true" />
                   </div>
                   <div>
                     <h3 className="compare-title">Le Standard LéralScolaire</h3>
@@ -389,7 +403,7 @@ export const LandingPage = () => {
 
               <div className="compare-points-list">
                 <div className="compare-point-box bg-slate-50">
-                  <CheckCircle2 size={20} className="text-teal-700 shrink-0 mt-1" />
+                  <CheckCircle2 size={20} className="text-teal-700" />
                   <div>
                     <p className="point-head">Immuabilité et intégrité certifiée</p>
                     <p className="point-desc">
@@ -400,7 +414,7 @@ export const LandingPage = () => {
                 </div>
 
                 <div className="compare-point-box bg-slate-50">
-                  <CheckCircle2 size={20} className="text-teal-700 shrink-0 mt-1" />
+                  <CheckCircle2 size={20} className="text-teal-700" />
                   <div>
                     <p className="point-head">Coffre-fort souverain adossé à l'IUP</p>
                     <p className="point-desc">
@@ -411,7 +425,7 @@ export const LandingPage = () => {
                 </div>
 
                 <div className="compare-point-box bg-slate-50">
-                  <CheckCircle2 size={20} className="text-teal-700 shrink-0 mt-1" />
+                  <CheckCircle2 size={20} className="text-teal-700" />
                   <div>
                     <p className="point-head">Résilience Hors-Ligne pour tout le Sénégal</p>
                     <p className="point-desc">
@@ -606,7 +620,7 @@ export const LandingPage = () => {
             <div className="maillage-text-content">
               <span className="stitch-tag-badge">Continuité Territoriale & Dématérialisation</span>
               <h2 className="maillage-title">
-                Le maillage territorial de l'Éducation : <span className="text-cyan-400">Zéro transport de papier</span>
+                Le maillage territorial de l'Éducation : <span>Zéro transport de papier</span>
               </h2>
               <p className="maillage-description">
                 De Dakar à Kédougou, de Saint-Louis à Ziguinchor :{' '}
@@ -616,7 +630,7 @@ export const LandingPage = () => {
 
               <div className="maillage-benefits-list">
                 <div className="maillage-benefit-item">
-                  <div className="maillage-icon-box bg-cyan-950 text-cyan-400 border border-cyan-700/50">
+                  <div className="maillage-icon-box">
                     <FileCheck size={22} />
                   </div>
                   <div>
@@ -629,7 +643,7 @@ export const LandingPage = () => {
                 </div>
 
                 <div className="maillage-benefit-item">
-                  <div className="maillage-icon-box bg-teal-950 text-teal-400 border border-teal-700/50">
+                  <div className="maillage-icon-box">
                     <Users size={22} />
                   </div>
                   <div>
@@ -642,7 +656,7 @@ export const LandingPage = () => {
                 </div>
 
                 <div className="maillage-benefit-item">
-                  <div className="maillage-icon-box bg-blue-950 text-blue-400 border border-blue-700/50">
+                  <div className="maillage-icon-box">
                     <Building2 size={22} />
                   </div>
                   <div>
@@ -676,8 +690,8 @@ export const LandingPage = () => {
           <div className="stitch-features-grid">
             {/* 1. IUP */}
             <div className="feature-card">
-              <div className="feature-icon-wrap bg-primary text-white">
-                <span className="material-symbols-outlined text-[22px]">badge</span>
+              <div className="feature-icon-wrap">
+                <IdCard size={22} aria-hidden="true" />
               </div>
               <h3 className="feature-title">Identifiant Unique de la Plateforme (IUP)</h3>
               <p className="feature-desc">
@@ -688,8 +702,8 @@ export const LandingPage = () => {
 
             {/* 2. Multi-rôles */}
             <div className="feature-card">
-              <div className="feature-icon-wrap bg-teal-700 text-white">
-                <span className="material-symbols-outlined text-[22px]">manage_accounts</span>
+              <div className="feature-icon-wrap bg-teal-700">
+                <UserCog size={22} aria-hidden="true" />
               </div>
               <h3 className="feature-title">Gouvernance Multi-Rôles Stricte</h3>
               <p className="feature-desc">
@@ -700,8 +714,8 @@ export const LandingPage = () => {
 
             {/* 3. Calcul automatisé des coefs */}
             <div className="feature-card">
-              <div className="feature-icon-wrap bg-orange-600 text-white">
-                <span className="material-symbols-outlined text-[22px]">calculate</span>
+              <div className="feature-icon-wrap bg-orange-600">
+                <Calculator size={22} aria-hidden="true" />
               </div>
               <h3 className="feature-title">Calcul Automatisé des Coefficients</h3>
               <p className="feature-desc">
@@ -712,8 +726,8 @@ export const LandingPage = () => {
 
             {/* 4. PDF Sécurisé & Filigrane */}
             <div className="feature-card">
-              <div className="feature-icon-wrap bg-red-600 text-white">
-                <span className="material-symbols-outlined text-[22px]">picture_as_pdf</span>
+              <div className="feature-icon-wrap">
+                <FileText size={22} aria-hidden="true" />
               </div>
               <h3 className="feature-title">Édition PDF & Filigrane Anti-Copie</h3>
               <p className="feature-desc">
@@ -724,8 +738,8 @@ export const LandingPage = () => {
 
             {/* 5. Mode Offline Résilient */}
             <div className="feature-card">
-              <div className="feature-icon-wrap bg-green-700 text-white">
-                <span className="material-symbols-outlined text-[22px]">cloud_sync</span>
+              <div className="feature-icon-wrap">
+                <CloudCog size={22} aria-hidden="true" />
               </div>
               <h3 className="feature-title">Mode Hors-Ligne Résilient</h3>
               <p className="feature-desc">
@@ -736,8 +750,8 @@ export const LandingPage = () => {
 
             {/* 6. Vérification sans App */}
             <div className="feature-card">
-              <div className="feature-icon-wrap bg-blue-900 text-white">
-                <span className="material-symbols-outlined text-[22px]">qr_code_2</span>
+              <div className="feature-icon-wrap bg-blue-900">
+                <QrCode size={22} aria-hidden="true" />
               </div>
               <h3 className="feature-title">Vérification QR sans Application</h3>
               <p className="feature-desc">
@@ -752,7 +766,7 @@ export const LandingPage = () => {
       {/* SECTION 5 : COMMENT ÇA MARCHE (LE PARCOURS EN 4 ÉTAPES) */}
       <section id="processus" className="stitch-section">
         <div className="stitch-container">
-          <div className="stitch-head text-center">
+          <div className="stitch-head">
             <span className="stitch-tag-badge">Processus Cadré</span>
             <h2 className="stitch-title">Le parcours de certification en 4 étapes simples</h2>
             <p className="stitch-subtitle">
@@ -765,9 +779,9 @@ export const LandingPage = () => {
             {/* Step 1 */}
             <div className="step-box-card">
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="step-huge-num text-slate-300">01</span>
-                  <span className="material-symbols-outlined text-teal-700 text-[26px]">edit_note</span>
+                <div>
+                  <span className="step-huge-num">01</span>
+                  <NotebookPen size={26} className="text-teal-700" aria-hidden="true" />
                 </div>
                 <h3 className="step-card-title">Saisie Décentralisée</h3>
                 <p className="step-card-desc">
@@ -783,9 +797,9 @@ export const LandingPage = () => {
             {/* Step 2 */}
             <div className="step-box-card">
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="step-huge-num text-slate-300">02</span>
-                  <span className="material-symbols-outlined text-blue-900 text-[26px]">gavel</span>
+                <div>
+                  <span className="step-huge-num">02</span>
+                  <Gavel size={26} className="text-blue-900" aria-hidden="true" />
                 </div>
                 <h3 className="step-card-title">Conseil & Scellement</h3>
                 <p className="step-card-desc">
@@ -801,9 +815,9 @@ export const LandingPage = () => {
             {/* Step 3 */}
             <div className="step-box-card">
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="step-huge-num text-slate-300">03</span>
-                  <span className="material-symbols-outlined text-green-700 text-[26px]">forward_to_inbox</span>
+                <div>
+                  <span className="step-huge-num">03</span>
+                  <Send size={26} className="text-green-700" aria-hidden="true" />
                 </div>
                 <h3 className="step-card-title">Diffusion Instantanée</h3>
                 <p className="step-card-desc">
@@ -819,9 +833,9 @@ export const LandingPage = () => {
             {/* Step 4 */}
             <div className="step-box-card">
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="step-huge-num text-slate-300">04</span>
-                  <span className="material-symbols-outlined text-orange-600 text-[26px]">school</span>
+                <div>
+                  <span className="step-huge-num">04</span>
+                  <GraduationCap size={26} className="text-orange-600" aria-hidden="true" />
                 </div>
                 <h3 className="step-card-title">Contrôle Bac & Universités</h3>
                 <p className="step-card-desc">
@@ -840,7 +854,7 @@ export const LandingPage = () => {
       {/* SECTION 6 : PENSÉ POUR CHAQUE ACTEUR ÉDUCATIF */}
       <section id="acteurs" className="stitch-section bg-surface-low">
         <div className="stitch-container">
-          <div className="stitch-head text-center">
+          <div className="stitch-head">
             <span className="stitch-tag-badge">Écosystème Inclusif</span>
             <h2 className="stitch-title">Une valeur concrète pour chaque maillon scolaire</h2>
             <p className="stitch-subtitle">
@@ -852,8 +866,8 @@ export const LandingPage = () => {
             {/* Proviseurs */}
             <div className="actor-card">
               <div className="actor-card-body">
-                <div className="actor-icon-box bg-blue-900 text-white">
-                  <span className="material-symbols-outlined text-[20px]">account_balance</span>
+                <div className="actor-icon-box bg-blue-900">
+                  <Landmark size={20} aria-hidden="true" />
                 </div>
                 <h3 className="actor-card-title">Chefs d'Établissement</h3>
                 <p className="actor-card-desc">
@@ -869,8 +883,8 @@ export const LandingPage = () => {
             {/* Enseignants */}
             <div className="actor-card">
               <div className="actor-card-body">
-                <div className="actor-icon-box bg-orange-600 text-white">
-                  <span className="material-symbols-outlined text-[20px]">edit_square</span>
+                <div className="actor-icon-box bg-orange-600">
+                  <SquarePen size={20} aria-hidden="true" />
                 </div>
                 <h3 className="actor-card-title">Corps Enseignant</h3>
                 <p className="actor-card-desc">
@@ -886,8 +900,8 @@ export const LandingPage = () => {
             {/* Parents / Elèves */}
             <div className="actor-card">
               <div className="actor-card-body">
-                <div className="actor-icon-box bg-green-600 text-white">
-                  <span className="material-symbols-outlined text-[20px]">family_restroom</span>
+                <div className="actor-icon-box">
+                  <Users size={20} aria-hidden="true" />
                 </div>
                 <h3 className="actor-card-title">Parents & Élèves</h3>
                 <p className="actor-card-desc">
@@ -903,8 +917,8 @@ export const LandingPage = () => {
             {/* Office du Bac */}
             <div className="actor-card">
               <div className="actor-card-body">
-                <div className="actor-icon-box bg-teal-700 text-white">
-                  <span className="material-symbols-outlined text-[20px]">domain_verification</span>
+                <div className="actor-icon-box bg-teal-700">
+                  <BadgeCheck size={20} aria-hidden="true" />
                 </div>
                 <h3 className="actor-card-title">Office du Bac & MEN</h3>
                 <p className="actor-card-desc">
@@ -927,7 +941,7 @@ export const LandingPage = () => {
             {/* Colonne Gauche : Principes Généraux de Sécurité */}
             <div className="security-content">
               <div className="security-badge-chip">
-                <span className="material-symbols-outlined text-[16px]">shield</span>
+                <Shield size={16} aria-hidden="true" />
                 <span>Protection & Souveraineté</span>
               </div>
               <h2 className="security-main-title">Sécurité renforcée et protection intégrale du parcours scolaire</h2>
@@ -938,7 +952,7 @@ export const LandingPage = () => {
 
               <div className="security-items-list">
                 <div className="security-item-row">
-                  <span className="material-symbols-outlined icon-green text-[22px]">verified_user</span>
+                  <ShieldCheck size={22} className="icon-green" aria-hidden="true" />
                   <div>
                     <h4 className="security-item-heading">Intégrité & Immuabilité des Bulletins</h4>
                     <p className="security-item-text">
@@ -949,7 +963,7 @@ export const LandingPage = () => {
                 </div>
 
                 <div className="security-item-row">
-                  <span className="material-symbols-outlined icon-green text-[22px]">lock</span>
+                  <Lock size={22} className="icon-green" aria-hidden="true" />
                   <div>
                     <h4 className="security-item-heading">Protection des Données Personnelles</h4>
                     <p className="security-item-text">
@@ -960,7 +974,7 @@ export const LandingPage = () => {
                 </div>
 
                 <div className="security-item-row">
-                  <span className="material-symbols-outlined icon-green text-[22px]">qr_code_scanner</span>
+                  <ScanLine size={22} className="icon-green" aria-hidden="true" />
                   <div>
                     <h4 className="security-item-heading">Authentification & Traçabilité Immédiate</h4>
                     <p className="security-item-text">
@@ -977,7 +991,7 @@ export const LandingPage = () => {
               <div className="security-cert-card">
                 <div className="cert-card-header">
                   <div className="cert-badge-official">
-                    <ShieldCheck size={18} className="text-teal-300" />
+                    <ShieldCheck size={18} />
                     <span>Garantie d'Authenticité Officielle</span>
                   </div>
                   <span className="cert-status-pill">Sceau Actif</span>
@@ -990,15 +1004,15 @@ export const LandingPage = () => {
                   </div>
                   <div className="cert-field-row">
                     <span className="cert-label">Niveau de protection</span>
-                    <span className="cert-value font-semibold text-teal-300">Scellement Numérique d'État</span>
+                    <span className="cert-value">Scellement Numérique d'État</span>
                   </div>
                   <div className="cert-field-row">
                     <span className="cert-label">Contrôle d'intégrité</span>
-                    <span className="cert-value font-semibold text-green-400">100% Conforme & Inaltérable</span>
+                    <span className="cert-value">100% Conforme & Inaltérable</span>
                   </div>
                   <div className="cert-field-row">
                     <span className="cert-label">Statut de validation</span>
-                    <span className="cert-value flex items-center gap-1.5 text-green-400 font-semibold">
+                    <span className="cert-value">
                       <CheckCircle2 size={16} /> Authentifié & Certifié
                     </span>
                   </div>
@@ -1048,7 +1062,7 @@ export const LandingPage = () => {
           <div className="stitch-sovereign-banner">
             <div className="banner-content-wrap">
               <div className="banner-badge-pill">
-                <span className="material-symbols-outlined text-[14px]">flag</span>
+                <Flag size={14} aria-hidden="true" />
                 <span>Engagement National du Sénégal</span>
               </div>
               <h2 className="banner-title-text">
@@ -1069,7 +1083,7 @@ export const LandingPage = () => {
 
             {/* Filigrane en arrière-plan */}
             <div className="banner-watermark-bg" aria-hidden="true">
-              <span className="material-symbols-outlined text-[320px]">verified</span>
+              <BadgeCheck size={320} aria-hidden="true" />
             </div>
           </div>
         </div>

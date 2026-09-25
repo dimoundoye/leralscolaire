@@ -2,15 +2,10 @@ const express = require('express');
 const router = express.Router();
 const profPortalController = require('../controllers/profPortalController');
 const auth = require('../middleware/authMiddleware');
-const { requireProfOfClasse, requireProfAffiliation } = require('../middleware/access');
+const { requireRole, requireProfOfClasse, requireProfAffiliation } = require('../middleware/access');
 
 // Security middleware to ensure role is PROFESSEUR
-const checkProfRole = (req, res, next) => {
-  if (req.user.role !== 'PROFESSEUR') {
-    return res.status(403).json({ message: 'Accès interdit. Rôle professeur requis.' });
-  }
-  next();
-};
+const checkProfRole = requireRole('PROFESSEUR');
 
 // --- 1. PROFIL ---
 router.get('/profile', auth, checkProfRole, profPortalController.getProfile);

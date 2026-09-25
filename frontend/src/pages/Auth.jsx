@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { apiFetch } from '../services/http';
 import './Auth.css';
 
 const Auth = () => {
@@ -36,7 +37,7 @@ const Auth = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      const response = await fetch('/api/auth/forgot-password', {
+      const response = await apiFetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ iup: forgotData.iup, email: forgotData.email }),
@@ -61,7 +62,7 @@ const Auth = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      const response = await fetch('/api/auth/reset-password', {
+      const response = await apiFetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -93,7 +94,7 @@ const Auth = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await apiFetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(loginData),

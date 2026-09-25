@@ -1,5 +1,6 @@
 import { syncEngine } from './syncEngine';
 import { API_BASE_URL as BASE_URL } from '../config/api';
+import { apiFetch } from './http';
 
 const API_BASE_URL = `${BASE_URL}/api`;
 
@@ -52,7 +53,7 @@ export async function offlineFetch(url, options = {}, label = 'Action') {
     }
 
     try {
-      const res = await fetch(url, options);
+      const res = await apiFetch(url, options);
       if (res.ok) {
         const cloned = res.clone();
         cloned
@@ -118,7 +119,7 @@ export async function offlineFetch(url, options = {}, label = 'Action') {
 
   // Si on est en ligne, on tente l'envoi immédiat
   try {
-    const res = await fetch(url, options);
+    const res = await apiFetch(url, options);
     return res;
   } catch (err) {
     // Si la requête échoue en cours de route à cause du réseau, on ne perd pas la donnée !
@@ -159,7 +160,7 @@ export async function offlineFetch(url, options = {}, label = 'Action') {
 export const api = {
   // Authentication & Session
   async login(identifier, password) {
-    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+    const res = await apiFetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ identifier, password }),
@@ -241,7 +242,7 @@ export const api = {
   },
 
   async enrollStudent(formData) {
-    const res = await fetch(`${API_BASE_URL}/eleves`, {
+    const res = await apiFetch(`${API_BASE_URL}/eleves`, {
       method: 'POST',
       headers: getUploadHeaders(),
       body: formData,
@@ -250,7 +251,7 @@ export const api = {
   },
 
   async updateStudent(id, formData) {
-    const res = await fetch(`${API_BASE_URL}/eleves/${id}`, {
+    const res = await apiFetch(`${API_BASE_URL}/eleves/${id}`, {
       method: 'PUT',
       headers: getUploadHeaders(),
       body: formData,
@@ -271,7 +272,7 @@ export const api = {
   },
 
   async importStudents(formData) {
-    const res = await fetch(`${API_BASE_URL}/eleves/import`, {
+    const res = await apiFetch(`${API_BASE_URL}/eleves/import`, {
       method: 'POST',
       headers: getUploadHeaders(),
       body: formData,
@@ -404,7 +405,7 @@ export const api = {
   },
 
   async searchEtablissements(query) {
-    const res = await fetch(`${API_BASE_URL}/etablissement/search?q=${query}`, { headers: getHeaders() });
+    const res = await apiFetch(`${API_BASE_URL}/etablissement/search?q=${query}`, { headers: getHeaders() });
     return res.json();
   },
 
@@ -439,7 +440,7 @@ export const api = {
   },
 
   async sendPartage(formData) {
-    const res = await fetch(`${API_BASE_URL}/partages`, {
+    const res = await apiFetch(`${API_BASE_URL}/partages`, {
       method: 'POST',
       headers: getUploadHeaders(),
       body: formData,
@@ -657,7 +658,7 @@ export const api = {
 
   // AI OCR Scan
   async scanStudents(formData) {
-    const res = await fetch(`${API_BASE_URL}/ai/scan-students`, {
+    const res = await apiFetch(`${API_BASE_URL}/ai/scan-students`, {
       method: 'POST',
       headers: getUploadHeaders(),
       body: formData,
@@ -782,12 +783,12 @@ export const api = {
 
   // Géolocalisation de l'émargement (administration) — nécessite le réseau : pas de file hors ligne
   async getGeolocalisation() {
-    return jsonOrThrow(await fetch(`${API_BASE_URL}/etablissement/geolocalisation`, { headers: getHeaders() }));
+    return jsonOrThrow(await apiFetch(`${API_BASE_URL}/etablissement/geolocalisation`, { headers: getHeaders() }));
   },
 
   async updatePositionEtablissement({ latitude, longitude, rayon_metres }) {
     return jsonOrThrow(
-      await fetch(`${API_BASE_URL}/etablissement/geolocalisation`, {
+      await apiFetch(`${API_BASE_URL}/etablissement/geolocalisation`, {
         method: 'PUT',
         headers: getHeaders(),
         body: JSON.stringify({ latitude, longitude, rayon_metres }),
@@ -797,7 +798,7 @@ export const api = {
 
   async createTerrainEps({ nom, latitude, longitude, rayon_metres }) {
     return jsonOrThrow(
-      await fetch(`${API_BASE_URL}/etablissement/terrains-eps`, {
+      await apiFetch(`${API_BASE_URL}/etablissement/terrains-eps`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({ nom, latitude, longitude, rayon_metres }),
@@ -807,7 +808,7 @@ export const api = {
 
   async deleteTerrainEps(id) {
     return jsonOrThrow(
-      await fetch(`${API_BASE_URL}/etablissement/terrains-eps/${id}`, {
+      await apiFetch(`${API_BASE_URL}/etablissement/terrains-eps/${id}`, {
         method: 'DELETE',
         headers: getHeaders(),
       })
@@ -817,7 +818,7 @@ export const api = {
   // Terrains d'EPS d'un établissement de rattachement (professeur)
   async getTerrainsEps(etablissementId) {
     return jsonOrThrow(
-      await fetch(`${API_BASE_URL}/emargement/terrains-eps/${etablissementId}`, { headers: getHeaders() })
+      await apiFetch(`${API_BASE_URL}/emargement/terrains-eps/${etablissementId}`, { headers: getHeaders() })
     );
   },
 };

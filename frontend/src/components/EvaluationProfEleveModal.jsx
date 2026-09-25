@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Star, CheckCircle, X, ShieldCheck } from 'lucide-react';
+import { apiFetch } from '../services/http';
 
 export default function EvaluationProfEleveModal({ isOpen, onClose, professeur, etablissementId }) {
   const [q1, setQ1] = useState(5);
@@ -20,7 +21,7 @@ export default function EvaluationProfEleveModal({ isOpen, onClose, professeur, 
     setError(null);
 
     try {
-      const res = await fetch('/api/emargement/evaluation-eleve', {
+      const res = await apiFetch('/api/emargement/evaluation-eleve', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

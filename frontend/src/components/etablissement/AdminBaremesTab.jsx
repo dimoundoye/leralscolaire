@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
+import { apiFetch } from '../../services/http';
 
 const AdminBaremesTab = ({ baremes, setBaremes, baremesSaving, setBaremesSaving, showNotification }) => {
   useEffect(() => {
     if (baremes.length === 0 && !baremesSaving) {
-      fetch('/api/etablissement/baremes', {
+      apiFetch('/api/etablissement/baremes', {
         headers: {},
       })
         .then((r) => r.json())
@@ -230,7 +231,7 @@ const AdminBaremesTab = ({ baremes, setBaremes, baremesSaving, setBaremesSaving,
             onClick={async () => {
               setBaremesSaving(true);
               try {
-                const res = await fetch('/api/etablissement/baremes', {
+                const res = await apiFetch('/api/etablissement/baremes', {
                   method: 'PUT',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ baremes }),

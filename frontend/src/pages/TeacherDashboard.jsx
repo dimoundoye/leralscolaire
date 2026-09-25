@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useParams } from 'react-router-dom';
 import { offlineFetch } from '../services/api';
-import { CheckCircle2, X, Bell, Loader2, AlertTriangle, XCircle } from 'lucide-react';
+import { CheckCircle2, Loader2, XCircle } from 'lucide-react';
 import TeacherDisciplineView from '../components/professeur/TeacherDisciplineView';
 import TeacherOverviewTab from '../components/professeur/TeacherOverviewTab';
 import TeacherPartnerSchoolsTab from '../components/professeur/TeacherPartnerSchoolsTab';
@@ -19,6 +19,11 @@ import TeacherCahierTexteTab from '../components/professeur/TeacherCahierTexteTa
 import ProfDashboardEmargement from './ProfDashboardEmargement';
 import TeacherSidebar from '../components/professeur/TeacherSidebar';
 import TeacherTopbar from '../components/professeur/TeacherTopbar';
+import { apiFetch } from '../services/http';
+import ModifyGradeModal from '../components/professeur/modals/ModifyGradeModal';
+import NotificationsDrawer from '../components/professeur/modals/NotificationsDrawer';
+import ProposeDevoirModal from '../components/professeur/modals/ProposeDevoirModal';
+import ScheduleSyncModal from '../components/professeur/modals/ScheduleSyncModal';
 import './TeacherDashboard.css';
 
 const TeacherDashboard = () => {
@@ -68,7 +73,7 @@ const TeacherDashboard = () => {
     formData.append('fichier', file);
 
     try {
-      const res = await fetch('/api/messages/upload', {
+      const res = await apiFetch('/api/messages/upload', {
         method: 'POST',
         headers: {},
         body: formData,
@@ -271,7 +276,7 @@ const TeacherDashboard = () => {
 
   const fetchChatChannels = async () => {
     try {
-      const res = await fetch('/api/messages/channels', {
+      const res = await apiFetch('/api/messages/channels', {
         headers: {},
       });
       if (res.ok) {
@@ -289,14 +294,14 @@ const TeacherDashboard = () => {
     try {
       const params = new URLSearchParams({ type: contact.type, target_id: contact.id });
       if (contact.etablissement_id) params.append('etablissement_id', contact.etablissement_id);
-      const res = await fetch(`/api/messages/history?${params}`, {
+      const res = await apiFetch(`/api/messages/history?${params}`, {
         headers: {},
       });
       if (res.ok) {
         const data = await res.json();
         setChatHistory(data);
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-        const detRes = await fetch('/api/professeurs-portal/dashboard-details', { headers: {} });
+        const detRes = await apiFetch('/api/professeurs-portal/dashboard-details', { headers: {} });
         if (detRes.ok) setDashboardDetails(await detRes.json());
       }
     } catch (err) {
@@ -489,7 +494,7 @@ const TeacherDashboard = () => {
     try {
       const params = new URLSearchParams();
       if (cahierFilterClasse) params.append('classe_id', cahierFilterClasse);
-      const res = await fetch(`/api/cahier-texte/professeur?${params}`, {
+      const res = await apiFetch(`/api/cahier-texte/professeur?${params}`, {
         headers: {},
       });
       if (res.ok) {
@@ -515,7 +520,7 @@ const TeacherDashboard = () => {
     formData.append('fichier', file);
 
     try {
-      const res = await fetch('/api/cahier-texte/upload', {
+      const res = await apiFetch('/api/cahier-texte/upload', {
         method: 'POST',
         headers: {},
         body: formData,
@@ -591,7 +596,7 @@ const TeacherDashboard = () => {
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch('/api/professeurs-portal/notifications', { headers: getHeaders() });
+      const res = await apiFetch('/api/professeurs-portal/notifications', { headers: getHeaders() });
       if (res.ok) {
         const data = await res.json();
         setNotifications(data);
@@ -604,7 +609,7 @@ const TeacherDashboard = () => {
 
   const handleMarkAsRead = async (notifId) => {
     try {
-      const res = await fetch(`/api/professeurs-portal/notifications/${notifId}/read`, {
+      const res = await apiFetch(`/api/professeurs-portal/notifications/${notifId}/read`, {
         method: 'PUT',
         headers: getHeaders(),
       });
@@ -619,7 +624,7 @@ const TeacherDashboard = () => {
 
   const handleDownloadPDF = async () => {
     try {
-      const res = await fetch('/api/professeurs-portal/schedule/pdf', {
+      const res = await apiFetch('/api/professeurs-portal/schedule/pdf', {
         headers: {},
       });
       if (res.ok) {
@@ -644,7 +649,7 @@ const TeacherDashboard = () => {
     if (!classId || !matId) return;
     setPedLoading(true);
     try {
-      const res = await fetch(`/api/professeurs-portal/pedagogie/${classId}/${matId}`, {
+      const res = await apiFetch(`/api/professeurs-portal/pedagogie/${classId}/${matId}`, {
         headers: getHeaders(),
       });
       const data = await res.json();
@@ -670,7 +675,7 @@ const TeacherDashboard = () => {
   const fetchPlanning = async () => {
     setPlanningLoading(true);
     try {
-      const res = await fetch('/api/professeurs-portal/planning', {
+      const res = await apiFetch('/api/professeurs-portal/planning', {
         headers: getHeaders(),
       });
       const data = await res.json();
@@ -694,7 +699,7 @@ const TeacherDashboard = () => {
       return;
     }
     try {
-      const res = await fetch('/api/professeurs-portal/planning/propose', {
+      const res = await apiFetch('/api/professeurs-portal/planning/propose', {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({
@@ -736,7 +741,7 @@ const TeacherDashboard = () => {
 
   const handleRespondInvitation = async (etablissementId, accept) => {
     try {
-      const res = await fetch(`/api/professeurs-portal/invitations/${etablissementId}`, {
+      const res = await apiFetch(`/api/professeurs-portal/invitations/${etablissementId}`, {
         method: 'PUT',
         headers: getHeaders(),
         body: JSON.stringify({ accept }),
@@ -745,12 +750,12 @@ const TeacherDashboard = () => {
       if (res.ok) {
         showNotification(data.message, 'success');
         // Refresh invitations
-        const invRes = await fetch('/api/professeurs-portal/invitations', { headers: getHeaders() });
+        const invRes = await apiFetch('/api/professeurs-portal/invitations', { headers: getHeaders() });
         const invData = await invRes.json();
         if (invRes.ok) setInvitations(invData);
 
         // Refresh Summary
-        const sumRes = await fetch('/api/professeurs-portal/summary', { headers: getHeaders() });
+        const sumRes = await apiFetch('/api/professeurs-portal/summary', { headers: getHeaders() });
         const sumData = await sumRes.json();
         if (sumRes.ok) setSummary(sumData);
       }
@@ -765,7 +770,7 @@ const TeacherDashboard = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('/api/professeurs-portal/profile', {
+      const res = await apiFetch('/api/professeurs-portal/profile', {
         method: 'PUT',
         headers: getHeaders(),
         body: JSON.stringify(editProfileData),
@@ -1380,350 +1385,48 @@ const TeacherDashboard = () => {
       {/* .td-main-area */}
 
       {showProposeModal && (
-        <div className="modal-overlay">
-          <div className="modal-card" style={{ maxWidth: '480px' }}>
-            <h3 style={{ marginBottom: '6px' }}>Proposer un Devoir</h3>
-            <p className="subtitle" style={{ fontSize: '12px', color: 'var(--text-slate-500)', marginBottom: '20px' }}>
-              Soumettez une proposition de date de devoir à l'administrateur de l'établissement concerné.
-            </p>
-
-            <form onSubmit={handleProposeDevoir} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div className="input-group">
-                <label>Établissement & Classe</label>
-                <select
-                  required
-                  value={propClasse}
-                  onChange={(e) => {
-                    const cId = e.target.value;
-                    setPropClasse(cId);
-                    const matchingClass = classes.find((c) => c.classe_id === cId);
-                    if (matchingClass) {
-                      setPropEtab(matchingClass.etablissement_id);
-                    } else {
-                      setPropEtab('');
-                    }
-                    setPropMatiere('');
-                  }}
-                >
-                  <option value="">Sélectionner</option>
-                  {Array.from(new Set(classes.map((c) => c.classe_id))).map((cId) => {
-                    const c = classes.find((cl) => cl.classe_id === cId);
-                    return (
-                      <option key={cId} value={cId}>
-                        {c.classe_nom} ({c.etablissement_nom})
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-
-              {propClasse && (
-                <div className="input-group">
-                  <label>Matière</label>
-                  <select required value={propMatiere} onChange={(e) => setPropMatiere(e.target.value)}>
-                    <option value="">Sélectionner</option>
-                    {classes
-                      .filter((c) => c.classe_id === propClasse)
-                      .map((c) => (
-                        <option key={c.matiere_id} value={c.matiere_id}>
-                          {c.matiere_nom}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-              )}
-
-              <div className="input-group">
-                <label>Type d'Évaluation</label>
-                <select required value={propType} onChange={(e) => setPropType(e.target.value)}>
-                  <option value="DEVOIR">Devoir</option>
-                  <option value="COMPOSITION">Composition</option>
-                </select>
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <div className="input-group" style={{ flex: 1 }}>
-                  <label>Date & Heure</label>
-                  <input
-                    type="datetime-local"
-                    required
-                    value={propDate}
-                    onChange={(e) => setPropDate(e.target.value)}
-                  />
-                </div>
-                <div className="input-group" style={{ flex: 1 }}>
-                  <label>Salle (Optionnel)</label>
-                  <input
-                    type="text"
-                    placeholder="ex: Salle B1"
-                    value={propSalle}
-                    onChange={(e) => setPropSalle(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="modal-actions" style={{ marginTop: '16px' }}>
-                <button type="button" className="btn btn-outline" onClick={() => setShowProposeModal(false)}>
-                  Annuler
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Soumettre la date
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <ProposeDevoirModal
+          classes={classes}
+          handleProposeDevoir={handleProposeDevoir}
+          propClasse={propClasse}
+          propDate={propDate}
+          propMatiere={propMatiere}
+          propSalle={propSalle}
+          propType={propType}
+          setPropClasse={setPropClasse}
+          setPropDate={setPropDate}
+          setPropEtab={setPropEtab}
+          setPropMatiere={setPropMatiere}
+          setPropSalle={setPropSalle}
+          setPropType={setPropType}
+          setShowProposeModal={setShowProposeModal}
+        />
       )}
 
       {showSyncModal && (
-        <div className="modal-overlay">
-          <div className="modal-card" style={{ maxWidth: '480px' }}>
-            <h3>Synchroniser votre Emploi du Temps</h3>
-            <p
-              className="subtitle"
-              style={{ fontSize: '12.5px', color: 'var(--text-slate-500)', marginBottom: '16px', lineHeight: 1.5 }}
-            >
-              Copiez ce lien pour ajouter votre emploi du temps consolidé en temps réel dans votre agenda externe
-              (Google Calendar, Apple iCal, Outlook, etc.).
-            </p>
-
-            <div className="input-group" style={{ marginBottom: '20px' }}>
-              <label>Lien de synchronisation (iCal)</label>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <input
-                  type="text"
-                  readOnly
-                  value={`/api/professeurs-portal/public-schedule/ical/${profile?.id}`}
-                  style={{
-                    flex: 1,
-                    padding: '8px 12px',
-                    border: '1px solid var(--border-slate-200)',
-                    borderRadius: '8px',
-                    fontSize: '11px',
-                    background: '#f8fafc',
-                    fontWeight: 600,
-                  }}
-                  onClick={(e) => e.target.select()}
-                />
-                <button
-                  className="btn btn-outline"
-                  onClick={() => {
-                    navigator.clipboard.writeText(`/api/professeurs-portal/public-schedule/ical/${profile?.id}`);
-                    showNotification('Lien copié dans le presse-papier !');
-                  }}
-                  style={{ fontSize: '12px', whiteSpace: 'nowrap' }}
-                >
-                  Copier
-                </button>
-              </div>
-            </div>
-
-            <div
-              style={{
-                background: '#f0f9ff',
-                padding: '12px',
-                borderRadius: '8px',
-                border: '1px solid #bae6fd',
-                fontSize: '11.5px',
-                color: '#0369a1',
-                lineHeight: 1.5,
-              }}
-            >
-              <strong> Comment faire ?</strong>
-              <br />• Dans <strong>Google Calendar</strong>: Cliquez sur le bouton "+" à côté de "Autres agendas",
-              sélectionnez "À partir de l'URL" et collez le lien.
-              <br />• Dans <strong>Apple iCal</strong>: Sélectionnez Fichier &gt; Nouvel abonnement calendrier, et
-              collez le lien.
-            </div>
-
-            <div className="modal-actions" style={{ marginTop: '20px' }}>
-              <button className="btn btn-primary" onClick={() => setShowSyncModal(false)}>
-                Fermer
-              </button>
-            </div>
-          </div>
-        </div>
+        <ScheduleSyncModal profile={profile} setShowSyncModal={setShowSyncModal} showNotification={showNotification} />
       )}
 
       {showNotificationsDrawer && (
-        <div className="modal-overlay" onClick={() => setShowNotificationsDrawer(false)}>
-          <div
-            className="modal-card"
-            style={{
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              bottom: 0,
-              height: '100%',
-              maxWidth: '400px',
-              width: '100%',
-              borderRadius: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              padding: '24px',
-              boxShadow: '-4px 0 16px rgba(0,0,0,0.1)',
-              background: 'white',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}
-            >
-              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Bell size={20} /> Alertes de cours
-              </h3>
-              <button
-                onClick={() => setShowNotificationsDrawer(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-slate-400)' }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div
-              style={{
-                flex: 1,
-                overflowY: 'auto',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                paddingRight: '4px',
-              }}
-            >
-              {notifications.length === 0 ? (
-                <div
-                  style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-slate-400)', fontSize: '13px' }}
-                >
-                  Aucune notification.
-                </div>
-              ) : (
-                notifications.map((notif) => (
-                  <div
-                    key={notif.id}
-                    style={{
-                      padding: '14px',
-                      borderRadius: '10px',
-                      background: notif.lu ? '#f8fafc' : '#eff6ff',
-                      border: `1px solid ${notif.lu ? 'var(--border-slate-200)' : '#bfdbfe'}`,
-                      position: 'relative',
-                      cursor: 'pointer',
-                    }}
-                    onClick={() => handleMarkAsRead(notif.id)}
-                  >
-                    {!notif.lu && (
-                      <span
-                        style={{
-                          position: 'absolute',
-                          top: '14px',
-                          right: '14px',
-                          width: '8px',
-                          height: '8px',
-                          background: '#3b82f6',
-                          borderRadius: '50%',
-                        }}
-                      ></span>
-                    )}
-                    <h4
-                      style={{
-                        margin: '0 0 4px',
-                        fontSize: '13px',
-                        fontWeight: 800,
-                        color: notif.lu ? 'var(--text-slate-800)' : '#1e3a8a',
-                      }}
-                    >
-                      {notif.titre}
-                    </h4>
-                    <p style={{ margin: '0 0 6px', fontSize: '12px', color: 'var(--text-slate-600)', lineHeight: 1.4 }}>
-                      {notif.description}
-                    </p>
-                    <span style={{ fontSize: '10px', color: 'var(--text-slate-400)' }}>
-                      {new Date(notif.created_at).toLocaleString('fr-FR', {
-                        day: '2-digit',
-                        month: 'short',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
+        <NotificationsDrawer
+          handleMarkAsRead={handleMarkAsRead}
+          notifications={notifications}
+          setShowNotificationsDrawer={setShowNotificationsDrawer}
+        />
       )}
 
       {/* AUDIT LOG MODAL FOR NOTE JUSTIFICATION */}
       {modifyingGradeId && (
-        <div className="modal-overlay">
-          <div className="modal-card" style={{ maxWidth: '450px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: '#b45309' }}>
-              <AlertTriangle size={24} />
-              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800 }}>Justification de Modification</h3>
-            </div>
-
-            <form onSubmit={handleUpdateGradeWithAudit}>
-              <p style={{ fontSize: '12.5px', color: 'var(--text-slate-700)', lineHeight: 1.5, marginBottom: '16px' }}>
-                Toute modification de note sur le livret scolaire numérique est enregistrée de manière permanente dans
-                le <strong>journal d'audit</strong> de l'etablissement concerné. Veuillez justifier cette modification.
-              </p>
-
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-                <div className="input-group" style={{ flex: 1, marginBottom: 0 }}>
-                  <label>Nouvelle note</label>
-                  <input
-                    type="number"
-                    step="0.25"
-                    min="0"
-                    max="20"
-                    required
-                    value={modifyingGradeValue}
-                    onChange={(e) => setModifyingGradeValue(e.target.value)}
-                    style={{ fontWeight: 'bold', fontSize: '16px', textAlign: 'center' }}
-                  />
-                </div>
-                <div className="input-group" style={{ flex: 2, marginBottom: 0 }}>
-                  <label>Nouvel appréciation</label>
-                  <input
-                    type="text"
-                    value={modifyingGradeAppreciation}
-                    onChange={(e) => setModifyingGradeAppreciation(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="input-group">
-                <label>Motif de la modification (Obligatoire)</label>
-                <textarea
-                  required
-                  rows="3"
-                  placeholder="ex: Erreur de report lors de la saisie initiale"
-                  value={auditMotif}
-                  onChange={(e) => setAuditMotif(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-slate-200)',
-                    fontSize: '13px',
-                  }}
-                />
-              </div>
-
-              <div className="modal-actions" style={{ marginTop: '20px' }}>
-                <button type="button" className="btn btn-outline" onClick={() => setModifyingGradeId(null)}>
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  style={{ background: '#b45309', borderColor: '#b45309' }}
-                >
-                  Valider et enregistrer
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <ModifyGradeModal
+          auditMotif={auditMotif}
+          handleUpdateGradeWithAudit={handleUpdateGradeWithAudit}
+          modifyingGradeAppreciation={modifyingGradeAppreciation}
+          modifyingGradeValue={modifyingGradeValue}
+          setAuditMotif={setAuditMotif}
+          setModifyingGradeAppreciation={setModifyingGradeAppreciation}
+          setModifyingGradeId={setModifyingGradeId}
+          setModifyingGradeValue={setModifyingGradeValue}
+        />
       )}
 
       {/* MOTIF MODAL FOR AUDIT LOG VIEW */}

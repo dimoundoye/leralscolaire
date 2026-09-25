@@ -18,6 +18,7 @@ import {
   ArrowRight,
   X,
 } from 'lucide-react';
+import { apiFetch } from '../services/http';
 import './PublicRegistration.css';
 
 const PublicRegistration = () => {
@@ -56,7 +57,7 @@ const PublicRegistration = () => {
 
   const fetchClassInfo = async () => {
     try {
-      const res = await fetch(`/api/pre-inscriptions/public/class/${classId}`);
+      const res = await apiFetch(`/api/pre-inscriptions/public/class/${classId}`);
       if (!res.ok) {
         throw new Error('Classe introuvable ou lien invalide.');
       }
@@ -102,7 +103,7 @@ const PublicRegistration = () => {
         formDataToSend.append('photo', photoFile);
       }
 
-      const res = await fetch('/api/pre-inscriptions/public/register', {
+      const res = await apiFetch('/api/pre-inscriptions/public/register', {
         method: 'POST',
         body: formDataToSend,
       });

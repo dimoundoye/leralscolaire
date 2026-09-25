@@ -1,4 +1,5 @@
 import { BookMarked, Paperclip, X, CheckCircle2, RefreshCw, Clock, ShieldCheck, Trash2, Download } from 'lucide-react';
+import { apiFetch } from '../../services/http';
 
 const TeacherCahierTexteTab = ({
   classes,
@@ -373,7 +374,7 @@ const TeacherCahierTexteTab = ({
                       type="button"
                       onClick={async () => {
                         if (window.confirm('Supprimer cette séance du cahier de texte ?')) {
-                          await fetch(`/api/cahier-texte/${entry.id}`, { method: 'DELETE', headers: {} });
+                          await apiFetch(`/api/cahier-texte/${entry.id}`, { method: 'DELETE', headers: {} });
                           fetchCahierEntries();
                         }
                       }}

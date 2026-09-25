@@ -6,24 +6,6 @@ const etablissementController = {
   async getAuditLog(req, res) {
     const { classe_id, trimestre, annee_scolaire } = req.query;
     try {
-      // Ensure table exists (in case migration hasn't run yet)
-      await db.query(`
-        CREATE TABLE IF NOT EXISTS historique_notes (
-          id SERIAL PRIMARY KEY,
-          note_id UUID REFERENCES notes(id) ON DELETE CASCADE,
-          ancienne_valeur NUMERIC,
-          nouvelle_valeur NUMERIC,
-          ancienne_appreciation TEXT,
-          nouvelle_appreciation TEXT,
-          motif TEXT,
-          auteur_id UUID REFERENCES users(id) ON DELETE SET NULL,
-          date_modification TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          statut VARCHAR(20) DEFAULT 'EN_ATTENTE'
-        );
-        ALTER TABLE historique_notes ADD COLUMN IF NOT EXISTS motif TEXT;
-        ALTER TABLE historique_notes ADD COLUMN IF NOT EXISTS statut VARCHAR(20) DEFAULT 'EN_ATTENTE';
-      `);
-
       let conditions = [];
       let params = [];
       let paramIdx = 1;

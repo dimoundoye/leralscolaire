@@ -215,6 +215,19 @@ test("borne QR : réservée à l'administration, QR de son propre établissement
   assert.strictEqual((await res.json()).etablissementId, rows[0].etablissement_id);
 });
 
+test("les identifiants temporaires des jurys sont réservés à l'Office du Bac, sans hash", async () => {
+  for (const who of ['eleveAutre', 'adminAutre', 'profAutre']) {
+    const res = await request('GET', '/api/office-bac/jurys', tokens[who]);
+    assert.strictEqual(res.status, 403, `${who} : attendu 403, reçu ${res.status}`);
+  }
+  const { rows } = await db.query("SELECT id FROM users WHERE role = 'OFFICE_BAC' LIMIT 1");
+  if (rows[0]) {
+    const res = await request('GET', '/api/office-bac/jurys', token(rows[0].id, 'OFFICE_BAC'));
+    assert.strictEqual(res.status, 200);
+    assert.ok((await res.json()).every((jury) => !('password_hash' in jury)));
+  }
+});
+
 test("inscription directe d'un établissement désactivée", async () => {
   const res = await request('POST', '/api/auth/register-etablissement', null, {
     nom: 'X',
